@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIMP - Inteligência para Seus Processos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color-dark: #121223; /* Deep space dark blue/purple */
+            --bg-color-medium: #1a1a33; /* Slightly lighter dark for cards */
+            --primary-accent: #00e676; /* Neon Green for positive actions, highlights */
+            --secondary-accent: #2196F3; /* Electric Blue for main UI elements */
+            --text-light: #E0E0E0; /* Light gray for general text */
+            --text-dark: #0A0A1F; /* Very dark for contrast */
+            --border-light: rgba(0, 230, 118, 0.3); /* Transparent neon green border */
+            --shadow-glow: 0 0 15px rgba(0, 230, 118, 0.4); /* Neon green glow */
+            --button-red: #D32F2F; /* Alert red */
+            --button-orange: #FFAB40; /* Warning orange */
+            --font-family-heading: 'Orbitron', sans-serif;
+            --font-family-body: 'Roboto Mono', monospace; /* Monospace for tech feel */
+            --radius-default: 8px;
+            --radius-large: 12px;
+            --padding-default: 20px;
+        }
+
+        body {
+            font-family: var(--font-family-body);
+            background-color: var(--bg-color-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        /* Utility classes */
+        .container-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            padding: 0 20px;
+            margin: 0 auto;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            width: 100%;
+            background: linear-gradient(135deg, var(--bg-color-dark) 0%, var(--bg-color-medium) 100%);
+            border-bottom: 2px solid var(--border-light);
+            padding: 80px 0 60px 0;
+            text-align: center;
+            box-shadow: var(--shadow-glow);
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            gap: 15px;
+        }
+        .logo img {
+            height: 60px;
+            border-radius: var(--radius-default);
+            background-color: #fff;
+            padding: 8px;
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+            animation: pulse-logo 2s infinite alternate ease-in-out;
+        }
+        @keyframes pulse-logo {
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 230, 118, 0.3); }
+            100% { transform: scale(1.03); box-shadow: 0 0 20px rgba(0, 230, 118, 0.6); }
+        }
+        .logo span {
+            font-family: var(--font-family-heading);
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-accent);
+            text-shadow: 0 0 8px rgba(0, 230, 118, 0.6);
+        }
+        .hero-section h1 {
+            font-family: var(--font-family-heading);
+            font-size: 3.8rem;
+            margin-bottom: 20px;
+            line-height: 1.1;
+            font-weight: 900;
+            color: var(--secondary-accent);
+            text-shadow: 0 0 15px rgba(33, 150, 243, 0.7);
+        }
+        .hero-section p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px auto;
+            color: var(--text-light);
+            opacity: 0.9;
+        }
+
+        /* Main Console / Interaction Card */
+        .interaction-console {
+            background-color: var(--bg-color-medium);
+            border-radius: var(--radius-large);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-glow);
+            padding: var(--padding-default);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .mascot-interface {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px 25px;
+            background-color: #1f1f40; /* Darker blue for mascot area */
+            border-radius: var(--radius-large);
+            border: 1px solid rgba(33, 150, 243, 0.4);
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
+            margin-bottom: 10px;
+        }
+        #mascote-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #fff;
+            padding: 6px;
+            box-shadow: 0 0 12px rgba(0, 230, 118, 0.5);
+            transition: transform 0.2s ease-in-out;
+            flex-shrink: 0;
+        }
+        #mascote-avatar.speaking {
+            animation: pulse-mascot 0.8s infinite alternate;
+        }
+        @keyframes pulse-mascot {
+            0% { transform: scale(1); box-shadow: 0 0 12px rgba(0, 230, 118, 0.5); }
+            50% { transform: scale(1.08); box-shadow: 0 0 20px rgba(0, 230, 118, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 12px rgba(0, 230, 118, 0.5); }
+        }
+        .mascot-dialog-bubble {
+            flex-grow: 1;
+            text-align: left;
+            font-style: italic;
+            color: var(--primary-accent);
+            font-size: 1.1rem;
+            text-shadow: 0 0 5px rgba(0, 230, 118, 0.3);
+        }
+
+        /* Chat History */
+        #chat-log {
+            border: 1px solid rgba(0, 230, 118, 0.2);
+            border-radius: var(--radius-default);
+            padding: var(--padding-default);
+            min-height: 350px;
+            max-height: 600px;
+            overflow-y: auto;
+            background-color: #0A0A1F; /* Very dark, almost black for chat background */
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: inset 0 0 8px rgba(0, 230, 118, 0.1);
+        }
+        /* Scrollbar styles for a techy look */
+        #chat-log::-webkit-scrollbar { width: 10px; }
+        #chat-log::-webkit-scrollbar-track { background: var(--bg-color-medium); border-radius: 10px; }
+        #chat-log::-webkit-scrollbar-thumb { background: var(--primary-accent); border-radius: 10px; border: 2px solid var(--bg-color-medium); }
+        #chat-log::-webkit-scrollbar-thumb:hover { background: var(--secondary-accent); }
+
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+        }
+        .chat-message.user { justify-content: flex-end; }
+        .chat-message.mascote { justify-content: flex-start; }
+
+        .chat-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+            background-color: #3A3A5A; /* Darker gray for user avatar background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .chat-message.user .chat-avatar { order: 2; margin-left: 15px; margin-right: 0; }
+        .chat-message.mascote .chat-avatar { order: 0; margin-right: 15px; margin-left: 0; }
+
+        .chat-bubble {
+            padding: 14px 20px;
+            border-radius: 25px;
+            max-width: 75%;
+            line-height: 1.5;
+            word-wrap: break-word;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            font-size: 1rem;
+        }
+        .chat-bubble.user {
+            background-color: var(--secondary-accent);
+            color: var(--text-light);
+            border-bottom-right-radius: var(--radius-default);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        .chat-bubble.mascote {
+            background-color: #3f51b5; /* Slightly muted blue for mascote bubble */
+            color: var(--text-light);
+            border-bottom-left-radius: var(--radius-default);
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        /* Style for generated process inside chat bubble */
+        .chat-bubble .generated-process {
+            font-family: var(--font-family-body);
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+        .chat-bubble .generated-process ol, .chat-bubble .generated-process ul {
+            margin-left: 20px;
+            padding-left: 0;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            color: var(--text-light);
+        }
+        .chat-bubble .generated-process li {
+            margin-bottom: 6px;
+        }
+        .chat-bubble .generated-process strong {
+            color: var(--primary-accent); /* Highlight key terms with neon green */
+            text-shadow: 0 0 5px rgba(0, 230, 118, 0.5);
+        }
+        .chat-bubble .generated-process p:first-of-type { margin-top: 0; }
+        .chat-bubble .generated-process p:last-of-type { margin-bottom: 0; }
+
+
+        /* Input Area */
+        .chat-input-area {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        textarea#processo-input {
+            flex-grow: 1;
+            padding: 12px 20px;
+            border: 1px solid rgba(33, 150, 243, 0.4);
+            border-radius: 30px; /* More rounded for mobile feel */
+            font-size: 1rem;
+            resize: none;
+            min-height: 55px;
+            max-height: 120px;
+            background-color: #0A0A1F;
+            color: var(--primary-accent);
+            box-shadow: inset 0 0 8px rgba(33, 150, 243, 0.2);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        textarea#processo-input:focus {
+            border-color: var(--primary-accent);
+            box-shadow: inset 0 0 8px rgba(0, 230, 118, 0.4), 0 0 0 3px rgba(0, 230, 118, 0.2);
+            outline: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .icon-button {
+            background-color: var(--secondary-accent);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 22px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+        }
+        .icon-button svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--text-light);
+            transition: stroke 0.3s ease;
+        }
+        .icon-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.7);
+            background-color: #1976D2;
+        }
+        .icon-button:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .icon-button:disabled {
+            background-color: #4A4A60;
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+        .icon-button.primary { background-color: var(--primary-accent); box-shadow: 0 0 8px rgba(0, 230, 118, 0.4); }
+        .icon-button.primary:hover:not(:disabled) { background-color: #00C853; box-shadow: 0 0 15px rgba(0, 230, 118, 0.7); }
+        .icon-button.recording { background-color: var(--button-red); box-shadow: 0 0 8px rgba(211, 47, 47, 0.4); }
+        .icon-button.recording:hover:not(:disabled) { background-color: #C62828; box-shadow: 0 0 15px rgba(211, 47, 47, 0.7); }
+        .icon-button.recording svg { stroke: var(--text-light); }
+
+        /* Video Upload Section */
+        .data-upload-bay {
+            margin-top: 25px;
+            padding: 25px;
+            border: 2px dashed rgba(255, 171, 64, 0.4); /* Orange dashed border for data input */
+            border-radius: var(--radius-large);
+            background-color: #1f1f40;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 0 10px rgba(255, 171, 64, 0.3);
+        }
+        .section-title {
+            font-family: var(--font-family-heading);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--button-orange);
+            text-shadow: 0 0 5px rgba(255, 171, 64, 0.5);
+            margin-bottom: 10px;
+        }
+        .file-upload-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+        }
+        .file-input-label {
+            display: block;
+            background-color: var(--secondary-accent);
+            color: var(--text-light);
+            padding: 12px 20px;
+            border-radius: var(--radius-default);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .file-input-label:hover {
+            background-color: #1976D2;
+        }
+        .file-input-label.has-file {
+            background-color: var(--primary-accent);
+            box-shadow: 0 0 8px rgba(0, 230, 118, 0.4);
+        }
+        #video-input {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .icon-button.alt-action {
+            background-color: var(--button-orange);
+            color: var(--text-dark);
+            box-shadow: 0 0 8px rgba(255, 171, 64, 0.4);
+        }
+        .icon-button.alt-action:hover:not(:disabled) {
+            background-color: #FF9800;
+            box-shadow: 0 0 15px rgba(255, 171, 64, 0.7);
+        }
+        .icon-button.alt-action svg { stroke: var(--text-dark); }
+
+        /* Floating Feedback Button */
+        .floating-feedback-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--primary-accent);
+            color: var(--text-dark);
+            border: none;
+            padding: 15px 28px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.7);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        .floating-feedback-button svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+            stroke: none; /* Icon is filled, not stroked */
+        }
+        .floating-feedback-button:hover {
+            background-color: #00C853;
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(0, 230, 118, 1);
+        }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .hero-section { padding: 50px 0 40px 0; }
+            .hero-section h1 { font-size: 2.8rem; }
+            .hero-section p { font-size: 1rem; }
+            .logo img { height: 50px; }
+            .logo span { font-size: 1.8rem; }
+            .interaction-console { padding: 15px; }
+            .mascot-interface { flex-direction: column; text-align: center; gap: 10px; padding: 15px; }
+            #mascote-avatar { margin-bottom: 5px; width: 60px; height: 60px; }
+            .mascot-dialog-bubble { font-size: 1rem; }
+            #chat-log { min-height: 280px; max-height: 400px; padding: 15px; }
+            .chat-bubble { max-width: 90%; padding: 12px 18px; font-size: 0.9rem; }
+            .chat-input-area { flex-direction: column; gap: 15px; }
+            textarea#processo-input { width: 100%; min-height: 45px; max-height: 90px; }
+            .action-buttons { width: 100%; flex-wrap: wrap; }
+            .icon-button { flex-grow: 1; min-width: unset; padding: 12px 18px; }
+            .data-upload-bay { padding: 15px; }
+            .section-title { font-size: 1.1rem; }
+            .floating-feedback-button {
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 22px;
+                font-size: 1rem;
+                gap: 8px;
+            }
+            .floating-feedback-button svg { width: 20px; height: 20px; }
+        }
+
+        @media (max-width: 480px) {
+            .hero-section h1 { font-size: 2.2rem; }
+            .hero-section p { font-size: 0.9rem; }
+            .logo img { height: 45px; }
+            .logo span { font-size: 1.6rem; }
+            .mascot-interface { padding: 10px; }
+            #mascote-avatar { width: 50px; height: 50px; }
+            .mascot-dialog-bubble { font-size: 0.9rem; }
+            #chat-log { min-height: 200px; max-height: 350px; padding: 10px; }
+            .chat-bubble { max-width: 95%; padding: 10px 15px; font-size: 0.85rem; }
+            .chat-message.user .chat-avatar, .chat-message.mascote .chat-avatar { margin-left: 8px; margin-right: 8px; }
+            .chat-avatar { width: 35px; height: 35px; }
+            .icon-button { width: 100%; }
+            .floating-feedback-button {
+                bottom: 15px;
+                right: 15px;
+                font-size: 0.9rem;
+                padding: 10px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="hero-section">
+        <div class="container-wrapper hero-content">
+            <div class="logo">
+                <img src="https://raw.githubusercontent.com/thiago-gaioso/images/main/thiaguinho-solucoes-logo.png" alt="thIAguinho Soluções Logo">
+                <span>thIAguinho Soluções</span>
+            </div>
+            <h1>AIMP: Inteligência para Seus Processos</h1>
+            <p>Construa sistemas e rotinas impecáveis com a velocidade e consistência da IA. Do onboarding de clientes à gestão de estoque, seu assistente inteligente está pronto para otimizar. Converse, mostre e planeje!</p>
+        </div>
+    </header>
+
+    <main class="container-wrapper main-content">
+        <section class="interaction-console">
+            <div class="mascot-interface">
+                <img id="mascote-avatar" src="https://www.gstatic.com/images/branding/product/2x/gemini_2x_96dp.png" alt="Mascote Gemini">
+                <div class="mascot-dialog-bubble">
+                    <p id="mascote-fala">Olá! Eu sou seu assistente inteligente. Como posso ajudar você a otimizar seus processos hoje?</p>
+                </div>
+            </div>
+            
+            <div id="chat-log" class="chat-history">
+                <!-- Initial mascote message -->
+                <div class="chat-message mascote">
+                    <div class="chat-avatar"><img src="https://www.gstatic.com/images/branding/product/2x/gemini_2x_96dp.png" alt="Mascote Avatar"></div>
+                    <div class="chat-bubble mascote">Olá! Eu sou seu assistente inteligente. Como posso ajudar você a otimizar seus processos hoje?</div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <textarea id="processo-input" placeholder="Converse comigo ou descreva sua necessidade..." rows="1"></textarea>
+                <div class="action-buttons">
+                    <button id="record-audio-btn" class="icon-button" title="Gravar Áudio">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                        <span class="button-label">Falar</span>
+                    </button>
+                    <button id="send-message-btn" class="icon-button primary" title="Enviar Mensagem">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send"><path d="m22 2-7 7m0 0-3 3c-4 4-7.5 10.7-2 16.5m0 0c-4 4-10.7 7.5-16.5 2L2 22 22 2z"/></svg>
+                        <span class="button-label">Enviar</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="data-upload-bay">
+                <p class="section-title">Análise de Rotina por Vídeo</p>
+                <p>Envie um vídeo da sua rotina de trabalho. Descreva o que você faz, e nossa IA irá planejar otimizações!</p>
+                <div class="file-upload-controls">
+                    <div class="file-input-wrapper">
+                        <label for="video-input" class="file-input-label" id="video-input-label">
+                            <span id="file-name-display">Selecionar arquivo de vídeo...</span>
+                        </label>
+                        <input type="file" id="video-input" accept="video/*">
+                    </div>
+                    <button id="analisar-video-btn" class="icon-button alt-action" title="Analisar Vídeo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-film"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></svg>
+                        <span class="button-label">Analisar Vídeo</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <a href="#" id="feedback-button" class="floating-feedback-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        Fale com o Thiago
+    </a>
+
+    <script>
+        // MASCOTE DE VOZ - MOTOR GEMINI TTS INJETADO
+        let globalAudioCtx = null;
+        let currentAudioSource = null; // Para controlar o áudio em reprodução
+
+        async function falarComMascote(textoParaFalar) {
+            if (!globalAudioCtx) globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (globalAudioCtx.state === 'suspended') globalAudioCtx.resume();
+            
+            const mascoteAvatar = document.getElementById('mascote-avatar');
+            const mascoteFalaDisplay = document.getElementById('mascote-fala');
+
+            // Interrompe o áudio anterior, se houver
+            if (currentAudioSource) {
+                currentAudioSource.stop();
+                currentAudioSource = null;
+            }
+
+            // Atualiza o texto visual do mascote e inicia animação
+            if (mascoteFalaDisplay) mascoteFalaDisplay.textContent = textoParaFalar;
+            if (mascoteAvatar) mascoteAvatar.classList.add('speaking');
+
+            try {
+                // 1. Busca a chave e o nome da voz dinamicamente no banco de dados do painel do Thiago
+                const resKey = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_api_key.json');
+                const adminApiKey = await resKey.json();
+                const resVoice = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_voice_name.json');
+                const voiceName = await resVoice.json() || "Aoede";
+
+                if (!adminApiKey) throw new Error("Chave do Admin não encontrada.");
+
+                // 2. Chama a API do Gemini TTS em modo de Áudio
+                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + adminApiKey;
+                const payload = {
+                    contents: [{ parts: [{ text: textoParaFalar }] }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } }
+                    }
+                };
+
+                const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                const base64Audio = data.candidates[0].content.parts[0].inlineData.data;
+
+                // 3. Converte os bytes puros do Gemini (PCM16) para som de altíssima qualidade
+                const binaryString = window.atob(base64Audio);
+                const buffer = new ArrayBuffer(binaryString.length);
+                const view = new Uint8Array(buffer);
+                for (let i = 0; i < binaryString.length; i++) {
+                    view[i] = binaryString.charCodeAt(i);
+                }
+                const int16View = new Int16Array(buffer);
+                const audioBuffer = globalAudioCtx.createBuffer(1, int16View.length, 24000); // 24kHz do Gemini
+                const channelData = audioBuffer.getChannelData(0);
+                for (let i = 0; i < int16View.length; i++) {
+                    channelData[i] = int16View[i] / 32768.0;
+                }
+                const source = globalAudioCtx.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(globalAudioCtx.destination);
+                source.start();
+                currentAudioSource = source; // Armazena a referência da fonte de áudio
+
+                source.onended = () => {
+                    if (mascoteAvatar) mascoteAvatar.classList.remove('speaking');
+                    currentAudioSource = null;
+                };
+
+            } catch(e) {
+                console.warn("Falha no Motor Gemini, ativando plano B local: ", e);
+                const fallback = new SpeechSynthesisUtterance(textoParaFalar);
+                fallback.lang = 'pt-BR';
+                window.speechSynthesis.speak(fallback);
+                fallback.onend = () => {
+                    if (mascoteAvatar) mascoteAvatar.classList.remove('speaking');
+                    currentAudioSource = null;
+                };
+            }
+        }
+
+        // LÓGICA DO SISTEMA AIMP
+        document.addEventListener('DOMContentLoaded', () => {
+            const processoInput = document.getElementById('processo-input');
+            const sendMessageBtn = document.getElementById('send-message-btn');
+            const recordAudioBtn = document.getElementById('record-audio-btn');
+            const chatLog = document.getElementById('chat-log');
+            const mascoteFalaDisplay = document.getElementById('mascote-fala');
+            const mascoteAvatar = document.getElementById('mascote-avatar');
+            const feedbackButton = document.getElementById('feedback-button');
+            const videoInput = document.getElementById('video-input');
+            const analisarVideoBtn = document.getElementById('analisar-video-btn');
+            const videoInputLabel = document.getElementById('video-input-label');
+            const fileNameDisplay = document.getElementById('file-name-display');
+
+            const clientId = '-OogTbfAHhYxKhb0DxSU';
+            let recognition;
+            let conversationState = 'initial'; // To manage conversational flow
+
+            // Helper to add message to chat log
+            function addMessageToChat(sender, text, isHtml = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('chat-message', sender);
+                
+                const avatarDiv = document.createElement('div');
+                avatarDiv.classList.add('chat-avatar');
+                const avatarImg = document.createElement('img');
+                avatarImg.src = sender === 'mascote' ? 'https://www.gstatic.com/images/branding/product/2x/gemini_2x_96dp.png' : 'https://raw.githubusercontent.com/thiago-gaioso/images/main/user-icon.png'; // Generic user avatar
+                avatarImg.alt = sender === 'mascote' ? 'Mascote Avatar' : 'User Avatar';
+                avatarDiv.appendChild(avatarImg);
+
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.classList.add('chat-bubble', sender);
+                if (isHtml) {
+                    bubbleDiv.innerHTML = `<div class="generated-process">${text}</div>`;
+                } else {
+                    bubbleDiv.textContent = text;
+                }
+                
+                if (sender === 'mascote') {
+                    messageDiv.appendChild(avatarDiv);
+                    messageDiv.appendChild(bubbleDiv);
+                } else { // user
+                    messageDiv.appendChild(bubbleDiv);
+                    messageDiv.appendChild(avatarDiv);
+                }
+                
+                chatLog.appendChild(messageDiv);
+                chatLog.scrollTop = chatLog.scrollHeight; // Scroll to bottom
+            }
+
+            // Adjust textarea height dynamically
+            processoInput.addEventListener('input', () => {
+                processoInput.style.height = 'auto';
+                processoInput.style.height = (processoInput.scrollHeight) + 'px';
+            });
+
+            // Update file name display for video input
+            videoInput.addEventListener('change', () => {
+                if (videoInput.files.length > 0) {
+                    fileNameDisplay.textContent = videoInput.files[0].name;
+                    videoInputLabel.classList.add('has-file');
+                } else {
+                    fileNameDisplay.textContent = 'Selecionar arquivo de vídeo...';
+                    videoInputLabel.classList.remove('has-file');
+                }
+            });
+
+            // WEB SPEECH API FOR MICROPHONE INPUT
+            recordAudioBtn.addEventListener('click', () => {
+                if (recordAudioBtn.classList.contains('recording')) {
+                    // Stop recording
+                    if (recognition) recognition.stop();
+                    recordAudioBtn.classList.remove('recording');
+                    recordAudioBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg><span class="button-label">Falar</span>';
+                    // Re-enable other buttons after stopping recording
+                    sendMessageBtn.disabled = false;
+                    analisarVideoBtn.disabled = false;
+                } else {
+                    // Start recording
+                    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                        alert("Desculpe, seu navegador não suporta a API de Reconhecimento de Fala.");
+                        mascoteFalaDisplay.textContent = "Seu navegador não suporta reconhecimento de fala. Por favor, digite sua mensagem.";
+                        falarComMascote(mascoteFalaDisplay.textContent);
+                        return;
+                    }
+
+                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    recognition.lang = 'pt-BR';
+                    recognition.interimResults = true; // Show results while speaking
+                    recognition.continuous = true; // Keep listening
+
+                    let finalTranscript = '';
+                    processoInput.value = ''; // Clear input before starting new recording
+                    processoInput.style.height = 'auto'; // Reset textarea height
+                    recognition.addEventListener('result', event => {
+                        let interimTranscript = '';
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) {
+                                finalTranscript += event.results[i][0].transcript;
+                            } else {
+                                interimTranscript += event.results[i][0].transcript;
+                            }
+                        }
+                        processoInput.value = finalTranscript + interimTranscript; // Update input field with what's being said
+                        processoInput.style.height = 'auto'; // Adjust textarea height
+                        processoInput.style.height = (processoInput.scrollHeight) + 'px';
+                    });
+
+                    recognition.addEventListener('end', () => {
+                        if (recordAudioBtn.classList.contains('recording')) {
+                            // If recognition ended unexpectedly but button is still "recording", restart
+                            recognition.start();
+                        } else {
+                            // If button was manually stopped, and there's text, send it
+                            if (finalTranscript.trim().length > 0) {
+                                processoInput.value = finalTranscript;
+                                sendMessageBtn.click(); // Automatically send message when recording stops and there's text
+                            }
+                        }
+                    });
+
+                    recognition.addEventListener('error', event => {
+                        console.error('Erro de reconhecimento de fala:', event.error);
+                        if (event.error === 'not-allowed') {
+                            alert('Acesso ao microfone negado. Por favor, permita o acesso para usar a gravação de áudio.');
+                        } else if (event.error === 'no-speech') {
+                            // No speech detected, don't auto-send empty message
+                        }
+                        if (recordAudioBtn.classList.contains('recording')) { // Only stop if it was recording
+                           recordAudioBtn.click(); // Simulate click to stop and reset button state
+                        }
+                        // Re-enable other buttons in case of error
+                        sendMessageBtn.disabled = false;
+                        analisarVideoBtn.disabled = false;
+                    });
+                    
+                    recognition.start();
+                    recordAudioBtn.classList.add('recording');
+                    recordAudioBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square"><rect width="18" height="18" x="3" y="3" rx="2"/></svg><span class="button-label">Parar</span>';
+                    mascoteFalaDisplay.textContent = "Estou te ouvindo! Por favor, fale claramente.";
+                    falarComMascote(mascoteFalaDisplay.textContent);
+
+                    // Disable other buttons while recording
+                    sendMessageBtn.disabled = true;
+                    analisarVideoBtn.disabled = true;
+                }
+            });
+
+
+            // CORE CONVERSATIONAL LOGIC
+            sendMessageBtn.addEventListener('click', async () => {
+                const userQuery = processoInput.value.trim();
+                if (!userQuery) {
+                    const warnText = "Por favor, digite ou fale sua mensagem para que eu possa responder.";
+                    falarComMascote(warnText);
+                    return;
+                }
+
+                addMessageToChat('user', userQuery);
+                processoInput.value = ''; // Clear input after sending
+                processoInput.style.height = '55px'; // Reset textarea height
+
+                sendMessageBtn.disabled = true;
+                recordAudioBtn.disabled = true;
+                analisarVideoBtn.disabled = true;
+
+                // Simple simulated AI response based on keywords and state
+                let botResponse = "";
+
+                if (userQuery.toLowerCase().includes('olá') || userQuery.toLowerCase().includes('oi') || userQuery.toLowerCase().includes('tudo bem')) {
+                    botResponse = "Olá! Como posso ajudar você a otimizar seus processos hoje? Conte-me sobre o que você precisa.";
+                    conversationState = 'initial';
+                } else if (userQuery.toLowerCase().includes('processo') || userQuery.toLowerCase().includes('fluxo') || userQuery.toLowerCase().includes('otimizar') || userQuery.toLowerCase().includes('criar') || userQuery.toLowerCase().includes('negócio') || userQuery.toLowerCase().includes('ramo')) {
+                    botResponse = `Certo! Para qual tipo de negócio ou área você deseja criar ou otimizar um processo? Por exemplo, "um processo de vendas para uma imobiliária" ou "gestão de projetos para software".`;
+                    conversationState = 'awaiting_process_details';
+                } else if (conversationState === 'awaiting_process_details' || userQuery.toLowerCase().includes('onboarding') || userQuery.toLowerCase().includes('estoque') || userQuery.toLowerCase().includes('vendas') || userQuery.toLowerCase().includes('atendimento')) {
+                    botResponse = await generateProcessResponse(userQuery); // Delegate to a function to get specific process
+                    conversationState = 'process_generated';
+                } else if (userQuery.toLowerCase().includes('video') || userQuery.toLowerCase().includes('rotina') || userQuery.toLowerCase().includes('analisar rotina')) {
+                     botResponse = "Entendido! Você quer que eu analise um vídeo da sua rotina. Por favor, envie o vídeo usando o campo abaixo e, depois de carregar, clique em 'Analisar Vídeo'. Se já carregou, posso tentar analisar a descrição que você me der agora.";
+                     conversationState = 'awaiting_video_description';
+                } else if (conversationState === 'awaiting_video_description') {
+                    botResponse = await simulateVideoAnalysis(userQuery);
+                    conversationState = 'initial';
+                }
+                else {
+                    botResponse = "Interessante! Não entendi completamente, mas posso ajudar a criar processos personalizados. Poderia ser mais específico sobre o que você precisa? Ou talvez você queira que eu analise um vídeo?";
+                    conversationState = 'initial';
+                }
+
+                // Simulate AI thinking time
+                await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+
+                addMessageToChat('mascote', botResponse, true); // Use true if the bot response contains HTML
+                falarComMascote(botResponse.replace(/<[^>]*>?/gm, '')); // Strip HTML for speech
+
+                sendMessageBtn.disabled = false;
+                recordAudioBtn.disabled = false;
+                analisarVideoBtn.disabled = false;
+            });
+
+            async function generateProcessResponse(query) {
+                let generatedProcessHtml = '';
+
+                // Add more specific responses for common business process queries
+                if (query.toLowerCase().includes('onboarding')) {
+                    generatedProcessHtml = `
+                    <p>Ótima escolha! Para um <strong>Processo de Onboarding de Novos Clientes em Consultoria de Marketing Digital</strong>, sugiro:</p>
+                    <ol>
+                        <li>Boas-Vindas: Envio de e-mail e agendamento de kick-off.</li>
+                        <li>Kick-off: Alinhamento de objetivos e expectativas.</li>
+                        <li>Análise: Coleta de dados e auditoria inicial.</li>
+                        <li>Plano Estratégico: Criação e aprovação da estratégia.</li>
+                        <li>Execução: Início das campanhas e monitoramento.</li>
+                    </ol>
+                    <p>Este processo visa garantir uma transição suave e um início produtivo. Quer que eu detalhe alguma etapa?</p>
+                    `;
+
+                } else if (query.toLowerCase().includes('estoque') || query.toLowerCase().includes('inventário')) {
+                    generatedProcessHtml = `
+                    <p>Para um <strong>Processo de Gestão de Estoque para Loja de Varejo de Roupas</strong>, podemos focar em:</p>
+                    <ol>
+                        <li>Recebimento: Conferência e registro de novas mercadorias.</li>
+                        <li>Organização: Alocação e atualização de localização.</li>
+                        <li>Controle de Saídas: Registro de vendas e baixa automática.</li>
+                        <li>Inventário: Contagens periódicas e ajustes.</li>
+                        <li>Reabastecimento: Análise de demanda e pedidos.</li>
+                    </ol>
+                    <p>Com isso, garantimos o nível ideal de estoque e evitamos perdas. Há algo mais que gostaria de adicionar ou explorar?</p>
+                    `;
+                } else if (query.toLowerCase().includes('vendas')) {
+                    generatedProcessHtml = `
+                    <p>Para um <strong>Processo de Vendas Eficaz</strong>, é fundamental:</p>
+                    <ol>
+                        <li>Prospecção: Identificar e qualificar leads.</li>
+                        <li>Primeiro Contato: Abordagem inicial e levantamento de necessidades.</li>
+                        <li>Apresentação: Demonstração da solução e proposta de valor.</li>
+                        <li>Negociação: Resolução de objeções e ajustes.</li>
+                        <li>Fechamento: Formalização do negócio.</li>
+                        <li>Pós-venda: Acompanhamento e fidelização do cliente.</li>
+                    </ol>
+                    <p>Este processo busca maximizar conversões e construir relacionamentos duradouros. Algum ponto específico para detalharmos?</p>
+                    `;
+                } else if (query.toLowerCase().includes('atendimento ao cliente')) {
+                    generatedProcessHtml = `
+                    <p>Para um <strong>Processo de Atendimento ao Cliente de Excelência</strong>, considere:</p>
+                    <ol>
+                        <li>Abertura: Registro da solicitação e acolhimento.</li>
+                        <li>Classificação: Direcionamento ao setor ou especialista correto.</li>
+                        <li>Resolução: Análise do problema e apresentação da solução.</li>
+                        <li>Feedback: Confirmação da satisfação e coleta de opinião.</li>
+                        <li>Monitoramento: Análise de indicadores de satisfação e tempo de resposta.</li>
+                    </ol>
+                    <p>Um bom atendimento cria lealdade. Queremos focar em algum canal de atendimento específico?</p>
+                    `;
+                }
+                else {
+                    generatedProcessHtml = `
+                    <p>Excelente! Para <strong>"${query}"</strong>, aqui está uma estrutura de processo genérica para começar:</p>
+                    <ol>
+                        <li>Entendimento: Compreender o contexto e os objetivos primários.</li>
+                        <li>Mapeamento: Desenhar o fluxo atual e identificar melhorias.</li>
+                        <li>Desenho: Criar o novo processo otimizado, definindo responsabilidades.</li>
+                        <li>Implementação: Treinar a equipe e colocar em prática.</li>
+                        <li>Monitoramento: Acompanhar métricas e fazer ajustes contínuos.</li>
+                    </ol>
+                    <p>Esta abordagem garante consistência e melhoria contínua. Quer explorar um ponto específico ou adicionar detalhes?</p>
+                    `;
+                }
+                return generatedProcessHtml;
+            }
+
+            // SIMULATED VIDEO ANALYSIS
+            analisarVideoBtn.addEventListener('click', async () => {
+                if (!videoInput.files || videoInput.files.length === 0) {
+                    const warnText = "Por favor, selecione um arquivo de vídeo primeiro para que eu possa iniciar a análise.";
+                    addMessageToChat('mascote', warnText);
+                    falarComMascote(warnText);
+                    return;
+                }
+                const videoFile = videoInput.files[0];
+                addMessageToChat('user', `Enviei um vídeo: ${videoFile.name}`);
+                
+                const response = "Vídeo recebido! Atenção: Como a análise de vídeo por IA é muito complexa para rodar aqui diretamente, para que eu possa te ajudar a planejar, por favor, descreva em algumas palavras a rotina ou processo principal que você deseja analisar no vídeo. Por exemplo: 'A rotina de atendimento ao cliente da recepção' ou 'O processo de embalagem de produtos'.";
+                addMessageToChat('mascote', response);
+                falarComMascote(response);
+                conversationState = 'awaiting_video_description';
+
+                // In a real system, you would upload the video here and
+                // then send its reference to an AI backend for analysis.
+                // For this MVP, we prompt the user for a text description.
+            });
+
+            async function simulateVideoAnalysis(userDescription) {
+                // Here, a real AI would analyze the video based on the textual description
+                // For this MVP, we just use the description to generate a generic plan.
+                let plan = `
+                    <p>Entendi! Com base na sua descrição: <strong>"${userDescription}"</strong> e simulando uma análise do seu vídeo, posso sugerir um plano inicial para otimização:</p>
+                    <ol>
+                        <li>Observação Detalhada: Identificar os passos exatos e interações na sua rotina.</li>
+                        <li>Pontos de Melhoria: Marcar gargalos, redundâncias ou oportunidades de automação.</li>
+                        <li>Soluções Sugeridas: Propor ferramentas, treinamento ou reestruturação de atividades.</li>
+                        <li>Implementação Piloto: Testar as mudanças propostas em pequena escala.</li>
+                        <li>Monitoramento e Ajuste: Acompanhar resultados e refinar o processo continuamente.</li>
+                    </ol>
+                    <p>Esta é uma abordagem geral. Se você tiver um cenário específico do vídeo em mente, me diga para um plano mais customizado!</p>
+                `;
+                return plan;
+            }
+
+            // CHAT REVERSO (FEEDBACK DIRETO PARA O THIAGO)
+            feedbackButton.addEventListener('click', async (e) => {
+                e.preventDefault(); // Prevent default link behavior
+                const feedback = prompt("Sua opinião é valiosa! Conte ao Thiago o que você achou do sistema ou dê sugestões de melhoria:");
+                if (feedback) {
+                    try {
+                        const response = await fetch(`https://thiaguinho-40a14-default-rtdb.firebaseio.com/projetos_capturados/${clientId}/feedbacks.json`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                texto: feedback,
+                                data: new Date().toISOString()
+                            })
+                        });
+
+                        if (response.ok) {
+                            alert('Obrigado pelo seu feedback! O Thiago recebeu sua mensagem.');
+                            falarComMascote('Muito obrigado pelo seu feedback! Sua opinião é essencial para aprimorar ainda mais o sistema.');
+                        } else {
+                            alert('Ops! Houve um erro ao enviar seu feedback. Tente novamente.');
+                        }
+                    } catch (error) {
+                        console.error('Erro ao enviar feedback:', error);
+                        alert('Ops! Houve um erro de conexão ao enviar seu feedback. Tente novamente.');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

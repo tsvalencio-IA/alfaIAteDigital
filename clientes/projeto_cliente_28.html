@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>thIAguinho Delivery Hub - Demonstração</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #28a745; /* Verde thIAguinho */
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        section {
+            background-color: #fff;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        h2 {
+            color: #28a745;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 1.8em;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input[type="text"],
+        .form-group select,
+        .form-group textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            border: 1px solid #eee;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #555;
+        }
+        table tbody tr:nth-child(even) {
+            background-color: #fcfcfc;
+        }
+        .status-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        /* Feedback Button */
+        #feedback-button-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+        #feedback-button {
+            background-color: #007bff; /* Azul vibrante */
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        #feedback-button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        /* Feedback Form Overlay */
+        #feedback-form-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.3s, opacity 0.3s;
+        }
+        #feedback-form-container.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+        .feedback-form-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .feedback-form-content h3 {
+            margin-top: 0;
+            color: #007bff;
+            font-size: 1.5em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .feedback-form-content textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .feedback-form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .feedback-form-actions button.cancel {
+            background-color: #6c757d;
+        }
+        .feedback-form-actions button.cancel:hover {
+            background-color: #5a6268;
+        }
+
+        /* Trial Blocker */
+        #trial-blocker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95); /* Quase preto */
+            color: white;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 2em;
+            z-index: 9999;
+            padding: 20px;
+        }
+        #trial-blocker p {
+            max-width: 800px;
+            line-height: 1.5;
+        }
+        #trial-blocker strong {
+            color: #ffc107; /* Amarelo para destaque */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>thIAguinho Delivery Hub</h1>
+        <p>Otimização de Logística para a Empresa: Empresa</p>
+    </header>
+
+    <div class="container">
+        <section id="add-delivery">
+            <h2>Adicionar Nova Entrega</h2>
+            <form id="delivery-form">
+                <div class="form-group">
+                    <label for="descricao">Descrição do Item:</label>
+                    <input type="text" id="descricao" required>
+                </div>
+                <div class="form-group">
+                    <label for="destinatario">Destinatário:</label>
+                    <input type="text" id="destinatario" required>
+                </div>
+                <div class="form-group">
+                    <label for="endereco">Endereço de Entrega:</label>
+                    <input type="text" id="endereco" required>
+                </div>
+                <div class="form-group">
+                    <label for="prioridade">Prioridade:</label>
+                    <select id="prioridade">
+                        <option value="Baixa">Baixa</option>
+                        <option value="Média" selected>Média</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Urgente">Urgente</option>
+                    </select>
+                </div>
+                <button type="submit">Adicionar Entrega</button>
+            </form>
+        </section>
+
+        <section id="delivery-list">
+            <h2>Lista de Entregas</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Descrição</th>
+                        <th>Destinatário</th>
+                        <th>Endereço</th>
+                        <th>Prioridade</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="deliveries-tbody">
+                    <!-- Entregas serão listadas aqui -->
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <!-- Trial Blocker -->
+    <div id="trial-blocker">
+        <p>
+            <strong>Atenção:</strong> A sua versão de demonstração expirou.
+            <br>Entre em contato com a <strong>thIAguinho Soluções</strong> para adquirir o sistema completo.
+        </p>
+    </div>
+
+    <!-- Feedback Button -->
+    <div id="feedback-button-container">
+        <button id="feedback-button">Gostou? Fale com o Thiago!</button>
+    </div>
+
+    <!-- Feedback Form Overlay -->
+    <div id="feedback-form-container">
+        <div class="feedback-form-content">
+            <h3>Feedback para a thIAguinho Soluções</h3>
+            <p>Sua opinião é muito importante para nós!</p>
+            <form id="feedback-form">
+                <div class="form-group">
+                    <label for="feedback-text">Sua mensagem:</label>
+                    <textarea id="feedback-text" placeholder="Digite seu feedback aqui..." required></textarea>
+                </div>
+                <div class="feedback-form-actions">
+                    <button type="button" class="cancel" id="close-feedback-form">Fechar</button>
+                    <button type="submit">Enviar Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const CLIENT_UNIQUE_ID = '-Ooc11FboMhgEjhm2eHp';
+        const FIREBASE_FEEDBACK_URL = `https://thiaguinho-40a14-default-rtdb.firebaseio.com/projetos_capturados/${CLIENT_UNIQUE_ID}/feedbacks.json`;
+        const TRIAL_LOCAL_STORAGE_KEY = 'thiaguinho_trial_uses';
+        const MAX_TRIAL_USES = 5;
+
+        let deliveries = [];
+        let trialUses = 0;
+        let deliveryIdCounter = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar contador de trial
+            const storedTrialUses = localStorage.getItem(TRIAL_LOCAL_STORAGE_KEY);
+            if (storedTrialUses === null) {
+                localStorage.setItem(TRIAL_LOCAL_STORAGE_KEY, 0);
+            }
+            trialUses = parseInt(localStorage.getItem(TRIAL_LOCAL_STORAGE_KEY) || '0');
+            checkTrialStatus(); // Verifica o status do trial ao carregar a página
+
+            // Inicializar dados de entregas (opcional, para persistir entre recargas)
+            const storedDeliveries = localStorage.getItem('thiaguinho_deliveries');
+            if (storedDeliveries) {
+                deliveries = JSON.parse(storedDeliveries);
+                deliveryIdCounter = deliveries.length > 0 ? Math.max(...deliveries.map(d => d.id)) + 1 : 0;
+                renderDeliveries();
+            }
+
+            // Event Listeners
+            document.getElementById('delivery-form').addEventListener('submit', handleAddDelivery);
+            document.getElementById('feedback-button').addEventListener('click', () => {
+                document.getElementById('feedback-form-container').classList.add('visible');
+            });
+            document.getElementById('close-feedback-form').addEventListener('click', () => {
+                document.getElementById('feedback-form-container').classList.remove('visible');
+            });
+            document.getElementById('feedback-form').addEventListener('submit', handleSendFeedback);
+        });
+
+        function checkTrialStatus() {
+            if (trialUses >= MAX_TRIAL_USES) {
+                document.getElementById('trial-blocker').style.display = 'flex';
+                // Desabilita interações na interface principal
+                document.getElementById('add-delivery').style.pointerEvents = 'none';
+                document.getElementById('add-delivery').style.opacity = '0.5';
+                document.getElementById('delivery-list').style.pointerEvents = 'none';
+                document.getElementById('delivery-list').style.opacity = '0.5';
+                document.getElementById('feedback-button').style.display = 'none'; // Esconde o botão de feedback para forçar contato
+            } else {
+                document.getElementById('trial-blocker').style.display = 'none';
+                document.getElementById('add-delivery').style.pointerEvents = 'auto';
+                document.getElementById('add-delivery').style.opacity = '1';
+                document.getElementById('delivery-list').style.pointerEvents = 'auto';
+                document.getElementById('delivery-list').style.opacity = '1';
+                document.getElementById('feedback-button').style.display = 'block';
+            }
+        }
+
+        function incrementTrialUses() {
+            if (trialUses < MAX_TRIAL_USES) {
+                trialUses++;
+                localStorage.setItem(TRIAL_LOCAL_STORAGE_KEY, trialUses);
+                console.log(`Usos de trial: ${trialUses}/${MAX_TRIAL_USES}`);
+                checkTrialStatus();
+            }
+        }
+
+        function handleAddDelivery(event) {
+            event.preventDefault();
+
+            if (trialUses >= MAX_TRIAL_USES) {
+                alert("Sua versão de demonstração expirou. Por favor, entre em contato para adquirir o sistema completo.");
+                return;
+            }
+
+            const descricao = document.getElementById('descricao').value;
+            const destinatario = document.getElementById('destinatario').value;
+            const endereco = document.getElementById('endereco').value;
+            const prioridade = document.getElementById('prioridade').value;
+
+            const newDelivery = {
+                id: deliveryIdCounter++,
+                descricao,
+                destinatario,
+                endereco,
+                prioridade,
+                status: 'Pendente' // Status inicial
+            };
+
+            deliveries.push(newDelivery);
+            localStorage.setItem('thiaguinho_deliveries', JSON.stringify(deliveries)); // Persistir entregas
+            renderDeliveries();
+
+            incrementTrialUses(); // Conta como 1 uso real
+
+            // Limpar formulário
+            document.getElementById('delivery-form').reset();
+        }
+
+        function handleUpdateDeliveryStatus(event) {
+            const deliveryId = parseInt(event.target.dataset.id);
+            const newStatus = event.target.value;
+
+            const deliveryIndex = deliveries.findIndex(d => d.id === deliveryId);
+            if (deliveryIndex > -1) {
+                const oldStatus = deliveries[deliveryIndex].status;
+                deliveries[deliveryIndex].status = newStatus;
+
+                // Ação de valor: Marcar como 'Entregue'
+                if (newStatus === 'Entregue' && oldStatus !== 'Entregue') {
+                    if (trialUses >= MAX_TRIAL_USES) {
+                        alert("Sua versão de demonstração expirou. Por favor, entre em contato para adquirir o sistema completo.");
+                        deliveries[deliveryIndex].status = oldStatus; // Reverte o status se o trial expirou
+                        renderDeliveries();
+                        return;
+                    }
+                    incrementTrialUses(); // Conta como 1 uso real
+                }
+                localStorage.setItem('thiaguinho_deliveries', JSON.stringify(deliveries)); // Persistir entregas
+                renderDeliveries();
+            }
+        }
+
+        function renderDeliveries() {
+            const tbody = document.getElementById('deliveries-tbody');
+            tbody.innerHTML = ''; // Limpa a lista existente
+
+            if (deliveries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7">Nenhuma entrega cadastrada ainda.</td></tr>';
+                return;
+            }
+
+            deliveries.forEach(delivery => {
+                const row = tbody.insertRow();
+                row.insertCell().textContent = delivery.id;
+                row.insertCell().textContent = delivery.descricao;
+                row.insertCell().textContent = delivery.destinatario;
+                row.insertCell().textContent = delivery.endereco;
+                row.insertCell().textContent = delivery.prioridade;
+
+                const statusCell = row.insertCell();
+                const statusSelect = document.createElement('select');
+                statusSelect.className = 'status-select';
+                statusSelect.dataset.id = delivery.id;
+                statusSelect.innerHTML = `
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em Rota">Em Rota</option>
+                    <option value="Entregue">Entregue</option>
+                    <option value="Problema">Problema</option>
+                `;
+                statusSelect.value = delivery.status;
+                statusSelect.addEventListener('change', handleUpdateDeliveryStatus);
+                statusCell.appendChild(statusSelect);
+
+                const actionsCell = row.insertCell();
+                actionsCell.textContent = 'Nenhuma'; // Por enquanto, sem mais ações visíveis
+            });
+        }
+
+        async function handleSendFeedback(event) {
+            event.preventDefault();
+
+            const feedbackText = document.getElementById('feedback-text').value;
+            if (!feedbackText.trim()) {
+                alert("Por favor, digite sua mensagem de feedback.");
+                return;
+            }
+
+            try {
+                const response = await fetch(FIREBASE_FEEDBACK_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        texto: feedbackText,
+                        data: new Date().toISOString(),
+                        cliente_id: CLIENT_UNIQUE_ID
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro ao enviar feedback: ${response.statusText}`);
+                }
+
+                alert("Mensagem enviada com sucesso ao Thiago!");
+                document.getElementById('feedback-text').value = '';
+                document.getElementById('feedback-form-container').classList.remove('visible');
+
+            } catch (error) {
+                console.error("Erro ao enviar feedback:", error);
+                alert("Ocorreu um erro ao enviar sua mensagem. Tente novamente mais tarde.");
+            }
+        }
+    </script>
+</body>
+</html>

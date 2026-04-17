@@ -1,0 +1,231 @@
+<!-- NOME DO ARQUIVO: admin.html -->
+<!-- LOCALIZAÇÃO: Pasta principal do projeto -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Painel CRM & SaaS - thIAguinho Soluções</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background-color: #0f172a; color: white; }
+        .oculto { display: none !important; }
+        
+        .modal-overlay { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 1000; }
+        .modal-content { animation: slideUp 0.3s ease-out forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 4px; }
+
+        /* Accordion Nativo sem JS (Remove a setinha padrão do Chrome) */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+
+        /* SCROLL MOBILE BLINDADO */
+        .dev-chat-box { background: #020617; border: 1px solid #334155; border-radius: 12px; height: 50vh; overflow-y: auto; overflow-x: hidden; padding: 15px; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; }
+        .msg-dev { padding: 12px 16px; border-radius: 10px; font-size: 14px; max-width: 95%; line-height: 1.6; word-break: break-word; }
+        .msg-dev.admin { background: #dc2626; color: white; align-self: flex-end; }
+        .msg-dev.ai { background: #1e293b; color: #e2e8f0; align-self: flex-start; border: 1px solid #334155; width: 100%; }
+        
+        .code-container { background: #000; border-radius: 8px; margin: 10px 0; border: 1px solid #334155; overflow: hidden; width: 100%; }
+        .code-header { background: #0f172a; padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 5px; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; font-size: 12px; color: #94a3b8; }
+        .code-content { padding: 12px; overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+        .code-content code { font-family: monospace; color: #38bdf8; font-size: 13px; white-space: pre; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- TELA DE LOGIN -->
+    <div id="admin-login" class="flex-1 flex items-center justify-center p-4">
+        <div class="bg-slate-800 p-8 rounded-2xl w-full max-w-sm border border-slate-700 shadow-2xl text-center">
+            <i class='bx bx-shield-quarter text-5xl text-red-500 mb-2'></i>
+            <h2 class="text-xl font-bold text-white mb-6">Acesso da Agência</h2>
+            <input type="email" id="email-admin" class="w-full bg-slate-900 text-white border border-slate-600 rounded-xl p-3 mb-3 outline-none focus:border-red-500 transition" placeholder="Email do Firebase">
+            <input type="password" id="senha-admin" class="w-full bg-slate-900 text-white border border-slate-600 rounded-xl p-3 mb-4 outline-none focus:border-red-500 transition" placeholder="Senha">
+            <button id="btn-login" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl mb-4 transition">Entrar no Painel</button>
+            <p id="msg-erro-login" class="text-red-500 text-sm mt-3 oculto font-semibold">Email ou senha incorretos.</p>
+        </div>
+    </div>
+
+    <!-- PAINEL CRM -->
+    <div id="admin-dashboard" class="oculto flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="bg-slate-800 border-b border-slate-700 p-4 md:px-8 flex justify-between items-center shrink-0 z-10 relative shadow-md">
+            <div class="flex items-center gap-3">
+                <div class="bg-red-600 p-2 rounded-lg shadow-lg"><i class='bx bx-code-alt text-white text-xl'></i></div>
+                <div>
+                    <h2 class="text-lg font-bold leading-tight">Fábrica & CRM</h2>
+                    <p class="text-xs text-red-400 font-semibold uppercase tracking-wider">thIAguinho Soluções</p>
+                </div>
+            </div>
+            <button id="btn-logout" class="flex items-center gap-2 text-sm bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-white transition shadow">
+                <i class='bx bx-log-out'></i> <span class="hidden md:inline">Sair</span>
+            </button>
+        </header>
+        
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            
+            <!-- Coluna de Configurações (Agora com Accordions UX) -->
+            <div class="w-full lg:w-1/3 bg-slate-900 flex flex-col p-4 md:p-6 overflow-y-auto order-2 lg:order-1 border-t lg:border-t-0 lg:border-r border-slate-700">
+                
+                <!-- ACCORDION: CONFIGURAÇÕES DA NUVEM -->
+                <details class="group bg-slate-800 rounded-xl border border-slate-600 mb-4 transition-all duration-300">
+                    <summary class="flex justify-between items-center font-bold text-white p-4 cursor-pointer select-none">
+                        <span class="flex items-center gap-2 text-sm uppercase tracking-wider"><i class='bx bx-cog text-red-500 text-lg'></i> Servidores e Nuvem</span>
+                        <span class="transition-transform duration-300 group-open:rotate-180 text-slate-400"><i class='bx bx-chevron-down text-xl'></i></span>
+                    </summary>
+                    <div class="p-4 border-t border-slate-700 bg-slate-800/50">
+                        <!-- GEMINI API -->
+                        <div class="mb-4">
+                            <h3 class="font-bold text-white mb-2 flex items-center gap-2 text-xs"><i class='bx bx-brain text-yellow-500'></i> API Gemini (Cérebro)</h3>
+                            <div class="flex gap-2">
+                                <input type="password" id="api-key-input" class="flex-1 w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm text-white outline-none focus:border-yellow-500" placeholder="AIzaSy...">
+                                <button id="btn-save-key" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition shrink-0">Salvar</button>
+                            </div>
+                        </div>
+
+                        <!-- MOTOR DE VOZ GEMINI -->
+                        <div class="mb-4">
+                            <h3 class="font-bold text-white mb-2 flex items-center gap-2 text-xs"><i class='bx bx-podcast text-sky-500'></i> Voz Neural Mascote</h3>
+                            <div class="flex flex-col gap-2">
+                                <select id="gemini-voice-input" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm text-white outline-none focus:border-sky-500">
+                                    <option value="Aoede">Voz Aoede (Recomendada)</option>
+                                    <option value="Charon">Voz Charon (Grave)</option>
+                                    <option value="Kore">Voz Kore (Feminina)</option>
+                                    <option value="Puck">Voz Puck (Dinâmica)</option>
+                                    <option value="Fenrir">Voz Fenrir (Profunda)</option>
+                                </select>
+                                <button id="btn-save-voice" class="w-full bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition mt-1">Salvar Voz</button>
+                            </div>
+                        </div>
+
+                        <!-- GITHUB DEPLOY -->
+                        <div>
+                            <h3 class="font-bold text-white mb-2 flex items-center gap-2 text-xs"><i class='bx bxl-github text-white'></i> GitHub Pages (Hospedagem)</h3>
+                            <div class="flex flex-col gap-2">
+                                <input type="password" id="github-token-input" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm text-white outline-none focus:border-white" placeholder="Token do GitHub (ghp_...)">
+                                <input type="text" id="github-repo-input" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm text-white outline-none focus:border-white" placeholder="Seu Repositório (ex: user/repo)">
+                                <button id="btn-save-github" class="w-full bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition mt-1">Salvar GitHub</button>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- ACCORDION: MENTE DA ARQUITETA (PROMPT) -->
+                <details class="group bg-slate-800 rounded-xl border border-slate-600 transition-all duration-300">
+                    <summary class="flex justify-between items-center font-bold text-red-500 p-4 cursor-pointer select-none">
+                        <span class="flex items-center gap-2 text-sm uppercase tracking-wider"><i class='bx bx-slider-alt text-lg'></i> Personalidade da IA</span>
+                        <span class="transition-transform duration-300 group-open:rotate-180 text-slate-400"><i class='bx bx-chevron-down text-xl'></i></span>
+                    </summary>
+                    <div class="p-4 border-t border-slate-700 bg-slate-800/50 flex flex-col">
+                        <p class="text-xs text-slate-400 mb-3">Edite o comportamento e as regras de funil da sua Arquiteta (Mascote).</p>
+                        <textarea id="prompt-ia" class="flex-1 w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-xs text-slate-300 resize-y outline-none focus:border-red-500 min-h-[250px]"></textarea>
+                        <button id="btn-save-prompt" class="w-full mt-3 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg text-sm">Atualizar Cérebro</button>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Coluna Principal (Projetos & Processos) -->
+            <div class="w-full lg:w-2/3 bg-slate-800 flex flex-col p-4 md:p-6 overflow-hidden order-1 lg:order-2">
+                
+                <!-- Abas Superiores (Navegação Principal) -->
+                <div class="flex gap-4 md:gap-6 mb-4 border-b border-slate-700 pb-2 shrink-0 overflow-x-auto whitespace-nowrap scrollbar-hide">
+                    <button id="tab-novos" class="text-white font-bold border-b-2 border-red-500 pb-2 px-1 transition focus:outline-none flex items-center gap-2"><i class='bx bxs-inbox'></i> CRM Leads</button>
+                    <button id="tab-concluidos" class="text-slate-400 hover:text-white font-semibold pb-2 px-1 transition focus:outline-none flex items-center gap-2"><i class='bx bx-check-double'></i> Entregues</button>
+                    <!-- NOVA ABA: AIMP -->
+                    <button id="tab-processos" class="text-emerald-500/70 hover:text-emerald-400 font-semibold pb-2 px-1 transition focus:outline-none flex items-center gap-2 ml-auto"><i class='bx bx-git-merge'></i> Engenharia de Processos</button>
+                </div>
+                
+                <!-- ÁREA 1: GRID CRM (Padrão) -->
+                <div id="view-crm" class="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 pb-10 content-start items-start -webkit-overflow-scrolling: touch;">
+                    <div class="col-span-full text-center py-10 text-slate-500"><p>Carregando projetos...</p></div>
+                </div>
+
+                <!-- ÁREA 2: AIMP (Engenharia de Processos) -->
+                <div id="view-processos" class="oculto flex-1 flex flex-col overflow-hidden bg-slate-900 rounded-xl border border-slate-700 relative">
+                    <div class="p-4 border-b border-slate-700 bg-slate-800/80 shrink-0">
+                        <h3 class="text-emerald-400 font-bold text-lg flex items-center gap-2"><i class='bx bx-glasses'></i> Módulo AIMP (Padrão McDonald's)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Análise rotinas caóticas ou vídeos de clientes e gere Procedimentos Operacionais Padrão (POP) impecáveis.</p>
+                    </div>
+                    
+                    <div class="p-4 shrink-0 flex flex-col gap-3 border-b border-slate-700 bg-slate-800/30">
+                        <div class="flex items-center gap-2">
+                            <label for="aimp-video" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg cursor-pointer transition text-xs font-bold flex items-center gap-2 border border-slate-600 shadow-sm">
+                                <i class='bx bx-video-recording text-lg'></i> Anexar Vídeo / Prova
+                                <input type="file" id="aimp-video" class="hidden" accept="video/*,image/*">
+                            </label>
+                            <span id="aimp-file-name" class="text-xs text-emerald-500 font-semibold italic truncate max-w-[200px]">Nenhum arquivo.</span>
+                        </div>
+                        <textarea id="aimp-contexto" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-sm text-white resize-none outline-none focus:border-emerald-500 min-h-[80px]" placeholder="Ex: O cliente dono de oficina reclama que os mecânicos esquecem de apertar parafusos e o pátio fica sujo. Crie um POP de finalização de serviço..."></textarea>
+                        <button id="btn-gerar-pop" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-lg flex justify-center items-center gap-2">
+                            <i class='bx bx-brain'></i> Analisar e Gerar Padrão Ouro
+                        </button>
+                    </div>
+
+                    <div id="aimp-resultado" class="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0a0f1c] -webkit-overflow-scrolling: touch;">
+                        <div class="text-center py-10 text-slate-600 flex flex-col items-center justify-center h-full">
+                            <i class='bx bx-sitemap text-5xl mb-3 opacity-50'></i>
+                            <p class="text-sm font-semibold uppercase tracking-wider">Aguardando Rotina</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JANELA DA FÁBRICA (O ESTÚDIO SaaS) -->
+    <div id="modal-projeto" class="fixed inset-0 modal-overlay oculto flex items-center justify-center p-2 md:p-4">
+        <div class="modal-content bg-slate-800 border border-slate-600 rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col h-[98vh] md:h-[95vh]">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900 rounded-t-2xl shrink-0">
+                <h3 class="text-lg md:text-xl font-bold text-white flex items-center gap-2 truncate"><i class='bx bx-code-block text-red-500'></i> O Estúdio SaaS</h3>
+                <button id="btn-fechar-modal" class="text-slate-400 hover:text-white transition bg-slate-800 p-1 rounded-lg"><i class='bx bx-x text-2xl'></i></button>
+            </div>
+            
+            <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                <div class="w-full lg:w-1/3 p-4 overflow-y-auto border-b lg:border-b-0 lg:border-r border-slate-700 bg-slate-800/50 flex flex-col lg:max-h-full max-h-[40vh] -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
+                    <div class="flex items-start gap-3 p-3 bg-slate-900 rounded-xl border border-slate-700 mb-4 shrink-0">
+                        <div class="w-10 h-10 rounded-full bg-red-600/20 flex items-center justify-center text-red-500 shrink-0"><i class='bx bxs-business text-xl'></i></div>
+                        <div class="overflow-hidden">
+                            <h4 id="modal-nome" class="text-md font-bold text-white truncate">Nome</h4>
+                            <p id="modal-empresa" class="text-xs text-red-300 font-semibold truncate">Empresa</p>
+                        </div>
+                    </div>
+                    <div class="mb-4 shrink-0">
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-1"><i class='bx bx-target-lock'></i> A Verdade (Dor Real)</p>
+                        <div id="modal-dores" class="bg-slate-700/50 p-3 rounded-xl text-xs md:text-sm leading-relaxed text-slate-200 border border-slate-600"></div>
+                    </div>
+                    
+                    <!-- CHAT REVERSO -->
+                    <div class="mt-auto border-t border-slate-700 pt-4 flex-1 flex flex-col min-h-[150px]">
+                        <p class="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold mb-2"><i class='bx bx-message-dots'></i> Chat do App de Teste (Feedbacks)</p>
+                        <div id="modal-feedbacks" class="bg-slate-900 p-3 rounded-xl flex-1 overflow-y-auto border border-slate-700 flex flex-col gap-2 -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
+                            <span class="text-xs text-slate-500 italic">O cliente ainda não enviou mensagens do demo.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-2/3 p-2 md:p-6 flex flex-col bg-slate-900/50 flex-1 overflow-hidden">
+                    <div id="dev-chat-display" class="dev-chat-box flex-1 mb-3 bg-slate-900"></div>
+                    
+                    <div class="flex gap-2 shrink-0 items-center bg-slate-800 p-1 md:p-2 rounded-xl border border-slate-600">
+                        <label for="dev-file" class="bg-slate-700 hover:bg-slate-600 text-slate-300 p-2 md:p-3 rounded-lg cursor-pointer transition flex items-center justify-center shrink-0" title="Anexar códigos base (HTML/JS)">
+                            <i class='bx bx-paperclip text-lg md:text-xl'></i>
+                            <input type="file" id="dev-file" class="hidden" multiple accept=".html,.js,.css,.json,.txt">
+                        </label>
+                        <input type="text" id="dev-input" class="flex-1 w-full bg-transparent border-none p-2 text-xs md:text-sm text-white outline-none" placeholder="Ex: Gere o checklist de oficina com a blindagem...">
+                        <button id="btn-dev-send" class="bg-sky-600 hover:bg-sky-700 text-white p-2 md:p-3 rounded-lg transition font-bold flex items-center justify-center shrink-0">
+                            <i class='bx bx-send text-lg md:text-xl'></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/admin-logic.js"></script>
+</body>
+</html>

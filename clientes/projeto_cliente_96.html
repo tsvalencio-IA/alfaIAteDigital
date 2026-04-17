@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gerador de Projetos e Orçamentos para Marcenaria - thIAguinho Soluções</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Bibliotecas 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        :root {
+            /* Marcenaria Palette Original thIAguinho Soluções */
+            --primary-dark: #4A3C30;     /* Dark Coffee Brown */
+            --secondary-wood: #7F5539;   /* Warm Medium Brown */
+            --accent-gold: #DDA15E;      /* Muted Gold / Brass */
+            --light-cream: #FDFCF9;      /* Off-white Cream */
+            --soft-beige: #FBF8F4;       /* Soft Beige for Cards */
+            --earth-green: #6B8E23;      /* Olive Green (for AI section details) */
+            --text-color: #333333;       /* Dark Grey for Text */
+            --border-soft: #C6B6A5;      /* Soft Brown Grey for Borders */
+            --bg-light-panel: #EFEAE5;   /* Light Beige Grey for section panels */
+            --bg-ai-section: #E6F0E0;    /* Very Light Greenish for AI output */
+            --bg-summary: #F2E8DC;       /* Soft Warm Light Grey for Summary */
+            --warning-red: #dc3545;      /* Red for security warning */
+
+            --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --border-radius-soft: 8px;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-cream);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 960px;
+            margin: 30px auto;
+            padding: 30px;
+            background-color: var(--soft-beige);
+            border-radius: var(--border-radius-soft);
+            box-shadow: var(--shadow-subtle);
+        }
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--primary-dark);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+        }
+        h2 {
+            font-size: 2em;
+            border-bottom: 2px solid var(--border-soft);
+            padding-bottom: 15px;
+            margin-top: 40px;
+            color: var(--secondary-wood);
+        }
+        .subtitle {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            font-size: 0.95em;
+        }
+        .input-group input[type="text"],
+        .input-group input[type="number"],
+        .input-group textarea,
+        .input-group input[type="password"],
+        .input-group input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-soft);
+            border-radius: var(--border-radius-soft);
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-sizing: border-box;
+            background-color: var(--light-cream);
+            color: var(--text-color);
+        }
+        .input-group input:focus, .input-group textarea:focus {
+            border-color: var(--secondary-wood);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(127, 85, 57, 0.2);
+        }
+        textarea { resize: vertical; }
+
+        .section-panel {
+            padding: 25px;
+            background-color: var(--bg-light-panel);
+            border-radius: var(--border-radius-soft);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-soft);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        .grid-layout .full-width {
+            grid-column: 1 / -1;
+        }
+
+        button {
+            background-color: var(--accent-gold);
+            color: var(--primary-dark);
+            padding: 12px 25px;
+            border: none;
+            border-radius: var(--border-radius-soft);
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+        button:hover {
+            background-color: #C38C4B;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            color: #666;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .action-buttons button.primary { background-color: var(--secondary-wood); color: white; }
+        .action-buttons button.primary:hover { background-color: #6a4933; }
+
+        /* Estilos do Visualizador 3D */
+        #container3DWrapper {
+            width: 100%; height: 400px; position: relative;
+            border-radius: var(--border-radius-soft);
+            border: 2px solid var(--border-soft);
+            overflow: hidden; background: radial-gradient(circle, #ffffff 0%, #EFEAE5 100%);
+            touch-action: none;
+            margin-bottom: 20px;
+        }
+        #visualizador3D { width: 100%; height: 100%; display: block; }
+        #info3D {
+            position: absolute; top: 15px; left: 15px;
+            background: rgba(74, 60, 48, 0.85); color: #FFF;
+            padding: 8px 12px; border-radius: 6px;
+            font-size: 0.85em; font-weight: bold; pointer-events: none;
+            backdrop-filter: blur(4px);
+        }
+        #instrucao3D {
+            position: absolute; bottom: 15px; right: 15px;
+            background: rgba(221, 161, 94, 0.9); color: var(--primary-dark);
+            padding: 6px 12px; border-radius: 20px;
+            font-size: 0.8em; font-weight: 600; pointer-events: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Tabela Plano de Corte */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-soft); }
+        th { background-color: var(--secondary-wood); color: white; font-weight: 600; white-space: nowrap; }
+        tr:hover { background-color: var(--soft-beige); }
+
+        #itemsList { margin-top: 30px; padding-top: 20px; }
+        .item-card {
+            background-color: var(--soft-beige); border: 1px solid var(--border-soft);
+            border-radius: var(--border-radius-soft); padding: 20px 25px; margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .item-card h3 {
+            margin-top: 0; margin-bottom: 15px; color: var(--primary-dark); text-align: left;
+            border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; font-size: 1.5em;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .item-card h3 button { padding: 8px 15px; font-size: 0.9em; border-radius: 6px; margin-left: 10px; color: white; }
+        .item-card .cost-details {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-top: 15px;
+            padding-top: 15px; border-top: 1px dashed var(--border-soft);
+        }
+        .item-card .total-item-price {
+            font-weight: 700; color: var(--accent-gold); font-size: 1.3em; margin-top: 20px;
+            padding-top: 15px; border-top: 1px solid var(--border-soft); text-align: right;
+        }
+
+        #summary {
+            margin-top: 40px; padding: 30px; background-color: var(--bg-summary);
+            border-radius: var(--border-radius-soft); border: 1px solid #dccca0; text-align: center;
+            box-shadow: inset 0 1px 5px rgba(0,0,0,0.03);
+        }
+        #summary p { font-size: 1.6em; font-weight: 700; color: var(--primary-dark); margin: 15px 0; }
+        #summary button.warning { background-color: var(--secondary-wood); }
+        #summary button.warning:hover { background-color: #6a4933; }
+
+        .ai-output-section {
+            margin-top: 30px; padding: 25px; background-color: var(--bg-ai-section);
+            border-radius: var(--border-radius-soft); border: 1px solid #B0D7B0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .ai-output-section h3 { color: var(--earth-green); text-align: left; font-size: 1.6em; border-bottom: none; padding-bottom: 0;}
+        .description-box {
+            background-color: var(--light-cream); padding: 18px; border-radius: var(--border-radius-soft);
+            border: 1px solid var(--border-soft); white-space: pre-wrap; font-family: 'Roboto', monospace;
+            font-size: 0.95em; color: var(--text-color); margin-top: 15px; min-height: 100px;
+            line-height: 1.5; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .api-config-section {
+            background-color: var(--bg-light-panel); border: 1px solid var(--border-soft);
+            border-radius: var(--border-radius-soft); padding: 20px; margin-bottom: 30px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .warning-message {
+            background-color: #ffe0b2; border-left: 5px solid #ff9800; padding: 15px;
+            margin-bottom: 20px; border-radius: 5px; color: #555; font-size: 0.9em;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        /* Rodapé Original Restaurado */
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 25px;
+            color: #777;
+            font-size: 0.9em;
+            border-top: 1px solid var(--border-soft);
+            background-color: var(--bg-light-panel);
+            border-radius: 0 0 var(--border-radius-soft) var(--border-radius-soft);
+        }
+
+        .floating-buttons {
+            position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000;
+        }
+        .floating-button {
+            background-color: var(--secondary-wood); color: white; padding: 12px 20px; border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); font-size: 1em; font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 10px; border: none; cursor: pointer;
+        }
+        .floating-button:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); background-color: #6a4933; }
+        .floating-button.mascote { background-color: #FFC107; color: var(--primary-dark); }
+        .floating-button.mascote:hover { background-color: #e0a800; }
+
+        @media (max-width: 768px) {
+            .container { margin: 20px 15px; padding: 20px; }
+            h1 { font-size: 2.2em; }
+            h2 { font-size: 1.6em; }
+            .grid-layout { grid-template-columns: 1fr; }
+            #container3DWrapper { height: 350px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ Gerador de Projetos e Orçamentos para Marcenaria</h1>
+        <p class="subtitle">Transforme as ideias do seu cliente em designs visuais, planos de corte e orçamentos precisos.</p>
+
+        <!-- 1. Configuração da IA -->
+        <section id="apiConfigSection" class="api-config-section">
+            <h2 style="margin-top:0;"><i class="fas fa-cogs"></i> Configurações da IA (Groq)</h2>
+            <div class="warning-message">
+                <i class="fas fa-exclamation-triangle" style="color:#ff9800; font-size:1.5em;"></i>
+                <div>
+                    <strong>Atenção:</strong> Insira a sua chave da Groq API para ativar a transcrição de áudio e a geração de projetos 3D.
+                </div>
+            </div>
+            <div class="input-group full-width">
+                <label>Chave da API:</label>
+                <input type="password" id="apiKeyInput" placeholder="Cole a sua chave API da Groq aqui (gsk_...)">
+            </div>
+            <div class="action-buttons" style="justify-content: flex-start; margin-top: 0;">
+                <button onclick="salvarChave(false)" class="primary" id="btnSalvarChave">
+                    <i class="fas fa-save"></i> Salvar Chave e Ativar
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. Pedido do Cliente -->
+        <section id="audioInputSection" class="section-panel">
+            <h2 style="margin-top:0;"><i class="fas fa-microphone-alt"></i> Pedido do Cliente (Áudio)</h2>
+            <p class="subtitle" style="text-align: center; color: #777; margin-bottom: 20px;">Envie o arquivo de áudio do seu cliente para transcrever e gerar um design com IA.</p>
+            <div class="input-group">
+                <label>Carregar Áudio:</label>
+                <input type="file" id="audioFileInput" accept="audio/*">
+            </div>
+            <div class="input-group full-width">
+                <label>Texto do Pedido (Revise ou Digite):</label>
+                <textarea id="transcribedTextDisplay" rows="4" placeholder="A transcrição do áudio aparecerá aqui..."></textarea>
+            </div>
+            <div class="action-buttons">
+                <button id="processAudioBtn" class="primary" onclick="gerarProjeto()" style="width: 100%;">
+                    <i class="fas fa-magic"></i> Gerar Design com IA e 3D
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. Projeto Técnico (3D + Medidas) -->
+        <section id="aiDesignSection" class="ai-output-section" style="display: none;">
+            <h3 style="margin-top: 0;"><i class="fas fa-lightbulb"></i> Proposta de Design Inteligente</h3>
+            <p class="subtitle" style="text-align: left;">O assistente IA interpretou o pedido do seu cliente e gerou uma proposta:</p>
+            
+            <div class="input-group full-width">
+                <label>Descrição Detalhada do Móvel (Gerado por IA):</label>
+                <div id="descricaoProjeto" class="description-box">A calcular metragens para a fábrica...</div>
+            </div>
+
+            <!-- Visor 3D Profissional -->
+            <div style="margin-top: 30px;">
+                <h3 style="color: var(--primary-dark); font-size: 1.4em; border-bottom: 1px solid var(--border-soft); padding-bottom: 10px;"><i class="fas fa-cube"></i> Visualização 3D Dinâmica</h3>
+                <div id="container3DWrapper">
+                    <div id="visualizador3D"></div>
+                    <div id="info3D">A processar medidas...</div>
+                    <div id="instrucao3D"><i class="fas fa-hand-pointer"></i> Arraste para girar</div>
+                </div>
+            </div>
+
+            <!-- Tabela de Corte -->
+            <div style="margin-top: 30px;">
+                <h3 style="color: var(--primary-dark); font-size: 1.4em; border-bottom: 1px solid var(--border-soft); padding-bottom: 10px;"><i class="fas fa-ruler-combined"></i> Plano de Corte Oficial</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Peça / Componente</th>
+                                <th>Qtd</th>
+                                <th>C (mm)</th>
+                                <th>L (mm)</th>
+                                <th>Mat/Esp.</th>
+                                <th>Fita Borda</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPlanoCorte">
+                            <!-- Preenchido pela IA -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="primary" onclick="transferirParaOrcamento()">
+                    <i class="fas fa-plus-circle"></i> Adicionar Design ao Orçamento
+                </button>
+            </div>
+        </section>
+
+        <!-- 4. Orçamento Parametrizado -->
+        <section id="addItemSection" class="section-panel">
+            <h2><i class="fas fa-cube"></i> Adicionar ou Editar Item de Móvel</h2>
+            <div class="grid-layout">
+                <div class="input-group full-width">
+                    <label>Nome do Item:</label>
+                    <input type="text" id="itemName" placeholder="Ex: Balcão de Atendimento">
+                </div>
+                <div class="input-group">
+                    <label>Custo Material (R$):</label>
+                    <input type="number" id="costMaterial" value="0" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Custo Mão de Obra (R$):</label>
+                    <input type="number" id="costLabor" value="0" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Ferragens/Acessórios (R$):</label>
+                    <input type="number" id="costHardware" value="0" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Outros Custos (R$):</label>
+                    <input type="number" id="costOther" value="0" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Margem de Lucro (%):</label>
+                    <input type="number" id="profitMargin" value="20" min="0" max="100" step="1">
+                </div>
+                <div class="input-group full-width action-buttons">
+                    <button class="primary" onclick="calcularTotal()" id="btnSaveItem">
+                        <i class="fas fa-plus"></i> Adicionar/Atualizar Item
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="summary">
+            <h2><i class="fas fa-file-invoice-dollar"></i> Resumo do Orçamento</h2>
+            <p>Total do Projeto: <span id="totalProjectCost">R$ 0,00</span></p>
+            <button onclick="mascoteFalar('O total atual do seu projeto é ' + document.getElementById('totalProjectCost').textContent)" class="warning">
+                <i class="fas fa-robot"></i> Perguntar ao Mascote
+            </button>
+        </section>
+    </div>
+
+    <!-- Botões Flutuantes Originais Restaurados -->
+    <div class="floating-buttons">
+        <button class="floating-button mascote" onclick="mascoteFalar('Olá! Eu sou seu assistente inteligente. Carregue o áudio do seu cliente, e eu o ajudarei a criar uma sugestão de design e orçamento em 3D.')">
+            <i class="fas fa-headset"></i> <span>Mascote</span>
+        </button>
+    </div>
+
+    <!-- RODAPÉ OFICIAL RESTAURADO -->
+    <footer>
+        Powered by thIAguinho Soluções
+    </footer>
+
+    <!-- Script de Programação -->
+    <script>
+        let currentApiKey = null;
+        let cena3D, camera3D, renderizador3D, controles3D;
+        let motor3DIniciado = false;
+        const backticks = String.fromCharCode(96, 96, 96); 
+
+        window.onload = function() {
+            const chaveGuardada = localStorage.getItem('groqApiKeyLocal');
+            if (chaveGuardada) {
+                document.getElementById('apiKeyInput').value = chaveGuardada;
+                salvarChave(true); 
+            }
+        };
+
+        function salvarChave(modoSilencioso = false) {
+            const inputChave = document.getElementById('apiKeyInput');
+            const chave = inputChave.value.trim();
+            if (chave === "") return;
+            
+            currentApiKey = chave;
+            localStorage.setItem('groqApiKeyLocal', chave);
+            if(!modoSilencioso) {
+                const btn = document.getElementById('btnSalvarChave');
+                btn.innerHTML = "<i class='fas fa-check'></i> Chave Salva!";
+                btn.style.backgroundColor = "#6B8E23"; // Earth Green da sua paleta
+            }
+        }
+
+        // ==========================================
+        // ÁUDIO E VOZ
+        // ==========================================
+        function mascoteFalar(texto) {
+            try {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel(); 
+                    const fala = new SpeechSynthesisUtterance(texto);
+                    fala.lang = 'pt-BR';
+                    window.speechSynthesis.speak(fala);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function converterArquivoParaBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        document.getElementById('audioFileInput').addEventListener('change', async function(evento) {
+            try {
+                const file = evento.target.files[0];
+                if (!file) return;
+                if (!currentApiKey) { alert("Configure a Chave da IA primeiro!"); return; }
+
+                document.getElementById('transcribedTextDisplay').value = "⏳ A processar o áudio com a IA...";
+                
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("model", "whisper-large-v3");
+                formData.append("language", "pt");
+
+                const resposta = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+                    method: 'POST',
+                    headers: { "Authorization": `Bearer ${currentApiKey}` },
+                    body: formData
+                });
+
+                const dadosJson = await resposta.json();
+                if (!resposta.ok) throw new Error(dadosJson.error.message);
+
+                document.getElementById('transcribedTextDisplay').value = dadosJson.text.trim();
+
+            } catch (erro) {
+                alert("Erro ao ler áudio: " + erro.message);
+            }
+        });
+
+        // ==========================================
+        // PROJETO TÉCNICO E IA
+        // ==========================================
+        async function gerarProjeto() {
+            try {
+                const textoDoCliente = document.getElementById('transcribedTextDisplay').value.trim();
+                if (!textoDoCliente) { alert("Por favor, garanta que o texto está preenchido."); return; }
+                if (!currentApiKey) { alert("Chave API ausente."); return; }
+
+                const botaoGerar = document.getElementById('processAudioBtn');
+                botaoGerar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A criar Engenharia 3D...';
+                botaoGerar.disabled = true;
+                
+                const secaoDesign = document.getElementById('aiDesignSection');
+                secaoDesign.style.display = 'block';
+                document.getElementById('descricaoProjeto').innerText = "A calcular metragens para a fábrica...";
+
+                const promptComando = `Você é o Projetista Sênior Oficial de mobiliário para franquias de ótica (estilo Mercadão dos Óculos).
+O cliente pediu: "${textoDoCliente}".
+Projete a peça. Se for balcão/expositor, DEVE ter vitrine de vidro na parte superior e gaveteiro em MDF embaixo.
+
+Responda OBRIGATORIAMENTE em JSON estrito.
+Estrutura EXATA do JSON:
+{
+  "nome_projeto": "Ex: Balcão Vitrine Premium",
+  "descricao_projeto": "Explicação técnica de porque este móvel é perfeito para expor armações de óculos...",
+  "dimensoes_mm": {
+    "largura": 1200,
+    "altura": 1050,
+    "profundidade": 500
+  },
+  "tipo_movel": "balcao_vitrine", 
+  "plano_de_corte": [
+    {"peca": "Laterais", "qtde": 2, "comprimento": 700, "largura": 480, "espessura": "MDF 18mm", "fita_borda": "Frontal/Base"},
+    {"peca": "Tampo", "qtde": 1, "comprimento": 1164, "largura": 480, "espessura": "MDF 18mm", "fita_borda": "Frontal"},
+    {"peca": "Vidro Superior", "qtde": 1, "comprimento": 1200, "largura": 500, "espessura": "Vidro 10mm Temp.", "fita_borda": "Lapidado"}
+  ],
+  "custos": {
+    "material": 1350,
+    "mao_de_obra": 800,
+    "ferragens": 450,
+    "outros": 150
+  }
+}`;
+
+                const modelosParaTestar = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"];
+                let projetoIA = null;
+
+                for (const modelo of modelosParaTestar) {
+                    try {
+                        const resposta = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                            method: 'POST',
+                            headers: { "Authorization": `Bearer ${currentApiKey}`, "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                model: modelo, 
+                                messages: [{ role: "user", content: promptComando }],
+                                response_format: { type: "json_object" }, 
+                                temperature: 0.2
+                            })
+                        });
+
+                        const dados = await resposta.json();
+                        if (!resposta.ok) {
+                            if (dados.error && dados.error.message.includes("decommissioned")) continue;
+                            throw new Error(dados.error.message);
+                        }
+                        projetoIA = JSON.parse(dados.choices[0].message.content);
+                        break; 
+                    } catch (err) { console.error(`Falha no modelo ${modelo}:`, err); }
+                }
+
+                if (!projetoIA) throw new Error("Falha ao gerar especificações. Tente novamente.");
+
+                // 1. Tabela
+                document.getElementById('descricaoProjeto').innerText = projetoIA.descricao_projeto;
+                const tbody = document.getElementById('tabelaPlanoCorte');
+                tbody.innerHTML = '';
+                projetoIA.plano_de_corte.forEach(peca => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${peca.peca}</strong></td>
+                            <td>${peca.qtde}</td>
+                            <td>${peca.comprimento}</td>
+                            <td>${peca.largura}</td>
+                            <td style="color: var(--secondary-wood); font-weight:600;">${peca.espessura}</td>
+                            <td><span style="background:var(--bg-light-panel); padding:4px 8px; border-radius:4px;">${peca.fita_borda}</span></td>
+                        </tr>
+                    `;
+                });
+
+                // 2. Orçamento
+                document.getElementById('itemName').value = projetoIA.nome_projeto || "Projeto Ótica";
+                if(projetoIA.custos) {
+                    document.getElementById('costMaterial').value = projetoIA.custos.material || 0;
+                    document.getElementById('costLabor').value = projetoIA.custos.mao_de_obra || 0;
+                    document.getElementById('costHardware').value = projetoIA.custos.ferragens || 0;
+                    document.getElementById('costOther').value = projetoIA.custos.outros || 0;
+                    calcularTotal();
+                }
+
+                // 3. INICIAR 3D APENAS APÓS A TELA FICAR VISÍVEL
+                if (!motor3DIniciado) {
+                    init3D();
+                    motor3DIniciado = true;
+                }
+                
+                const med = projetoIA.dimensoes_mm || { largura: 1500, altura: 1000, profundidade: 500 };
+                
+                setTimeout(() => {
+                    ajustarTamanho3D();
+                    desenharMovelProfissional3D(med.largura, med.altura, med.profundidade, projetoIA.tipo_movel);
+                }, 100);
+
+            } catch(erro) {
+                alert("Erro ao processar: " + erro.message);
+            } finally {
+                const botaoGerar = document.getElementById('processAudioBtn');
+                botaoGerar.innerHTML = '<i class="fas fa-magic"></i> Gerar Design com IA e 3D';
+                botaoGerar.disabled = false;
+            }
+        }
+
+        // ==========================================
+        // MOTOR 3D PROFISSIONAL (À Prova de Celular)
+        // ==========================================
+        function init3D() {
+            const container = document.getElementById('visualizador3D');
+            const wrapper = document.getElementById('container3DWrapper');
+            
+            cena3D = new THREE.Scene();
+
+            const luzAmbiente = new THREE.AmbientLight(0xffffff, 0.7);
+            cena3D.add(luzAmbiente);
+            
+            const luzSpot = new THREE.SpotLight(0xffffff, 0.8);
+            luzSpot.position.set(2, 4, 3);
+            luzSpot.angle = Math.PI/4;
+            luzSpot.penumbra = 0.5;
+            cena3D.add(luzSpot);
+
+            // Luz traseira com o tom Dourado Muted da sua paleta (--accent-gold)
+            const luzTras = new THREE.DirectionalLight(0xDDA15E, 0.4); 
+            luzTras.position.set(-2, 2, -3);
+            cena3D.add(luzTras);
+
+            camera3D = new THREE.PerspectiveCamera(45, wrapper.clientWidth / wrapper.clientHeight, 0.1, 1000);
+            
+            renderizador3D = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderizador3D.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+            renderizador3D.setSize(wrapper.clientWidth, wrapper.clientHeight);
+            container.appendChild(renderizador3D.domElement);
+
+            controles3D = new THREE.OrbitControls(camera3D, renderizador3D.domElement);
+            controles3D.enableDamping = true;
+            controles3D.dampingFactor = 0.05;
+            controles3D.maxPolarAngle = Math.PI / 2 + 0.1; 
+
+            const gridHelper = new THREE.GridHelper(10, 20, 0xC6B6A5, 0xEFEAE5); // Cores da sua paleta
+            gridHelper.position.y = -0.01;
+            cena3D.add(gridHelper);
+
+            function animar() {
+                requestAnimationFrame(animar);
+                controles3D.update();
+                renderizador3D.render(cena3D, camera3D);
+            }
+            animar();
+
+            window.addEventListener('resize', ajustarTamanho3D);
+        }
+
+        function ajustarTamanho3D() {
+            if(!camera3D || !renderizador3D) return;
+            const wrapper = document.getElementById('container3DWrapper');
+            if(wrapper.clientWidth === 0) return; 
+            
+            camera3D.aspect = wrapper.clientWidth / wrapper.clientHeight;
+            camera3D.updateProjectionMatrix();
+            renderizador3D.setSize(wrapper.clientWidth, wrapper.clientHeight);
+        }
+
+        let movelAtual = null;
+
+        function desenharMovelProfissional3D(largura_mm, altura_mm, profundidade_mm, tipo) {
+            if (movelAtual) cena3D.remove(movelAtual);
+            movelAtual = new THREE.Group();
+
+            const L = largura_mm / 1000;
+            const A = altura_mm / 1000;
+            const P = profundidade_mm / 1000;
+            const espMDF = 0.018; 
+            const espVidro = 0.008; 
+
+            // Cores baseadas na SUA paleta original (thIAguinho Soluções)
+            const matMDFBranco = new THREE.MeshStandardMaterial({ color: 0xFDFCF9, roughness: 0.9 }); // --light-cream
+            const matMDFMadeira = new THREE.MeshStandardMaterial({ color: 0x7F5539, roughness: 0.8 }); // --secondary-wood
+            
+            const matVidro = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff, metalness: 0.1, roughness: 0.05,
+                transparent: true, opacity: 0.25, side: THREE.DoubleSide,
+                clearcoat: 1.0, clearcoatRoughness: 0.1
+            });
+
+            const matAco = new THREE.MeshStandardMaterial({ color: 0x4A3C30, metalness: 0.5, roughness: 0.5 }); // --primary-dark para rodapé
+
+            function criarPlaca(larg, alt, prof, material, x, y, z) {
+                const geo = new THREE.BoxGeometry(larg, alt, prof);
+                const mesh = new THREE.Mesh(geo, material);
+                const edges = new THREE.EdgesGeometry(geo);
+                const linha = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xC6B6A5, transparent: true, opacity: 0.5 })); // --border-soft
+                mesh.add(linha);
+                mesh.position.set(x, y, z);
+                movelAtual.add(mesh);
+                return mesh;
+            }
+
+            // PROJETO TÉCNICO: BALCÃO VITRINE ÓTICA
+            const hRodape = 0.10;
+            criarPlaca(L - 0.02, hRodape, P - 0.05, matAco, 0, hRodape/2, -0.025);
+
+            const hGabinete = (A - hRodape) * 0.65;
+            const yBaseMDF = hRodape + (hGabinete/2);
+            
+            criarPlaca(espMDF, hGabinete, P, matMDFBranco, -L/2 + espMDF/2, yBaseMDF, 0);
+            criarPlaca(espMDF, hGabinete, P, matMDFBranco, L/2 - espMDF/2, yBaseMDF, 0);
+            criarPlaca(L - (espMDF*2), hGabinete, espMDF, matMDFBranco, 0, yBaseMDF, -P/2 + espMDF/2);
+            criarPlaca(L, espMDF, P, matMDFMadeira, 0, hRodape + hGabinete, 0);
+
+            const pGaveta = 0.02;
+            criarPlaca((L/2) - 0.04, hGabinete/2 - 0.02, pGaveta, matMDFBranco, -L/4, yBaseMDF + hGabinete/4, P/2);
+            criarPlaca((L/2) - 0.04, hGabinete/2 - 0.02, pGaveta, matMDFBranco, L/4, yBaseMDF + hGabinete/4, P/2);
+
+            const hVitrine = (A - hRodape) * 0.35;
+            const yBaseVitrine = hRodape + hGabinete + (hVitrine/2);
+
+            criarPlaca(L, hVitrine, espVidro, matVidro, 0, yBaseVitrine, P/2 - espVidro/2); 
+            criarPlaca(L, espVidro, P, matVidro, 0, A, 0); 
+            criarPlaca(espVidro, hVitrine, P, matVidro, -L/2 + espVidro/2, yBaseVitrine, 0); 
+            criarPlaca(espVidro, hVitrine, P, matVidro, L/2 - espVidro/2, yBaseVitrine, 0); 
+
+            criarPlaca(L - 0.05, espVidro, P * 0.6, matVidro, 0, yBaseVitrine, 0.05);
+
+            cena3D.add(movelAtual);
+
+            const maxDim = Math.max(L, A, P);
+            camera3D.position.set(L * 1.2, A * 1.8, P * 2.5); 
+            controles3D.target.set(0, A / 2, 0); 
+            controles3D.update();
+
+            document.getElementById('info3D').innerHTML = `<i class="fas fa-check-circle" style="color:var(--earth-green);"></i> 3D: ${largura_mm}x${altura_mm}x${profundidade_mm}mm`;
+        }
+
+        // ==========================================
+        // CÁLCULO FINANCEIRO
+        // ==========================================
+        function transferirParaOrcamento() {
+            document.getElementById('addItemSection').scrollIntoView({behavior: 'smooth'});
+        }
+
+        function calcularTotal() {
+            const mat = parseFloat(document.getElementById('costMaterial').value) || 0;
+            const mao = parseFloat(document.getElementById('costLabor').value) || 0;
+            const fer = parseFloat(document.getElementById('costHardware').value) || 0;
+            const out = parseFloat(document.getElementById('costOther').value) || 0;
+            const margem = parseFloat(document.getElementById('profitMargin').value) || 0;
+
+            const custoFabrica = mat + mao + fer + out;
+            const precoVenda = custoFabrica / (1 - (margem / 100));
+
+            document.getElementById('totalProjectCost').innerText = 
+                new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(precoVenda);
+        }
+
+    </script>
+</body>
+</html>

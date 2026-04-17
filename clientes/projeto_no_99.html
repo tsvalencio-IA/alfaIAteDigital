@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Estoque Inteligente - thIAguinho Soluções</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff; /* Azul vibrante */
+            --secondary-color: #6c757d; /* Cinza */
+            --success-color: #28a745; /* Verde */
+            --danger-color: #dc3545; /* Vermelho */
+            --warning-color: #ffc107; /* Amarelo */
+            --info-color: #17a2b8; /* Ciano */
+            --light-bg: #f8f9fa; /* Fundo claro */
+            --dark-text: #343a40; /* Texto escuro */
+            --border-color: #dee2e6; /* Cor da borda */
+            --card-bg: #ffffff; /* Fundo do card */
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            --border-radius: 0.5rem;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-bottom-left-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        nav {
+            background-color: var(--card-bg);
+            padding: 15px 0;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            border-radius: var(--border-radius);
+            display: flex;
+            justify-content: center;
+        }
+
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 25px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: var(--dark-text);
+            font-weight: 500;
+            padding: 8px 15px;
+            transition: all 0.3s ease;
+            border-radius: var(--border-radius);
+        }
+
+        nav ul li a:hover,
+        nav ul li a.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.8em;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-text);
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: calc(100% - 20px);
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        button.btn {
+            background-color: var(--success-color);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button.btn:hover {
+            background-color: #218838; /* Darker success */
+            transform: translateY(-2px);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.95em;
+        }
+
+        table th, table td {
+            border: 1px solid var(--border-color);
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: var(--light-bg);
+        }
+
+        table tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        .action-buttons button {
+            background-color: var(--warning-color);
+            color: var(--dark-text);
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-right: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .action-buttons button.delete {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .action-buttons button:hover {
+            opacity: 0.9;
+        }
+
+        /* Floating buttons */
+        .floating-buttons {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .floating-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 20px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .floating-btn:hover {
+            background-color: #0056b3; /* Darker primary */
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .floating-btn i {
+            font-size: 1.2em;
+        }
+        
+        /* Mascote specific styling */
+        .mascote-btn {
+            background-color: #6f42c1; /* Roxo para o mascote */
+        }
+        .mascote-btn:hover {
+            background-color: #5a2e9d;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 50px;
+            color: var(--secondary-color);
+            font-size: 0.9em;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Basic Responsiveness */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            nav ul {
+                flex-direction: column;
+                gap: 10px;
+            }
+            nav ul li a {
+                display: block;
+                text-align: center;
+            }
+            .card {
+                padding: 20px;
+            }
+            .form-group input, .form-group select {
+                width: 100%;
+            }
+            .floating-buttons {
+                bottom: 15px;
+                right: 15px;
+                gap: 10px;
+            }
+            .floating-btn {
+                padding: 12px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+    <!-- Font Awesome para ícones (opcional, mas melhora o UI) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Controle de Estoque Inteligente</h1>
+            <p>Simplificando a gestão de peças para sua oficina mecânica.</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#" class="active" data-section="add-item-section"><i class="fas fa-plus-circle"></i> Adicionar Peça</a></li>
+                <li><a href="#" data-section="inventory-list-section"><i class="fas fa-warehouse"></i> Visualizar Estoque</a></li>
+                <li><a href="#"><i class="fas fa-chart-line"></i> Relatórios (em breve)</a></li>
+                <li><a href="#"><i class="fas fa-cogs"></i> Configurações (em breve)</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section id="add-item-section" class="card active-section">
+            <h2>Adicionar Nova Peça ao Estoque</h2>
+            <form id="addItemForm">
+                <div class="form-group">
+                    <label for="partName">Nome da Peça:</label>
+                    <input type="text" id="partName" placeholder="Ex: Filtro de Óleo, Pastilha de Freio" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantidade:</label>
+                    <input type="number" id="quantity" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="price">Preço Unitário (R$):</label>
+                    <input type="number" id="price" min="0.01" step="0.01" value="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label for="location">Localização no Estoque:</label>
+                    <input type="text" id="location" placeholder="Ex: Corredor A, Prateleira 3" required>
+                </div>
+                <button type="submit" class="btn"><i class="fas fa-plus"></i> Adicionar Peça</button>
+            </form>
+        </section>
+
+        <section id="inventory-list-section" class="card hidden-section">
+            <h2>Estoque Atual de Peças</h2>
+            <div class="table-responsive">
+                <table id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome da Peça</th>
+                            <th>Quantidade</th>
+                            <th>Preço Unitário</th>
+                            <th>Localização</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Peças serão injetadas aqui via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <p id="noItemsMessage" style="text-align: center; margin-top: 20px; color: var(--secondary-color);">Nenhum item no estoque ainda. Adicione uma peça acima!</p>
+        </section>
+    </main>
+
+    <div class="floating-buttons">
+        <button class="floating-btn mascote-btn" id="mascote-btn">
+            <i class="fas fa-robot"></i> Falar com Mascote
+        </button>
+        <button class="floating-btn" id="feedback-btn">
+            <i class="fas fa-comments"></i> Gostou? Fale com o Thiago
+        </button>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 thIAguinho Soluções. Todos os direitos reservados.</p>
+        <p>Desenvolvido com foco em UX/UI para oficinas mecânicas.</p>
+    </footer>
+
+    <script>
+        // DIRETRIZ MÁXIMA PARA O MOTOR DE VOZ DO MASCOTE:
+        // Função para processar a voz via Gemini ou plano B local
+        let globalAudioCtx = null;
+        async function falarComMascote(textoParaFalar) {
+            if (!globalAudioCtx) globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (globalAudioCtx.state === 'suspended') globalAudioCtx.resume();
+            
+            try {
+                const resKey = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_api_key.json');
+                const adminApiKey = await resKey.json();
+                const resVoice = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_voice_name.json');
+                const voiceName = await resVoice.json() || "Aoede";
+
+                if (!adminApiKey) throw new Error("Chave do Admin não encontrada.");
+
+                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + adminApiKey;
+                const payload = {
+                    contents: [{ parts: [{ text: textoParaFalar }] }],
+                    generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } } }
+                };
+
+                const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                const base64Audio = data.candidates[0].content.parts[0].inlineData.data;
+
+                const binaryString = window.atob(base64Audio);
+                const buffer = new ArrayBuffer(binaryString.length);
+                const view = new Uint8Array(buffer);
+                for (let i = 0; i < binaryString.length; i++) { view[i] = binaryString.charCodeAt(i); }
+                const int16View = new Int16Array(buffer);
+                const audioBuffer = globalAudioCtx.createBuffer(1, int16View.length, 24000);
+                const channelData = audioBuffer.getChannelData(0);
+                for (let i = 0; i < int16View.length; i++) { channelData[i] = int16View[i] / 32768.0; }
+                const source = globalAudioCtx.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(globalAudioCtx.destination);
+                source.start();
+
+            } catch(e) {
+                console.warn("Falha no Motor Gemini, ativando plano B local: ", e);
+                const fallback = new SpeechSynthesisUtterance(textoParaFalar);
+                fallback.lang = 'pt-BR';
+                window.speechSynthesis.speak(fallback);
+            }
+        }
+
+        // Script de navegação e funcionalidade do estoque
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('nav ul li a');
+            const sections = document.querySelectorAll('main section');
+            const addItemForm = document.getElementById('addItemForm');
+            const inventoryTableBody = document.querySelector('#inventoryTable tbody');
+            const noItemsMessage = document.getElementById('noItemsMessage');
+
+            let inventoryItems = [];
+            let nextItemId = 1;
+
+            // Função para exibir ou esconder seções
+            function showSection(id) {
+                sections.forEach(section => {
+                    section.classList.add('hidden-section');
+                    section.classList.remove('active-section');
+                });
+                document.getElementById(id).classList.remove('hidden-section');
+                document.getElementById(id).classList.add('active-section');
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.dataset.section === id) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            // Esconder todas as seções exceto a primeira ao carregar
+            sections.forEach(section => {
+                if (section.id !== 'add-item-section') {
+                    section.classList.add('hidden-section');
+                } else {
+                    section.classList.add('active-section');
+                }
+            });
+
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetSectionId = e.target.closest('a').dataset.section;
+                    if (targetSectionId) {
+                        showSection(targetSectionId);
+                    }
+                });
+            });
+
+            // Adicionar peça
+            addItemForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const partName = document.getElementById('partName').value;
+                const quantity = parseInt(document.getElementById('quantity').value);
+                const price = parseFloat(document.getElementById('price').value).toFixed(2);
+                const location = document.getElementById('location').value;
+
+                const newItem = {
+                    id: nextItemId++,
+                    partName,
+                    quantity,
+                    price,
+                    location
+                };
+
+                inventoryItems.push(newItem);
+                renderInventory();
+                addItemForm.reset(); // Limpar formulário
+                document.getElementById('quantity').value = 1; // Reset quantity to 1
+                document.getElementById('price').value = '0.00'; // Reset price to 0.00
+                falarComMascote(`A peça ${partName} foi adicionada ao estoque com sucesso!`);
+                showSection('inventory-list-section'); // Mudar para a seção de estoque
+            });
+
+            // Renderizar itens do estoque
+            function renderInventory() {
+                inventoryTableBody.innerHTML = ''; // Limpa a tabela
+                if (inventoryItems.length === 0) {
+                    noItemsMessage.style.display = 'block';
+                    inventoryTable.style.display = 'none';
+                    return;
+                }
+                noItemsMessage.style.display = 'none';
+                inventoryTable.style.display = 'table';
+
+
+                inventoryItems.forEach(item => {
+                    const row = inventoryTableBody.insertRow();
+                    row.dataset.id = item.id;
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.partName}</td>
+                        <td>${item.quantity}</td>
+                        <td>R$ ${item.price}</td>
+                        <td>${item.location}</td>
+                        <td class="action-buttons">
+                            <button class="edit-btn"><i class="fas fa-edit"></i> Editar</button>
+                            <button class="delete delete-btn"><i class="fas fa-trash-alt"></i> Excluir</button>
+                        </td>
+                    `;
+                });
+            }
+
+            // Eventos para botões de Editar/Excluir (demo simples)
+            inventoryTableBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const row = e.target.closest('tr');
+                    const itemId = parseInt(row.dataset.id);
+                    const itemName = row.querySelector('td:nth-child(2)').textContent;
+                    if (confirm(`Tem certeza que deseja excluir "${itemName}" do estoque?`)) {
+                        inventoryItems = inventoryItems.filter(item => item.id !== itemId);
+                        renderInventory();
+                        falarComMascote(`A peça ${itemName} foi removida do estoque.`);
+                    }
+                } else if (e.target.classList.contains('edit-btn')) {
+                    // Implementar lógica de edição aqui
+                    const row = e.target.closest('tr');
+                    const itemId = parseInt(row.dataset.id);
+                    const item = inventoryItems.find(i => i.id === itemId);
+                    if (item) {
+                        alert(`Funcionalidade de edição para "${item.partName}" em construção!`);
+                        // Em um sistema real, abriria um modal ou preencheria o formulário de adição para edição.
+                        falarComMascote(`A funcionalidade de edição para a peça ${item.partName} será implementada em breve.`);
+                    }
+                }
+            });
+
+            // Inicializar com alguns dados fictícios
+            inventoryItems.push(
+                { id: nextItemId++, partName: 'Filtro de Óleo Bosch', quantity: 15, price: '45.50', location: 'Corredor A, Prateleira 1' },
+                { id: nextItemId++, partName: 'Pastilha de Freio Dianteira TRW', quantity: 8, price: '120.00', location: 'Corredor B, Prateleira 2' },
+                { id: nextItemId++, partName: 'Vela de Ignição NGK (kit 4 un)', quantity: 12, price: '95.99', location: 'Corredor C, Prateleira 3' }
+            );
+            renderInventory();
+
+            // CHAT REVERSO (FEEDBACK DIRETO PARA O THIAGO)
+            const feedbackBtn = document.getElementById('feedback-btn');
+            feedbackBtn.addEventListener('click', async () => {
+                const msg = prompt("Olá! Que legal que você gostou do sistema! Por favor, deixe seu feedback ou sugestão para o Thiago:");
+                if (msg) {
+                    try {
+                        await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/projetos_capturados/-OpsVCWsWUMLgqHzbZFb/feedbacks.json', {
+                            method: 'POST',
+                            body: JSON.stringify({ texto: msg, data: new Date().toISOString() })
+                        });
+                        alert("Seu feedback foi enviado com sucesso! Muito obrigado!");
+                    } catch (error) {
+                        console.error("Erro ao enviar feedback:", error);
+                        alert("Ocorreu um erro ao enviar seu feedback. Por favor, tente novamente mais tarde.");
+                    }
+                } else if (msg === "") {
+                    alert("Por favor, digite seu feedback.");
+                }
+            });
+
+            // Botão para o Mascote
+            const mascoteBtn = document.getElementById('mascote-btn');
+            mascoteBtn.addEventListener('click', () => {
+                falarComMascote("Olá! Sou seu assistente de estoque. Posso ajudar a adicionar peças, consultar o estoque ou gerar relatórios. O que você gostaria de fazer hoje?");
+            });
+        });
+    </script>
+</body>
+</html>

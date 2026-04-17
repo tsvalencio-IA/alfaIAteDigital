@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolution Motors - Sistema de Gestão da Oficina</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --bs-body-bg: #212529; /* Darker background */
+            --bs-body-color: #f8f9fa; /* Light text (off-white) */
+            --bs-dark-card: #343a40; /* Darker card/nav */
+            --bs-accent: #e65100; /* Vibrant Orange */
+            --bs-primary-light: #0d6efd; /* For feedback button */
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color); /* General body text color */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            background-color: var(--bs-dark-card) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .navbar-brand, .navbar-nav .nav-link {
+            color: var(--bs-body-color) !important;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .navbar-nav .nav-link.active {
+            color: var(--bs-accent) !important;
+            border-bottom: 2px solid var(--bs-accent);
+        }
+        /* Highlight hamburger menu icon */
+        .navbar-toggler-icon {
+            filter: invert(1) grayscale(100%) brightness(200%); /* Turns default dark icon to bright white */
+        }
+        .container-fluid {
+            padding-top: 20px;
+            flex-grow: 1;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+            border-radius: 0.75rem;
+            background-color: var(--bs-dark-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .card-header {
+            background-color: var(--bs-accent);
+            color: white; /* Header text is always white for contrast */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-top-left-radius: calc(0.75rem - 1px);
+            border-top-right-radius: calc(0.75rem - 1px);
+        }
+        .btn-primary, .btn-success, .btn-warning, .btn-danger, .btn-info {
+            border-radius: 0.5rem;
+        }
+        .btn-primary {
+            background-color: var(--bs-accent);
+            border-color: var(--bs-accent);
+        }
+        .btn-primary:hover {
+            background-color: #c94400; /* Slightly darker orange */
+            border-color: #c94400;
+        }
+        /* Custom for header add buttons to stand out from orange header */
+        .card-header .btn-light {
+            background-color: #f8f9fa; /* White */
+            color: var(--bs-dark-card); /* Dark text */
+            border-color: #f8f9fa;
+        }
+        .card-header .btn-light:hover {
+            background-color: #e2e6ea; /* Slightly darker white on hover */
+            border-color: #e2e6ea;
+        }
+
+        .form-control, .form-select, .form-control:focus, .form-select:focus {
+            background-color: #495057; /* Darker input fields */
+            color: var(--bs-body-color); /* Input text color */
+            border-color: #6c757d;
+        }
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7); /* Brighter placeholder text */
+        }
+        label {
+            color: var(--bs-body-color); /* Label text color */
+        }
+        .table {
+            margin-top: 15px;
+            color: var(--bs-body-color); /* Table body text color */
+        }
+        .table thead th {
+            background-color: #495057;
+            color: white; /* Table header text is white */
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        /* Ensure table text in empty state is visible */
+        .table td {
+            color: var(--bs-body-color);
+        }
+        .empty-list-message { /* Custom class for empty list messages */
+            color: var(--bs-body-color);
+        }
+
+        .modal-content {
+            background-color: var(--bs-dark-card);
+            color: var(--bs-body-color); /* Modal body text color */
+        }
+        .modal-header {
+            background-color: var(--bs-accent);
+            color: white; /* Modal header text color */
+            border-bottom: none;
+        }
+        .modal-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%); /* Make close button bright white */
+        }
+
+        /* Responsive Modals (forcing fullscreen on small devices) */
+        @media (max-width: 575.98px) {
+            .modal-dialog {
+                margin: 0;
+                width: 100vw;
+                max-width: 100vw;
+            }
+            .modal-content {
+                min-height: 100vh;
+                border-radius: 0;
+            }
+            .modal.fade .modal-dialog {
+                transform: translate(0,0);
+            }
+            .modal.show .modal-dialog {
+                transform: translate(0,0);
+            }
+            /* Ensure form controls are readable and tappable without zoom */
+            .modal-body .form-control,
+            .modal-body .form-select,
+            .modal-body .btn {
+                min-height: 48px; /* Standard touch target size */
+                font-size: 1.1em; /* Slightly larger text for readability */
+            }
+            .modal-body label {
+                font-size: 1em; /* Ensure label is readable */
+            }
+        }
+
+        /* Status colors for Servicos */
+        .servico-card { 
+            border-left: 5px solid;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+            background-color: #3f464e; /* Slightly lighter dark for contrast */
+            color: var(--bs-body-color); /* Ensure card text is light */
+        }
+        .servico-card.status-aguardando-orcamento { border-color: #ffc107; } /* Yellow */
+        .servico-card.status-orcamento-enviado { border-color: #0d6efd; } /* Blue */
+        .servico-card.status-aguardando-aprovacao { border-color: #0d6efd; } /* Blue */
+        .servico-card.status-aprovado { border-color: #28a745; } /* Green */
+        .servico-card.status-recusado { border-color: #dc3545; } /* Red */
+        .servico-card.status-em-andamento { border-color: #fd7e14; } /* Orange */
+        .servico-card.status-concluido { border-color: #198754; } /* Darker Green */
+        .servico-card.status-cancelado { border-color: #6c757d; } /* Gray */
+
+
+        .servico-card h6 {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--bs-body-color); /* Card title text color */
+        }
+        .servico-card small {
+            color: var(--bs-body-color); /* Small text within card color */
+        }
+        .servico-card .actions {
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        /* Financeiro summary cards */
+        .card.bg-primary { background-color: #0d6efd !important; border-color: #0d6efd !important; }
+        .card.bg-danger { background-color: #dc3545 !important; border-color: #dc3545 !important; }
+        .card.bg-success { background-color: #28a745 !important; border-color: #28a745 !important; }
+        .card.bg-info { background-color: #0dcaf0 !important; border-color: #0dcaf0 !important; }
+
+
+        /* Feedback Button */
+        .feedback-button {
+            position: fixed;
+            bottom: 80px; /* Adjusted to be above the footer */
+            right: 20px;
+            z-index: 1000;
+            background-color: var(--bs-primary-light); /* Bootstrap primary blue for distinctness */
+            color: white; /* Feedback button text color */
+            border-radius: 50px;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            border: none;
+            cursor: pointer;
+            text-decoration: none; /* For accessibility if it's an anchor */
+        }
+        .feedback-button:hover {
+            background-color: #0b5ed7; /* Darker blue on hover */
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        .feedback-button .bi {
+            margin-right: 8px;
+        }
+        @media (max-width: 575.98px) {
+            .feedback-button {
+                bottom: 60px; /* Adjust for smaller screens to not clash with footer */
+                font-size: 0.9em;
+                padding: 10px 15px;
+                right: 15px;
+            }
+        }
+
+
+        /* Footer */
+        footer {
+            background-color: var(--bs-dark-card);
+            color: var(--bs-body-color); /* Footer text color */
+            padding: 15px 0;
+            text-align: center;
+            margin-top: auto; /* Push footer to the bottom */
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            font-size: 0.9em;
+        }
+        
+        /* Parts used in Service Modal */
+        #partsUsedContainer {
+            border: 1px solid #6c757d;
+            border-radius: 0.25rem;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #495057;
+        }
+        .part-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+        .part-item select, .part-item input {
+            flex-grow: 1;
+            margin-right: 5px;
+            margin-bottom: 5px; /* Add margin for mobile layout */
+        }
+        .part-item .remove-part-btn {
+            margin-bottom: 5px; /* Align with other elements */
+        }
+        .part-price-display {
+            font-size: 0.9em;
+            color: var(--bs-body-color);
+            margin-left: auto; /* Push to right */
+            white-space: nowrap;
+        }
+        @media (min-width: 576px) { /* On larger screens, keep elements in one line */
+            .part-item select, .part-item input {
+                margin-bottom: 0;
+            }
+            .part-item .remove-part-btn {
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Panel Structure -->
+    <div id="adminPanel" class="d-flex flex-column h-100">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Evolution Motors - Admin</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAdmin" aria-controls="navbarNavAdmin" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavAdmin">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#" onclick="showAdminSection('estoque')"><i class="bi bi-box-seam me-1"></i>Estoque</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showAdminSection('clientesMotos')"><i class="bi bi-people-fill me-1"></i>Clientes & Motos</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showAdminSection('funcionarios')"><i class="bi bi-person-badge-fill me-1"></i>Funcionários</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showAdminSection('fornecedores')"><i class="bi bi-truck me-1"></i>Fornecedores</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showAdminSection('agendamentos')"><i class="bi bi-calendar-check me-1"></i>Serviços</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showAdminSection('financeiro')"><i class="bi bi-currency-dollar me-1"></i>Financeiro</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid mt-3 flex-grow-1">
+            <!-- Estoque Section -->
+            <section id="estoque" class="admin-section">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-box-seam me-2"></i>Controle de Estoque</h5>
+                        <div>
+                            <button class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal" onclick="prepareStockAdjustmentModal('add')">
+                                <i class="bi bi-plus-circle me-1"></i> Add Qtd.
+                            </button>
+                            <button class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal" onclick="prepareStockAdjustmentModal('remove')">
+                                <i class="bi bi-dash-circle me-1"></i> Rem. Qtd.
+                            </button>
+                            <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#estoqueModal" onclick="prepareEstoqueModal('add')">
+                                <i class="bi bi-plus-circle me-1"></i> Novo Item
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Descrição</th>
+                                        <th>Custo</th>
+                                        <th>Venda</th>
+                                        <th>Qtd.</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaEstoque">
+                                    <!-- Estoque items will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clientes & Motos Section -->
+            <section id="clientesMotos" class="admin-section" style="display:none;">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-people-fill me-2"></i>Cadastro de Clientes</h5>
+                        <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#clienteModal" onclick="prepareClienteModal('add')">
+                            <i class="bi bi-person-plus me-1"></i> Adicionar Cliente
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Contato</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaClientes">
+                                    <!-- Clientes will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-motorbike me-2"></i>Cadastro de Motos</h5>
+                        <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#motoModal" onclick="prepareMotoModal('add')">
+                            <i class="bi bi-plus-circle me-1"></i> Adicionar Moto
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Modelo</th>
+                                        <th>Placa</th>
+                                        <th>KM Atual</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaMotos">
+                                    <!-- Motos will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Funcionários Section -->
+            <section id="funcionarios" class="admin-section" style="display:none;">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-person-badge-fill me-2"></i>Cadastro de Funcionários</h5>
+                        <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#funcionarioModal" onclick="prepareFuncionarioModal('add')">
+                            <i class="bi bi-plus-circle me-1"></i> Adicionar Funcionário
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Contato</th>
+                                        <th>Função</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaFuncionarios">
+                                    <!-- Funcionários will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fornecedores Section -->
+            <section id="fornecedores" class="admin-section" style="display:none;">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-truck me-2"></i>Cadastro de Fornecedores</h5>
+                        <div>
+                            <button class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#purchaseModal" onclick="preparePurchaseModal()">
+                                <i class="bi bi-receipt me-1"></i> Registrar Compra
+                            </button>
+                            <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#fornecedorModal" onclick="prepareFornecedorModal('add')">
+                                <i class="bi bi-plus-circle me-1"></i> Novo Fornecedor
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Contato</th>
+                                        <th>Categoria</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaFornecedores">
+                                    <!-- Fornecedores will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Serviços Section -->
+            <section id="agendamentos" class="admin-section" style="display:none;">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-calendar-check me-2"></i>Gerenciamento de Ordens de Serviço</h5>
+                        <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#servicoModal" onclick="prepareServicoModal('add')">
+                            <i class="bi bi-plus-circle me-1"></i> Nova OS
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="listaAgendamentos">
+                            <!-- Serviços will be loaded here, organized by date -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Financeiro Section -->
+            <section id="financeiro" class="admin-section" style="display:none;">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="bi bi-currency-dollar me-2"></i>Controle Financeiro</h5>
+                        <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#financeiroModal" onclick="prepareFinanceiroModal('add')">
+                            <i class="bi bi-plus-circle me-1"></i> Adicionar Transação
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card text-white bg-primary mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Entradas</h5>
+                                        <p class="card-text fs-4" id="totalEntradas">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-danger mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Saídas</h5>
+                                        <p class="card-text fs-4" id="totalSaidas">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-success mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Saldo</h5>
+                                        <p class="card-text fs-4" id="saldoTotal">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Descrição</th>
+                                        <th>Valor</th>
+                                        <th>Data</th>
+                                        <th>Categoria</th>
+                                        <th>Origem</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaFinanceiro">
+                                    <!-- Financeiro items will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div> <!-- End Admin Panel -->
+
+    <!-- Modals (shared) -->
+
+    <!-- Estoque Modal (Add/Edit Item) -->
+    <div class="modal fade" id="estoqueModal" tabindex="-1" aria-labelledby="estoqueModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="estoqueModalLabel">Adicionar/Editar Peça/Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="estoqueForm">
+                        <input type="hidden" id="estoqueId">
+                        <div class="mb-3">
+                            <label for="estoqueNome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="estoqueNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="estoqueDescricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="estoqueDescricao" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="estoqueCusto" class="form-label">Preço de Custo (última compra)</label>
+                            <input type="number" step="0.01" class="form-control" id="estoqueCusto" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="estoqueVenda" class="form-label">Preço de Venda</label>
+                            <input type="number" step="0.01" class="form-control" id="estoqueVenda" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="estoqueQuantidade" class="form-label">Quantidade Inicial</label>
+                            <input type="number" class="form-control" id="estoqueQuantidade" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Adjustment Modal (Add/Remove Quantity) -->
+    <div class="modal fade" id="stockAdjustmentModal" tabindex="-1" aria-labelledby="stockAdjustmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="stockAdjustmentModalLabel">Ajustar Quantidade de Estoque</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="stockAdjustmentForm">
+                        <input type="hidden" id="adjustmentType"> <!-- 'add' or 'remove' -->
+                        <div class="mb-3">
+                            <label for="adjustmentItem" class="form-label">Peça/Produto</label>
+                            <select class="form-select" id="adjustmentItem" required>
+                                <!-- Estoque items will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="adjustmentQuantity" class="form-label">Quantidade</label>
+                            <input type="number" class="form-control" id="adjustmentQuantity" min="1" required>
+                        </div>
+                        <div class="mb-3" id="adjustmentReasonGroup">
+                            <label for="adjustmentReason" class="form-label">Motivo (Opcional)</label>
+                            <input type="text" class="form-control" id="adjustmentReason" placeholder="Ex: Contagem de estoque, Quebra, Uso interno">
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 w-100" id="stockAdjustmentSubmitBtn">Salvar Ajuste</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cliente Modal -->
+    <div class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="clienteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="clienteModalLabel">Adicionar/Editar Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="clienteForm">
+                        <input type="hidden" id="clienteId">
+                        <input type="hidden" id="clientePanelLinkInput"> <!-- To store the permanent link -->
+                        <div class="mb-3">
+                            <label for="clienteNome" class="form-label">Nome do Cliente</label>
+                            <input type="text" class="form-control" id="clienteNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="clienteContato" class="form-label">Contato (Telefone/Email)</label>
+                            <input type="text" class="form-control" id="clienteContato" placeholder="Ex: (XX) 9XXXX-XXXX ou email@exemplo.com">
+                        </div>
+                        <div id="clienteLinkContainer" class="mt-4" style="display:none;">
+                            <button type="button" class="btn btn-info w-100" onclick="sendClientPanelLink()">
+                                <i class="bi bi-whatsapp me-1"></i> Enviar Link do Painel (WhatsApp)
+                            </button>
+                            <small class="text-white-50 d-block mt-2 text-center">O link permanente do cliente será enviado via WhatsApp.</small>
+                        </div>
+                        <hr class="my-4">
+                        <button type="submit" class="btn btn-primary w-100">Salvar Cliente</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Moto Modal -->
+    <div class="modal fade" id="motoModal" tabindex="-1" aria-labelledby="motoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="motoModalLabel">Adicionar/Editar Moto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="motoForm">
+                        <input type="hidden" id="motoId">
+                        <div class="mb-3">
+                            <label for="motoClienteId" class="form-label">Cliente</label>
+                            <select class="form-select" id="motoClienteId" required>
+                                <!-- Clientes will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="motoModelo" class="form-label">Modelo</label>
+                            <input type="text" class="form-control" id="motoModelo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="motoPlaca" class="form-label">Placa</label>
+                            <input type="text" class="form-control" id="motoPlaca" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="motoMarca" class="form-label">Marca</label>
+                            <input type="text" class="form-control" id="motoMarca">
+                        </div>
+                        <div class="mb-3">
+                            <label for="motoAno" class="form-label">Ano</label>
+                            <input type="number" class="form-control" id="motoAno">
+                        </div>
+                        <div class="mb-3">
+                            <label for="motoKmAtual" class="form-label">KM Atual</label>
+                            <input type="number" class="form-control" id="motoKmAtual">
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Funcionario Modal -->
+    <div class="modal fade" id="funcionarioModal" tabindex="-1" aria-labelledby="funcionarioModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="funcionarioModalLabel">Adicionar/Editar Funcionário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="funcionarioForm">
+                        <input type="hidden" id="funcionarioId">
+                        <div class="mb-3">
+                            <label for="funcionarioNome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="funcionarioNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="funcionarioContato" class="form-label">Contato</label>
+                            <input type="text" class="form-control" id="funcionarioContato" placeholder="Telefone ou Email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="funcionarioFuncao" class="form-label">Função</label>
+                            <input type="text" class="form-control" id="funcionarioFuncao" placeholder="Ex: Mecânico, Atendente">
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fornecedor Modal -->
+    <div class="modal fade" id="fornecedorModal" tabindex="-1" aria-labelledby="fornecedorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fornecedorModalLabel">Adicionar/Editar Fornecedor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="fornecedorForm">
+                        <input type="hidden" id="fornecedorId">
+                        <div class="mb-3">
+                            <label for="fornecedorNome" class="form-label">Nome do Fornecedor</label>
+                            <input type="text" class="form-control" id="fornecedorNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fornecedorContato" class="form-label">Contato</label>
+                            <input type="text" class="form-control" id="fornecedorContato" placeholder="Telefone ou Email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="fornecedorCategoria" class="form-label">Categoria de Fornecimento</label>
+                            <input type="text" class="form-control" id="fornecedorCategoria" placeholder="Ex: Peças, Óleos, Equipamentos">
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchase Modal (Entrada de Nota de Compra) -->
+    <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="purchaseModalLabel">Registrar Compra de Material</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="purchaseForm">
+                        <div class="mb-3">
+                            <label for="purchaseFornecedorId" class="form-label">Fornecedor</label>
+                            <select class="form-select" id="purchaseFornecedorId" required>
+                                <!-- Fornecedores will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="purchaseDate" class="form-label">Data da Compra</label>
+                            <input type="date" class="form-control" id="purchaseDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Itens Comprados:</label>
+                            <div id="purchaseItemsContainer" class="mb-2">
+                                <!-- Dynamic purchase item fields will be added here -->
+                                <div class="purchase-item d-flex align-items-center mb-2">
+                                    <select class="form-select form-control-sm me-2" onchange="updatePurchaseItemName(this)">
+                                        <option value="">Selecione a Peça</option>
+                                    </select>
+                                    <input type="text" class="form-control form-control-sm me-2 purchase-item-new-name" placeholder="Ou Novo Nome" style="display:none;">
+                                    <input type="number" class="form-control form-control-sm me-2" placeholder="Qtd" min="1" value="1">
+                                    <input type="number" step="0.01" class="form-control form-control-sm me-2" placeholder="Custo Unit." min="0.01" value="0.01">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.purchase-item').remove()">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="addPurchaseItemField()">
+                                <i class="bi bi-plus-circle me-1"></i> Adicionar Item
+                            </button>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Registrar Compra</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Serviço Modal -->
+    <div class="modal fade" id="servicoModal" tabindex="-1" aria-labelledby="servicoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="servicoModalLabel">Registrar/Editar Ordem de Serviço</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="servicoForm">
+                        <input type="hidden" id="servicoId">
+                        <input type="hidden" id="originalServicoStatus"> 
+                        <input type="hidden" id="originalServicoParts"> 
+
+                        <div class="mb-3">
+                            <label for="servicoClienteId" class="form-label">Cliente</label>
+                            <select class="form-select" id="servicoClienteId" required onchange="filterMotosByCliente()">
+                                <!-- Clientes will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="servicoMotoId" class="form-label">Moto</label>
+                            <select class="form-select" id="servicoMotoId" required>
+                                <!-- Motos will be loaded here (filtered by client) -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="servicoFuncionarioId" class="form-label">Funcionário Responsável</label>
+                            <select class="form-select" id="servicoFuncionarioId">
+                                <option value="">Não Atribuído</option>
+                                <!-- Funcionários will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="servicoDescricao" class="form-label">Descrição do Serviço</label>
+                            <textarea class="form-control" id="servicoDescricao" rows="2" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="servicoDataAgendamento" class="form-label">Data de Agendamento/Início</label>
+                            <input type="date" class="form-control" id="servicoDataAgendamento" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="servicoHoraAgendamento" class="form-label">Hora de Agendamento/Início</label>
+                            <input type="time" class="form-control" id="servicoHoraAgendamento" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="servicoStatus" class="form-label">Status</label>
+                            <select class="form-select" id="servicoStatus">
+                                <option value="Aguardando Orçamento">Aguardando Orçamento</option>
+                                <option value="Orçamento Enviado">Orçamento Enviado</option>
+                                <option value="Aguardando Aprovação">Aguardando Aprovação (Cliente)</option>
+                                <option value="Aprovado">Aprovado</option>
+                                <option value="Recusado">Recusado</option>
+                                <option value="Em Andamento">Em Andamento</option>
+                                <option value="Concluido">Concluído</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="servicoLaborCost" class="form-label">Mão de Obra (R$)</label>
+                            <input type="number" step="0.01" class="form-control" id="servicoLaborCost" value="0" oninput="calculateServiceTotal()">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Peças Utilizadas:</label>
+                            <div id="partsUsedContainer" class="mb-2">
+                                <!-- Dynamic parts fields will be added here -->
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="addPartField()">
+                                <i class="bi bi-plus-circle me-1"></i> Adicionar Peça
+                            </button>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="servicoCustoTotal" class="form-label">Custo Total da OS (R$)</label>
+                            <input type="number" step="0.01" class="form-control" id="servicoCustoTotal" value="0" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="servicoBudgetNotes" class="form-label">Observações do Orçamento (Cliente)</label>
+                            <textarea class="form-control" id="servicoBudgetNotes" rows="2" readonly></textarea>
+                            <small class="form-text text-white-50">Campo para visualização das perguntas do cliente sobre o orçamento.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="servicoDataConclusao" class="form-label">Data de Conclusão (se aplicável)</label>
+                            <input type="date" class="form-control" id="servicoDataConclusao">
+                        </div>
+                        <div class="mb-3">
+                            <label for="servicoObservacoes" class="form-label">Observações Internas</label>
+                            <textarea class="form-control" id="servicoObservacoes" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Salvar OS</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financeiro Modal -->
+    <div class="modal fade" id="financeiroModal" tabindex="-1" aria-labelledby="financeiroModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="financeiroModalLabel">Adicionar/Editar Transação Financeira</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="financeiroForm">
+                        <input type="hidden" id="financeiroId">
+                        <input type="hidden" id="financeiroOriginId"> <!-- To link to service/purchase/adjustment -->
+                        <input type="hidden" id="financeiroOriginType"> <!-- 'service', 'purchase', 'stock-adjustment' -->
+
+                        <div class="mb-3">
+                            <label for="financeiroTipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="financeiroTipo" required>
+                                <option value="Entrada">Entrada</option>
+                                <option value="Saída">Saída</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="financeiroDescricao" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="financeiroDescricao" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="financeiroValor" class="form-label">Valor</label>
+                            <input type="number" step="0.01" class="form-control" id="financeiroValor" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="financeiroData" class="form-label">Data</label>
+                            <input type="date" class="form-control" id="financeiroData" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="financeiroCategoria" class="form-label">Categoria</label>
+                            <input type="text" class="form-control" id="financeiroCategoria" placeholder="Ex: Venda de Peças, Salário, Aluguel">
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Button -->
+    <button class="feedback-button" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+        <i class="bi bi-chat-dots-fill"></i> Fale com o Thiago!
+    </button>
+
+    <!-- Feedback Modal -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="feedbackModalLabel">Deixe seu Feedback para a thIAguinho Soluções!</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="feedbackForm">
+                        <div class="mb-3">
+                            <label for="feedbackMessage" class="form-label">Sua mensagem:</label>
+                            <textarea class="form-control" id="feedbackMessage" rows="5" placeholder="O que você achou do sistema? Sugestões? Críticas?" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Enviar Feedback</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Powered by thIAguinho Soluções
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- Mascote de Voz (OBRIGATÓRIO) ---
+        let globalAudioCtx = null;
+        async function falarComMascote(textoParaFalar) {
+            if (!globalAudioCtx) globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (globalAudioCtx.state === 'suspended') globalAudioCtx.resume();
+            
+            try {
+                const resKey = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_api_key.json');
+                const adminApiKey = await resKey.json();
+                const resVoice = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_voice_name.json');
+                const voiceName = await resVoice.json() || "Aoede";
+
+                if (!adminApiKey) throw new Error("Chave do Admin não encontrada.");
+
+                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + adminApiKey;
+                const payload = {
+                    contents: [{ parts: [{ text: textoParaFalar }] }],
+                    generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } } }
+                };
+
+                const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                const base64Audio = data.candidates[0].content.parts[0].inlineData.data;
+
+                const binaryString = window.atob(base64Audio);
+                const buffer = new ArrayBuffer(binaryString.length);
+                const view = new Uint8Array(buffer);
+                for (let i = 0; i < binaryString.length; i++) { view[i] = binaryString.charCodeAt(i); }
+                const int16View = new Int16Array(buffer);
+                const audioBuffer = globalAudioCtx.createBuffer(1, int16View.length, 24000);
+                const channelData = audioBuffer.getChannelData(0);
+                for (let i = 0; i < int16View.length; i++) { channelData[i] = int16View[i] / 32768.0; }
+                const source = globalAudioCtx.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(globalAudioCtx.destination);
+                source.start();
+
+            } catch(e) {
+                console.warn("Falha no Motor Gemini, ativando plano B local: ", e);
+                const fallback = new SpeechSynthesisUtterance(textoParaFalar);
+                fallback.lang = 'pt-BR';
+                window.speechSynthesis.speak(fallback);
+            }
+        }
+        // --- Fim Mascote de Voz ---
+
+        const CLIENT_ID = '-Ooffu_5kkgNnpUlAW7K';
+        const FIREBASE_FEEDBACK_URL = `https://thiaguinho-40a14-default-rtdb.firebaseio.com/projetos_capturados/${CLIENT_ID}/feedbacks.json`;
+
+        // --- Global Helper Functions ---
+        function generateUniqueId() {
+            return '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString + 'T00:00:00').toLocaleDateString('pt-BR');
+        }
+
+        // --- LocalStorage Helpers ---
+        function saveData(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        function loadData(key) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // --- Data Models (using LocalStorage) ---
+        let estoqueItems = loadData('estoqueItems');
+        let clientes = loadData('clientes');
+        let motos = loadData('motos');
+        let funcionarios = loadData('funcionarios');
+        let fornecedores = loadData('fornecedores');
+        let servicos = loadData('servicos');
+        let financeiroItems = loadData('financeiroItems');
+
+        // --- Admin Panel Section Switching ---
+        function showAdminSection(sectionId) {
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
+
+            document.querySelectorAll('#navbarNavAdmin .nav-link').forEach(link => {
+                link.classList.remove('active');
+                link.removeAttribute('aria-current');
+            });
+            const activeLink = document.querySelector(`#navbarNavAdmin .nav-link[onclick*="${sectionId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+                activeLink.setAttribute('aria-current', 'page');
+            }
+            
+            // Refresh data when switching sections
+            if (sectionId === 'estoque') renderEstoque();
+            if (sectionId === 'clientesMotos') { renderClientes(); renderMotos(); }
+            if (sectionId === 'funcionarios') renderFuncionarios();
+            if (sectionId === 'fornecedores') renderFornecedores();
+            if (sectionId === 'agendamentos') renderServicos();
+            if (sectionId === 'financeiro') renderFinanceiro();
+        }
+
+        // --- Estoque Logic ---
+        function renderEstoque() {
+            const list = document.getElementById('listaEstoque');
+            list.innerHTML = '';
+            if (estoqueItems.length === 0) {
+                list.innerHTML = '<tr><td colspan="6" class="text-center empty-list-message">Nenhum item no estoque.</td></tr>';
+                return;
+            }
+            estoqueItems.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.nome}</td>
+                    <td>${item.descricao}</td>
+                    <td>${formatCurrency(item.custo)}</td>
+                    <td>${formatCurrency(item.venda)}</td>
+                    <td>${item.quantidade}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#estoqueModal" onclick="prepareEstoqueModal('edit', '${item.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEstoqueItem('${item.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        function prepareEstoqueModal(mode, id = null) {
+            const modalLabel = document.getElementById('estoqueModalLabel');
+            const form = document.getElementById('estoqueForm');
+            const estoqueId = document.getElementById('estoqueId');
+            const estoqueNome = document.getElementById('estoqueNome');
+            const estoqueDescricao = document.getElementById('estoqueDescricao');
+            const estoqueCusto = document.getElementById('estoqueCusto');
+            const estoqueVenda = document.getElementById('estoqueVenda');
+            const estoqueQuantidade = document.getElementById('estoqueQuantidade');
+
+            if (mode === 'add') {
+                modalLabel.textContent = 'Adicionar Peça/Produto';
+                form.reset();
+                estoqueId.value = '';
+                estoqueQuantidade.disabled = false; // Initial quantity can be set for new items
+                estoqueCusto.disabled = false; // Initial cost can be set
+            } else if (mode === 'edit') {
+                modalLabel.textContent = 'Editar Peça/Produto';
+                const item = estoqueItems.find(i => i.id === id);
+                if (item) {
+                    estoqueId.value = item.id;
+                    estoqueNome.value = item.nome;
+                    estoqueDescricao.value = item.descricao;
+                    estoqueCusto.value = item.custo;
+                    estoqueVenda.value = item.venda;
+                    estoqueQuantidade.value = item.quantidade;
+                    estoqueQuantidade.disabled = true; // Quantity adjusted via other modals
+                    estoqueCusto.disabled = true; // Cost adjusted via purchase modal
+                }
+            }
+        }
+
+        document.getElementById('estoqueForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('estoqueId').value;
+            const nome = document.getElementById('estoqueNome').value;
+            const descricao = document.getElementById('estoqueDescricao').value;
+            const custo = parseFloat(document.getElementById('estoqueCusto').value);
+            const venda = parseFloat(document.getElementById('estoqueVenda').value);
+            const quantidade = parseInt(document.getElementById('estoqueQuantidade').value);
+
+            if (isNaN(custo) || isNaN(venda) || isNaN(quantidade)) {
+                alert('Por favor, insira valores numéricos válidos para Custo, Venda e Quantidade.');
+                return;
+            }
+
+            if (id) {
+                const index = estoqueItems.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    estoqueItems[index] = { id, nome, descricao, custo, venda, quantidade: estoqueItems[index].quantidade }; // Qtd and Custo cannot be edited here
+                }
+            } else {
+                estoqueItems.push({ id: generateUniqueId(), nome, descricao, custo, venda, quantidade });
+            }
+            saveData('estoqueItems', estoqueItems);
+            renderEstoque();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('estoqueModal'));
+            modal.hide();
+        });
+
+        function deleteEstoqueItem(id) {
+            if (confirm('Tem certeza que deseja excluir este item do estoque?')) {
+                // Check if this item is used in any service
+                const isUsedInService = servicos.some(service => 
+                    service.partsUsed && service.partsUsed.some(part => part.itemId === id)
+                );
+                // Check if this item is used in any financial transaction (e.g., purchase or internal use)
+                const isUsedInFinance = financeiroItems.some(finance => 
+                    (finance.originType === 'purchase' || finance.originType === 'stock-adjustment') && finance.originDetails && finance.originDetails.itemId === id
+                );
+
+
+                if (isUsedInService || isUsedInFinance) {
+                    alert('Não é possível excluir este item, pois ele está sendo utilizado em um ou mais serviços ou transações financeiras.');
+                    return;
+                }
+
+                estoqueItems = estoqueItems.filter(item => item.id !== id);
+                saveData('estoqueItems', estoqueItems);
+                renderEstoque();
+            }
+        }
+
+        // --- Stock Adjustment Logic ---
+        function populateAdjustmentItems() {
+            const select = document.getElementById('adjustmentItem');
+            select.innerHTML = '<option value="">Selecione a Peça</option>';
+            estoqueItems.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${item.nome} (Qtd atual: ${item.quantidade})`;
+                select.appendChild(option);
+            });
+        }
+
+        function prepareStockAdjustmentModal(type) {
+            document.getElementById('adjustmentType').value = type;
+            document.getElementById('stockAdjustmentModalLabel').textContent = type === 'add' ? 'Adicionar Quantidade no Estoque' : 'Remover Quantidade do Estoque';
+            document.getElementById('stockAdjustmentSubmitBtn').textContent = type === 'add' ? 'Adicionar' : 'Remover';
+            document.getElementById('stockAdjustmentForm').reset();
+            populateAdjustmentItems();
+        }
+
+        document.getElementById('stockAdjustmentForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const type = document.getElementById('adjustmentType').value;
+            const itemId = document.getElementById('adjustmentItem').value;
+            const quantity = parseInt(document.getElementById('adjustmentQuantity').value);
+            const reason = document.getElementById('adjustmentReason').value || (type === 'add' ? 'Adição Manual' : 'Remoção Manual');
+
+            if (!itemId || isNaN(quantity) || quantity <= 0) {
+                alert('Por favor, selecione uma peça e insira uma quantidade válida.');
+                return;
+            }
+
+            const itemIndex = estoqueItems.findIndex(item => item.id === itemId);
+            if (itemIndex === -1) {
+                alert('Peça não encontrada no estoque.');
+                return;
+            }
+
+            if (type === 'remove' && estoqueItems[itemIndex].quantidade < quantity) {
+                alert(`Quantidade insuficiente em estoque. Disponível: ${estoqueItems[itemIndex].quantidade}.`);
+                return;
+            }
+
+            const oldQuantity = estoqueItems[itemIndex].quantidade;
+            let financialChange = 0;
+            let financialDescription = "";
+            let financialType = "";
+
+            if (type === 'add') {
+                estoqueItems[itemIndex].quantidade += quantity;
+                // No direct financial impact for manual addition (usually means found stock or a return not tied to a purchase)
+            } else { // 'remove'
+                estoqueItems[itemIndex].quantidade -= quantity;
+                // For internal use, create a financial outflow based on average cost
+                financialType = 'Saída';
+                financialChange = quantity * estoqueItems[itemIndex].custo;
+                financialDescription = `Uso Interno/Ajuste: ${estoqueItems[itemIndex].nome} (${quantity} un) - Motivo: ${reason}`;
+                
+                financeiroItems.push({
+                    id: generateUniqueId(),
+                    tipo: financialType,
+                    descricao: financialDescription,
+                    valor: financialChange,
+                    data: new Date().toISOString().split('T')[0],
+                    categoria: 'Ajuste de Estoque/Uso Interno',
+                    originType: 'stock-adjustment',
+                    originId: generateUniqueId(), // Unique ID for this adjustment transaction
+                    originDetails: { itemId: itemId, quantity: quantity, reason: reason }
+                });
+                saveData('financeiroItems', financeiroItems);
+            }
+
+            saveData('estoqueItems', estoqueItems);
+            renderEstoque();
+            renderFinanceiro(); // Update financial view
+            const modal = bootstrap.Modal.getInstance(document.getElementById('stockAdjustmentModal'));
+            modal.hide();
+        });
+
+
+        // --- Clientes Logic ---
+        function renderClientes() {
+            const list = document.getElementById('listaClientes');
+            list.innerHTML = '';
+            if (clientes.length === 0) {
+                list.innerHTML = '<tr><td colspan="3" class="text-center empty-list-message">Nenhum cliente cadastrado.</td></tr>';
+                return;
+            }
+            clientes.forEach(cliente => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${cliente.nome}</td>
+                    <td>${cliente.contato || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#clienteModal" onclick="prepareClienteModal('edit', '${cliente.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCliente('${cliente.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+            populateClienteSelects(); // Update client dropdowns in other modals
+        }
+
+        function prepareClienteModal(mode, id = null) {
+            const modalLabel = document.getElementById('clienteModalLabel');
+            const form = document.getElementById('clienteForm');
+            const clienteIdField = document.getElementById('clienteId');
+            const clienteNome = document.getElementById('clienteNome');
+            const clienteContato = document.getElementById('clienteContato');
+            const clienteLinkContainer = document.getElementById('clienteLinkContainer');
+            const clientePanelLinkInput = document.getElementById('clientePanelLinkInput');
+
+            if (mode === 'add') {
+                modalLabel.textContent = 'Adicionar Cliente';
+                form.reset();
+                clienteIdField.value = '';
+                clientePanelLinkInput.value = ''; // Clear temporary link storage
+                clienteLinkContainer.style.display = 'none'; // Hide link generation for new clients
+            } else if (mode === 'edit') {
+                modalLabel.textContent = 'Editar Cliente';
+                const item = clientes.find(i => i.id === id);
+                if (item) {
+                    clienteIdField.value = item.id;
+                    clienteNome.value = item.nome;
+                    clienteContato.value = item.contato;
+                    clientePanelLinkInput.value = item.clientPanelLink || ''; // Load existing link
+                    clienteLinkContainer.style.display = 'block'; // Show link generation for existing clients
+                }
+            }
+        }
+
+        document.getElementById('clienteForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('clienteId').value;
+            const nome = document.getElementById('clienteNome').value;
+            const contato = document.getElementById('clienteContato').value;
+            let clientPanelLink = document.getElementById('clientePanelLinkInput').value;
+
+            // Generate permanent link only if it's a new client or doesn't exist
+            if (!id || !clientPanelLink) {
+                const newClientId = id || generateUniqueId();
+                const currentBaseUrl = window.location.origin + window.location.pathname.replace('index.html', 'client-panel.html');
+                clientPanelLink = `${currentBaseUrl}?clienteId=${newClientId}`;
+            }
+
+            if (id) {
+                const index = clientes.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    clientes[index] = { id, nome, contato, clientPanelLink };
+                }
+            } else {
+                clientes.push({ id: generateUniqueId(), nome, contato, clientPanelLink });
+            }
+            saveData('clientes', clientes);
+            renderClientes();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('clienteModal'));
+            modal.hide();
+        });
+
+        function deleteCliente(id) {
+            const hasMotos = motos.some(moto => moto.clienteId === id);
+            const hasServicos = servicos.some(servico => servico.clienteId === id);
+
+            if (hasMotos || hasServicos) {
+                alert('Não é possível excluir este cliente, pois ele possui motos cadastradas ou serviços agendados/realizados. Remova-os primeiro.');
+                return;
+            }
+
+            if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                clientes = clientes.filter(item => item.id !== id);
+                saveData('clientes', clientes);
+                renderClientes();
+            }
+        }
+
+        function sendClientPanelLink() {
+            const clienteId = document.getElementById('clienteId').value;
+            const cliente = clientes.find(c => c.id === clienteId);
+            if (!cliente || !cliente.clientPanelLink) {
+                alert('Cliente não encontrado ou link do painel não gerado.');
+                return;
+            }
+
+            const clientPanelUrl = cliente.clientPanelLink;
+            let whatsappMessage = `Olá ${cliente.nome}, acompanhe o status dos serviços da sua moto e o histórico completo na Evolution Motors através deste link: ${clientPanelUrl}`;
+            
+            let phoneNumber = '';
+            if (cliente.contato) {
+                const phoneMatch = cliente.contato.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/);
+                if (phoneMatch) {
+                    phoneNumber = phoneMatch[0].replace(/\D/g, ''); // Remove non-digits
+                    if (phoneNumber.length === 10) phoneNumber = '55' + phoneNumber; // Add country code for 10-digit numbers (like 1199999999)
+                    if (phoneNumber.length === 9) phoneNumber = '55' + phoneNumber; // Add country code for 9-digit numbers (like 999999999)
+                }
+            }
+
+            navigator.clipboard.writeText(clientPanelUrl).then(() => {
+                alert(`Link para o Painel do Cliente copiado para a área de transferência:\n\n${clientPanelUrl}`);
+                if (phoneNumber) {
+                    const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+                    if (confirm('Deseja abrir o WhatsApp para enviar este link agora?')) {
+                        window.open(whatsappLink, '_blank');
+                    }
+                } else {
+                    alert('Nenhum número de telefone válido encontrado para abrir o WhatsApp.');
+                }
+            }).catch(err => {
+                alert('Falha ao copiar o link. Por favor, copie manualmente: ' + clientPanelUrl);
+            });
+        }
+
+        // --- Motos Logic ---
+        function renderMotos() {
+            const list = document.getElementById('listaMotos');
+            list.innerHTML = '';
+            if (motos.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" class="text-center empty-list-message">Nenhuma moto cadastrada.</td></tr>';
+                return;
+            }
+            motos.forEach(moto => {
+                const cliente = clientes.find(c => c.id === moto.clienteId);
+                const clienteNome = cliente ? cliente.nome : 'Cliente Desconhecido';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${clienteNome}</td>
+                    <td>${moto.modelo}</td>
+                    <td>${moto.placa}</td>
+                    <td>${moto.kmAtual || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#motoModal" onclick="prepareMotoModal('edit', '${moto.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMoto('${moto.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        function populateClienteSelects() {
+            const selectClienteMoto = document.getElementById('motoClienteId');
+            const selectClienteServico = document.getElementById('servicoClienteId');
+            
+            // Clear existing options first
+            if(selectClienteMoto) selectClienteMoto.innerHTML = '<option value="">Selecione um Cliente</option>';
+            if(selectClienteServico) selectClienteServico.innerHTML = '<option value="">Selecione um Cliente</option>';
+
+            clientes.forEach(cliente => {
+                const optionMoto = document.createElement('option');
+                optionMoto.value = cliente.id;
+                optionMoto.textContent = cliente.nome;
+                if(selectClienteMoto) selectClienteMoto.appendChild(optionMoto);
+
+                const optionServico = document.createElement('option');
+                optionServico.value = cliente.id;
+                optionServico.textContent = cliente.nome;
+                if(selectClienteServico) selectClienteServico.appendChild(optionServico);
+            });
+        }
+
+        function prepareMotoModal(mode, id = null) {
+            const modalLabel = document.getElementById('motoModalLabel');
+            const form = document.getElementById('motoForm');
+            const motoId = document.getElementById('motoId');
+            const motoClienteId = document.getElementById('motoClienteId');
+            const motoModelo = document.getElementById('motoModelo');
+            const motoPlaca = document.getElementById('motoPlaca');
+            const motoMarca = document.getElementById('motoMarca');
+            const motoAno = document.getElementById('motoAno');
+            const motoKmAtual = document.getElementById('motoKmAtual');
+
+            populateClienteSelects(); // Ensure clients are loaded
+
+            if (mode === 'add') {
+                modalLabel.textContent = 'Adicionar Moto';
+                form.reset();
+                motoId.value = '';
+            } else if (mode === 'edit') {
+                modalLabel.textContent = 'Editar Moto';
+                const item = motos.find(i => i.id === id);
+                if (item) {
+                    motoId.value = item.id;
+                    motoClienteId.value = item.clienteId;
+                    motoModelo.value = item.modelo;
+                    motoPlaca.value = item.placa;
+                    motoMarca.value = item.marca;
+                    motoAno.value = item.ano;
+                    motoKmAtual.value = item.kmAtual;
+                }
+            }
+        }
+
+        document.getElementById('motoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('motoId').value;
+            const clienteId = document.getElementById('motoClienteId').value;
+            const modelo = document.getElementById('motoModelo').value;
+            const placa = document.getElementById('motoPlaca').value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Normalize placa
+            const marca = document.getElementById('motoMarca').value;
+            const ano = parseInt(document.getElementById('motoAno').value);
+            const kmAtual = parseInt(document.getElementById('motoKmAtual').value);
+
+            if (!clienteId) { alert('Por favor, selecione um cliente.'); return; }
+            if (placa.length < 4) { alert('Placa inválida.'); return; }
+
+            if (id) {
+                const index = motos.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    motos[index] = { id, clienteId, modelo, placa, marca, ano, kmAtual };
+                }
+            } else {
+                motos.push({ id: generateUniqueId(), clienteId, modelo, placa, marca, ano, kmAtual });
+            }
+            saveData('motos', motos);
+            renderMotos();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('motoModal'));
+            modal.hide();
+        });
+
+        function deleteMoto(id) {
+            const hasServicos = servicos.some(servico => servico.motoId === id);
+            if (hasServicos) {
+                alert('Não é possível excluir esta moto, pois ela possui serviços registrados. Remova-os primeiro.');
+                return;
+            }
+            if (confirm('Tem certeza que deseja excluir esta moto?')) {
+                motos = motos.filter(item => item.id !== id);
+                saveData('motos', motos);
+                renderMotos();
+            }
+        }
+
+        // --- Funcionarios Logic ---
+        function renderFuncionarios() {
+            const list = document.getElementById('listaFuncionarios');
+            list.innerHTML = '';
+            if (funcionarios.length === 0) {
+                list.innerHTML = '<tr><td colspan="4" class="text-center empty-list-message">Nenhum funcionário cadastrado.</td></tr>';
+                return;
+            }
+            funcionarios.forEach(func => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${func.nome}</td>
+                    <td>${func.contato || '-'}</td>
+                    <td>${func.funcao || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#funcionarioModal" onclick="prepareFuncionarioModal('edit', '${func.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteFuncionario('${func.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+            populateFuncionarioSelects(); // Update dropdowns in other modals
+        }
+
+        function populateFuncionarioSelects() {
+            const selectFuncionarioServico = document.getElementById('servicoFuncionarioId');
+            if(selectFuncionarioServico) selectFuncionarioServico.innerHTML = '<option value="">Não Atribuído</option>';
+
+            funcionarios.forEach(func => {
+                const option = document.createElement('option');
+                option.value = func.id;
+                option.textContent = func.nome;
+                if(selectFuncionarioServico) selectFuncionarioServico.appendChild(option);
+            });
+        }
+
+        function prepareFuncionarioModal(mode, id = null) {
+            const modalLabel = document.getElementById('funcionarioModalLabel');
+            const form = document.getElementById('funcionarioForm');
+            const funcionarioId = document.getElementById('funcionarioId');
+            const funcionarioNome = document.getElementById('funcionarioNome');
+            const funcionarioContato = document.getElementById('funcionarioContato');
+            const funcionarioFuncao = document.getElementById('funcionarioFuncao');
+
+            if (mode === 'add') {
+                modalLabel.textContent = 'Adicionar Funcionário';
+                form.reset();
+                funcionarioId.value = '';
+            } else if (mode === 'edit') {
+                modalLabel.textContent = 'Editar Funcionário';
+                const item = funcionarios.find(i => i.id === id);
+                if (item) {
+                    funcionarioId.value = item.id;
+                    funcionarioNome.value = item.nome;
+                    funcionarioContato.value = item.contato;
+                    funcionarioFuncao.value = item.funcao;
+                }
+            }
+        }
+
+        document.getElementById('funcionarioForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('funcionarioId').value;
+            const nome = document.getElementById('funcionarioNome').value;
+            const contato = document.getElementById('funcionarioContato').value;
+            const funcao = document.getElementById('funcionarioFuncao').value;
+
+            if (id) {
+                const index = funcionarios.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    funcionarios[index] = { id, nome, contato, funcao };
+                }
+            } else {
+                funcionarios.push({ id: generateUniqueId(), nome, contato, funcao });
+            }
+            saveData('funcionarios', funcionarios);
+            renderFuncionarios();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('funcionarioModal'));
+            modal.hide();
+        });
+
+        function deleteFuncionario(id) {
+             const hasServices = servicos.some(servico => servico.funcionarioId === id);
+            if (hasServices) {
+                alert('Não é possível excluir este funcionário, pois ele está atribuído a um ou mais serviços. Remova a atribuição primeiro.');
+                return;
+            }
+            if (confirm('Tem certeza que deseja excluir este funcionário?')) {
+                funcionarios = funcionarios.filter(item => item.id !== id);
+                saveData('funcionarios', funcionarios);
+                renderFuncionarios();
+            }
+        }
+
+        // --- Fornecedores Logic ---
+        function renderFornecedores() {
+            const list = document.getElementById('listaFornecedores');
+            list.innerHTML = '';
+            if (fornecedores.length === 0) {
+                list.innerHTML = '<tr><td colspan="4" class="text-center empty-list-message">Nenhum fornecedor cadastrado.</td></tr>';
+                return;
+            }
+            fornecedores.forEach(forn => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${forn.nome}</td>
+                    <td>${forn.contato || '-'}</td>
+                    <td>${forn.categoria || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#fornecedorModal" onclick="prepareFornecedorModal('edit', '${forn.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteFornecedor('${forn.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+            populatePurchaseFornecedorSelect();
+        }
+
+        function prepareFornecedorModal(mode, id = null) {
+            const modalLabel = document.getElementById('fornecedorModalLabel');
+            const form = document.getElementById('fornecedorForm');
+            const fornecedorId = document.getElementById('fornecedorId');
+            const fornecedorNome = document.getElementById('fornecedorNome');
+            const fornecedorContato = document.getElementById('fornecedorContato');
+            const fornecedorCategoria = document.getElementById('fornecedorCategoria');
+
+            if (mode === 'add') {
+                modalLabel.textContent = 'Adicionar Fornecedor';
+                form.reset();
+                fornecedorId.value = '';
+            } else if (mode === 'edit') {
+                modalLabel.textContent = 'Editar Fornecedor';
+                const item = fornecedores.find(i => i.id === id);
+                if (item) {
+                    fornecedorId.value = item.id;
+                    fornecedorNome.value = item.nome;
+                    fornecedorContato.value = item.contato;
+                    fornecedorCategoria.value = item.categoria;
+                }
+            }
+        }
+
+        document.getElementById('fornecedorForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('fornecedorId').value;
+            const nome = document.getElementById('fornecedorNome').value;
+            const contato = document.getElementById('fornecedorContato').value;
+            const categoria = document.getElementById('fornecedorCategoria').value;
+
+            if (id) {
+                const index = fornecedores.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    fornecedores[index] = { id, nome, contato, categoria };
+                }
+            } else {
+                fornecedores.push({ id: generateUniqueId(), nome, contato, categoria });
+            }
+            saveData('fornecedores', fornecedores);
+            renderFornecedores();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('fornecedorModal'));
+            modal.hide();
+        });
+
+        function deleteFornecedor(id) {
+             const hasPurchases = financeiroItems.some(f => f.originType === 'purchase' && f.originDetails && f.originDetails.fornecedorId === id);
+            if (hasPurchases) {
+                alert('Não é possível excluir este fornecedor, pois ele possui compras registradas. Remova-as primeiro.');
+                return;
+            }
+            if (confirm('Tem certeza que deseja excluir este fornecedor?')) {
+                fornecedores = fornecedores.filter(item => item.id !== id);
+                saveData('fornecedores', fornecedores);
+                renderFornecedores();
+            }
+        }
+
+        // --- Purchase Logic (Entrada de Nota de Compra) ---
+        function populatePurchaseFornecedorSelect() {
+            const select = document.getElementById('purchaseFornecedorId');
+            select.innerHTML = '<option value="">Selecione um Fornecedor</option>';
+            fornecedores.forEach(forn => {
+                const option = document.createElement('option');
+                option.value = forn.id;
+                option.textContent = forn.nome;
+                select.appendChild(option);
+            });
+        }
+        
+        function populatePurchaseItemSelect(selectElement, currentItemId = null) {
+            selectElement.innerHTML = '<option value="">Selecione a Peça</option><option value="new_item">-- Nova Peça --</option>';
+            estoqueItems.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.nome;
+                if (item.id === currentItemId) {
+                    option.selected = true;
+                }
+                selectElement.appendChild(option);
+            });
+        }
+
+        function addPurchaseItemField(item = null, quantity = 1, unitCost = 0.01) {
+            const container = document.getElementById('purchaseItemsContainer');
+            const div = document.createElement('div');
+            div.className = 'purchase-item d-flex align-items-center mb-2 flex-wrap';
+
+            const selectItem = document.createElement('select');
+            selectItem.className = 'form-select form-control-sm me-2';
+            selectItem.style.flexGrow = '2';
+            populatePurchaseItemSelect(selectItem, item ? item.id : null);
+            selectItem.onchange = (event) => updatePurchaseItemName(event.target);
+            
+            const newItemNameInput = document.createElement('input');
+            newItemNameInput.type = 'text';
+            newItemNameInput.className = 'form-control form-control-sm me-2 purchase-item-new-name';
+            newItemNameInput.placeholder = 'Nome da Nova Peça';
+            newItemNameInput.style.display = (item && item.id === 'new_item') || !item ? 'block' : 'none';
+
+            const quantityInput = document.createElement('input');
+            quantityInput.type = 'number';
+            quantityInput.className = 'form-control form-control-sm me-2';
+            quantityInput.placeholder = 'Qtd';
+            quantityInput.min = '1';
+            quantityInput.value = quantity;
+            quantityInput.style.width = '70px';
+
+            const unitCostInput = document.createElement('input');
+            unitCostInput.type = 'number';
+            unitCostInput.step = '0.01';
+            unitCostInput.className = 'form-control form-control-sm me-2';
+            unitCostInput.placeholder = 'Custo Unit.';
+            unitCostInput.min = '0.01';
+            unitCostInput.value = unitCost;
+            unitCostInput.style.width = '100px';
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'btn btn-danger btn-sm remove-part-btn';
+            removeButton.innerHTML = '<i class="bi bi-x"></i>';
+            removeButton.onclick = () => div.remove();
+
+            div.appendChild(selectItem);
+            div.appendChild(newItemNameInput);
+            div.appendChild(quantityInput);
+            div.appendChild(unitCostInput);
+            div.appendChild(removeButton);
+            container.appendChild(div);
+
+            if (item && item.id === 'new_item') {
+                newItemNameInput.value = item.name || '';
+            } else if (item && item.id && item.id !== 'new_item') {
+                selectItem.value = item.id;
+            }
+        }
+
+        function updatePurchaseItemName(selectElement) {
+            const parentDiv = selectElement.closest('.purchase-item');
+            const newItemNameInput = parentDiv.querySelector('.purchase-item-new-name');
+            if (selectElement.value === 'new_item') {
+                newItemNameInput.style.display = 'block';
+                newItemNameInput.required = true;
+            } else {
+                newItemNameInput.style.display = 'none';
+                newItemNameInput.required = false;
+            }
+        }
+
+        function preparePurchaseModal() {
+            document.getElementById('purchaseForm').reset();
+            document.getElementById('purchaseDate').value = new Date().toISOString().split('T')[0];
+            populatePurchaseFornecedorSelect();
+            document.getElementById('purchaseItemsContainer').innerHTML = ''; // Clear previous items
+            addPurchaseItemField(); // Add one default item row
+        }
+
+        document.getElementById('purchaseForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const fornecedorId = document.getElementById('purchaseFornecedorId').value;
+            const purchaseDate = document.getElementById('purchaseDate').value;
+            const purchaseItemsDivs = document.querySelectorAll('#purchaseItemsContainer .purchase-item');
+
+            if (!fornecedorId) {
+                alert('Por favor, selecione um fornecedor.');
+                return;
+            }
+            if (purchaseItemsDivs.length === 0) {
+                alert('Adicione pelo menos um item à compra.');
+                return;
+            }
+
+            let totalPurchaseCost = 0;
+            const purchasedItems = [];
+            let isValid = true;
+
+            purchaseItemsDivs.forEach(itemDiv => {
+                const select = itemDiv.querySelector('select');
+                const newItemNameInput = itemDiv.querySelector('.purchase-item-new-name');
+                const quantityInput = itemDiv.querySelector('input[type="number"]:nth-of-type(1)');
+                const unitCostInput = itemDiv.querySelector('input[type="number"]:nth-of-type(2)');
+
+                const itemId = select.value;
+                const newItemName = newItemNameInput.value.trim();
+                const quantity = parseInt(quantityInput.value);
+                const unitCost = parseFloat(unitCostInput.value);
+
+                if (itemId === 'new_item' && !newItemName) {
+                    alert('Nome da nova peça é obrigatório.');
+                    isValid = false; return;
+                }
+                if (isNaN(quantity) || quantity <= 0 || isNaN(unitCost) || unitCost <= 0) {
+                    alert('Quantidade e custo unitário devem ser números positivos.');
+                    isValid = false; return;
+                }
+
+                purchasedItems.push({ itemId, newItemName, quantity, unitCost });
+                totalPurchaseCost += quantity * unitCost;
+            });
+
+            if (!isValid) return;
+
+            const purchaseId = generateUniqueId();
+            const fornecedor = fornecedores.find(f => f.id === fornecedorId);
+            const fornecedorName = fornecedor ? fornecedor.nome : 'Desconhecido';
+            const financialDescription = `Compra de Material: ${fornecedorName}`;
+
+            purchasedItems.forEach(pItem => {
+                let currentItem = estoqueItems.find(item => item.id === pItem.itemId);
+                
+                if (pItem.itemId === 'new_item' || !currentItem) { // Create new item or if selected item not found
+                    const newId = generateUniqueId();
+                    estoqueItems.push({
+                        id: newId,
+                        nome: pItem.newItemName,
+                        descricao: `Comprado de ${fornecedorName}`,
+                        custo: pItem.unitCost, // Initial cost
+                        venda: pItem.unitCost * 1.5, // Default 50% markup
+                        quantidade: pItem.quantity
+                    });
+                } else { // Update existing item
+                    currentItem.quantidade += pItem.quantity;
+                    currentItem.custo = pItem.unitCost; // Update last purchase cost
+                }
+            });
+
+            financeiroItems.push({
+                id: generateUniqueId(),
+                tipo: 'Saída',
+                descricao: financialDescription,
+                valor: totalPurchaseCost,
+                data: purchaseDate,
+                categoria: 'Compras de Fornecedores',
+                originType: 'purchase',
+                originId: purchaseId,
+                originDetails: {
+                    fornecedorId: fornecedorId,
+                    items: purchasedItems.map(pi => ({
+                        itemId: pi.itemId === 'new_item' ? (estoqueItems.find(i => i.nome === pi.newItemName && i.custo === pi.unitCost))?.id : pi.itemId,
+                        name: pi.itemId === 'new_item' ? pi.newItemName : estoqueItems.find(i => i.id === pi.itemId)?.nome,
+                        quantity: pi.quantity,
+                        unitCost: pi.unitCost
+                    }))
+                }
+            });
+            
+            saveData('estoqueItems', estoqueItems);
+            saveData('financeiroItems', financeiroItems);
+            renderEstoque();
+            renderFinanceiro();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('purchaseModal'));
+            modal.hide();
+        });
+
+
+        // --- Serviços Logic (with Stock and Financial Integration) ---
+        function renderServicos() {
+            const list = document.getElementById('listaAgendamentos');
+            list.innerHTML = '';
+
+            const groupedServicos = servicos.reduce((acc, item) => {
+                const date = item.dataAgendamento;
+                if (!acc[date]) {
+                    acc[date] = [];
+                }
+                acc[date].push(item);
+                return acc;
+            }, {});
+
+            const sortedDates = Object.keys(groupedServicos).sort((a, b) => new Date(a) - new Date(b));
+
+            if (sortedDates.length === 0) {
+                list.innerHTML = '<p class="empty-list-message text-center mt-3">Nenhum serviço registrado.</p>';
+                return;
+            }
+
+            sortedDates.forEach(date => {
+                const col = document.createElement('div');
+                col.className = 'col-md-6 col-lg-4 mb-4';
+                
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                const cardHeader = document.createElement('div');
+                cardHeader.className = 'card-header';
+                cardHeader.innerHTML = `<h5 class="mb-0">${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h5>`;
+                card.appendChild(cardHeader);
+
+                const cardBody = document.createElement('div');
+                cardBody.className = 'card-body';
+
+                const sortedServices = groupedServicos[date].sort((a, b) => a.horaAgendamento.localeCompare(b.horaAgendamento));
+
+                sortedServices.forEach(item => {
+                    const cliente = clientes.find(c => c.id === item.clienteId);
+                    const moto = motos.find(m => m.id === item.motoId);
+                    const funcionario = funcionarios.find(f => f.id === item.funcionarioId);
+
+                    const clienteNome = cliente ? cliente.nome : 'Cliente Desconhecido';
+                    const motoInfo = moto ? `${moto.modelo} (${moto.placa})` : 'Moto Desconhecida';
+                    const funcionarioNome = funcionario ? `Responsável: ${funcionario.nome}` : '';
+
+                    const statusClass = `status-${item.status.toLowerCase().replace(/\s/g, '-')}`;
+
+                    const servicoDiv = document.createElement('div');
+                    servicoDiv.className = `servico-card ${statusClass}`;
+                    servicoDiv.innerHTML = `
+                        <h6>${item.horaAgendamento} - ${clienteNome} (${motoInfo})</h6>
+                        <small>Serviço: ${item.descricaoServico}</small><br>
+                        <small>Status: <strong>${item.status}</strong></small><br>
+                        ${funcionarioNome ? `<small>${funcionarioNome}</small><br>` : ''}
+                        ${item.status === 'Orçamento Enviado' || item.status === 'Aguardando Aprovação' || item.status === 'Aprovado' ? `<small>Total: ${formatCurrency(item.custoTotal)}</small><br>` : ''}
+                        <div class="actions">
+                            <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#servicoModal" onclick="prepareServicoModal('edit', '${item.id}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteServico('${item.id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    cardBody.appendChild(servicoDiv);
+                });
+                card.appendChild(cardBody);
+                col.appendChild(card);
+                list.appendChild(col);
+            });
+        }
+
+        function populateServicoMotoSelects(selectedClienteId = null, currentMotoId = null) {
+            const selectMoto = document.getElementById('servicoMotoId');
+            selectMoto.innerHTML = '<option value="">Selecione uma Moto</option>';
+            
+            const filteredMotos = selectedClienteId ? motos.filter(m => m.clienteId === selectedClienteId) : [];
+
+            filteredMotos.forEach(moto => {
+                const option = document.createElement('option');
+                option.value = moto.id;
+                option.textContent = `${moto.modelo} (${moto.placa})`;
+                if (moto.id === currentMotoId) {
+                    option.selected = true;
+                }
+                selectMoto.appendChild(option);
+            });
+        }
+
+        function filterMotosByCliente() {
+            const selectedClienteId = document.getElementById('servicoClienteId').value;
+            populateServicoMotoSelects(selectedClienteId);
+        }
+
+        function populateServicePartSelect(selectElement, currentItemId = null) {
+            selectElement.innerHTML = '<option value="">Selecione a Peça</option>';
+            estoqueItems.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${item.nome} (Estoque: ${item.quantidade} - Venda: ${formatCurrency(item.venda)})`;
+                if (item.id === currentItemId) {
+                    option.selected = true;
+                }
+                // Disable if item is out of stock AND not the currently selected item
+                if (item.quantidade <= 0 && item.id !== currentItemId) {
+                    option.disabled = true;
+                }
+                selectElement.appendChild(option);
+            });
+        }
+
+        function addPartField(part = null) {
+            const container = document.getElementById('partsUsedContainer');
+            const div = document.createElement('div');
+            div.className = 'part-item mb-2 d-flex align-items-center';
+            div.setAttribute('data-part-uid', generateUniqueId()); // Unique ID for this specific row
+
+            const select = document.createElement('select');
+            select.className = 'form-select form-control-sm me-2';
+            select.style.flexGrow = '2'; 
+            select.onchange = calculateServiceTotal; // Recalculate total when part changes
+            populateServicePartSelect(select, part ? part.itemId : null);
+
+            const quantityInput = document.createElement('input');
+            quantityInput.type = 'number';
+            quantityInput.className = 'form-control form-control-sm me-2';
+            quantityInput.value = part ? part.quantity : 1;
+            quantityInput.min = '1';
+            quantityInput.style.width = '70px'; 
+            quantityInput.oninput = calculateServiceTotal; // Recalculate total when quantity changes
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'btn btn-danger btn-sm';
+            removeButton.innerHTML = '<i class="bi bi-x"></i>';
+            removeButton.onclick = () => { div.remove(); calculateServiceTotal(); }; // Recalculate on remove
+
+            div.appendChild(select);
+            div.appendChild(quantityInput);
+            div.appendChild(removeButton);
+            container.appendChild(div);
+            calculateServiceTotal(); // Initial calculation when adding a field
+        }
+
+        function calculateServiceTotal() {
+            const laborCost = parseFloat(document.getElementById('servicoLaborCost').value) || 0;
+            let partsTotal = 0;
+
+            document.querySelectorAll('#partsUsedContainer .part-item').forEach(partDiv => {
+                const itemId = partDiv.querySelector('select').value;
+                const quantity = parseInt(partDiv.querySelector('input').value);
+                const estoqueItem = estoqueItems.find(item => item.id === itemId);
+
+                if (estoqueItem && quantity > 0) {
+                    partsTotal += estoqueItem.venda * quantity;
+                }
+            });
+            document.getElementById('servicoCustoTotal').value = (laborCost + partsTotal).toFixed(2);
+        }
+
+        function getPartsUsedFromForm() {
+            const parts = [];
+            document.querySelectorAll('#partsUsedContainer .part-item').forEach(partDiv => {
+                const itemId = partDiv.querySelector('select').value;
+                const quantity = parseInt(partDiv.querySelector('input').value);
+                const estoqueItem = estoqueItems.find(item => item.id === itemId);
+
+                if (itemId && quantity > 0 && estoqueItem) {
+                    parts.push({ itemId, quantity, unitPrice: estoqueItem.venda }); // Store price at time of use
+                }
+            });
+            return parts;
+        }
+
+        // Adjusts stock based on oldParts (from stored service) and newParts (from form)
+        // Returns true if adjustment is successful, false if stock is insufficient
+        function applyStockAdjustments(oldParts, newParts) {
+            const stockAdjustments = {}; // {itemId: delta_quantity}
+
+            // Calculate returns for old parts not in new parts or with reduced quantity
+            oldParts.forEach(oldPart => {
+                const newPart = newParts.find(np => np.itemId === oldPart.itemId);
+                if (newPart) {
+                    stockAdjustments[oldPart.itemId] = (stockAdjustments[oldPart.itemId] || 0) + (oldPart.quantity - newPart.quantity);
+                } else {
+                    stockAdjustments[oldPart.itemId] = (stockAdjustments[oldPart.itemId] || 0) + oldPart.quantity;
+                }
+            });
+
+            // Calculate deductions for new parts not in old parts or with increased quantity
+            newParts.forEach(newPart => {
+                const oldPart = oldParts.find(op => op.itemId === newPart.itemId);
+                if (!oldPart) {
+                    stockAdjustments[newPart.itemId] = (stockAdjustments[newPart.itemId] || 0) - newPart.quantity;
+                } else if (newPart.quantity > oldPart.quantity) {
+                    stockAdjustments[newPart.itemId] = (stockAdjustments[newPart.itemId] || 0) - (newPart.quantity - oldPart.quantity);
+                }
+            });
+
+            // Check if proposed changes result in negative stock before applying
+            for (const itemId in stockAdjustments) {
+                const itemIndex = estoqueItems.findIndex(item => item.id === itemId);
+                if (itemIndex !== -1) {
+                    const currentStock = estoqueItems[itemIndex].quantidade;
+                    const delta = stockAdjustments[itemId];
+                    
+                    if (currentStock + delta < 0) { 
+                        alert(`Estoque insuficiente para a peça "${estoqueItems[itemIndex].nome}". Disponível: ${currentStock}, Necessário remover: ${-delta}.`);
+                        return false; 
+                    }
+                } else {
+                    console.warn(`Peça com ID ${itemId} não encontrada no estoque durante ajuste.`);
+                }
+            }
+
+            // If all checks pass, apply changes
+            for (const itemId in stockAdjustments) {
+                const itemIndex = estoqueItems.findIndex(item => item.id === itemId);
+                if (itemIndex !== -1) {
+                    estoqueItems[itemIndex].quantidade += stockAdjustments[itemId];
+                }
+            }
+            saveData('estoqueItems', estoqueItems);
+            return true;
+        }
+
+
+        function prepareServicoModal(mode, id = null) {
+            const modalLabel = document.getElementById('servicoModalLabel');
+            const form = document.getElementById('servicoForm');
+            const servicoId = document.getElementById('servicoId');
+            const servicoClienteId = document.getElementById('servicoClienteId');
+            const servicoMotoId = document.getElementById('servicoMotoId');
+            const servicoFuncionarioId = document.getElementById('servicoFuncionarioId');
+            const servicoDescricao = document.getElementById('servicoDescricao');
+            const servicoDataAgendamento = document.getElementById('servicoDataAgendamento');
+            const servicoHoraAgendamento = document.getElementById('servicoHoraAgendamento');
+            const servicoStatus = document.getElementById('servicoStatus');
+            const servicoLaborCost = document.getElementById('servicoLaborCost');
+            const servicoCustoTotal = document.getElementById('servicoCustoTotal'); // This is readonly
+            const servicoBudgetNotes = document.getElementById('servicoBudgetNotes');
+            const servicoDataConclusao = document.getElementById('servicoDataConclusao');
+            const servicoObservacoes = document.getElementById('servicoObservacoes');
+            const partsUsedContainer = document.getElementById('partsUsedContainer');
+            const originalServicoStatus = document.getElementById('originalServicoStatus');
+            const originalServicoParts = document.getElementById('originalServicoParts');
+
+
+            populateClienteSelects();
+            populateFuncionarioSelects();
+            partsUsedContainer.innerHTML = ''; 
+
+            if (mode === 'add') {
+                modalLabel.textContent = 'Registrar Nova Ordem de Serviço';
+                form.reset();
+                servicoId.value = '';
+                servicoStatus.value = 'Aguardando Orçamento';
+                servicoDataAgendamento.value = new Date().toISOString().split('T')[0];
+                servicoHoraAgendamento.value = new Date().toTimeString().split(' ')[0].substring(0, 5);
+                servicoLaborCost.value = '0';
+                servicoCustoTotal.value = '0';
+                servicoBudgetNotes.value = '';
+                servicoDataConclusao.value = '';
+                servicoObservacoes.value = '';
+                servicoFuncionarioId.value = ''; 
+                servicoMotoId.innerHTML = '<option value="">Selecione uma Moto</option>';
+                originalServicoStatus.value = '';
+                originalServicoParts.value = JSON.stringify([]); 
+            } else if (mode === 'edit') {
+                modalLabel.textContent = 'Editar Ordem de Serviço';
+                const item = servicos.find(i => i.id === id);
+                if (item) {
+                    servicoId.value = item.id;
+                    servicoClienteId.value = item.clienteId;
+                    
+                    populateServicoMotoSelects(item.clienteId, item.motoId); 
+                    
+                    servicoFuncionarioId.value = item.funcionarioId || '';
+                    servicoDescricao.value = item.descricaoServico;
+                    servicoDataAgendamento.value = item.dataAgendamento;
+                    servicoHoraAgendamento.value = item.horaAgendamento;
+                    servicoStatus.value = item.status;
+                    servicoLaborCost.value = item.laborCost || 0;
+                    servicoCustoTotal.value = item.custoTotal;
+                    servicoBudgetNotes.value = item.budgetNotes || '';
+                    servicoDataConclusao.value = item.dataConclusao || '';
+                    servicoObservacoes.value = item.observacoes || '';
+
+                    if (item.partsUsed && item.partsUsed.length > 0) {
+                        item.partsUsed.forEach(part => addPartField(part));
+                    }
+                    originalServicoStatus.value = item.status;
+                    originalServicoParts.value = JSON.stringify(item.partsUsed || []);
+                }
+            }
+            calculateServiceTotal(); // Ensure total is calculated on modal load
+        }
+
+        document.getElementById('servicoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('servicoId').value;
+            const clienteId = document.getElementById('servicoClienteId').value;
+            const motoId = document.getElementById('servicoMotoId').value;
+            const funcionarioId = document.getElementById('servicoFuncionarioId').value;
+            const descricaoServico = document.getElementById('servicoDescricao').value;
+            const dataAgendamento = document.getElementById('servicoDataAgendamento').value;
+            const horaAgendamento = document.getElementById('servicoHoraAgendamento').value;
+            const newStatus = document.getElementById('servicoStatus').value;
+            const laborCost = parseFloat(document.getElementById('servicoLaborCost').value) || 0;
+            const custoTotal = parseFloat(document.getElementById('servicoCustoTotal').value) || 0; // Readonly, already calculated
+            const budgetNotes = document.getElementById('servicoBudgetNotes').value;
+            const dataConclusao = document.getElementById('servicoDataConclusao').value;
+            const observacoes = document.getElementById('servicoObservacoes').value;
+            const partsUsed = getPartsUsedFromForm();
+
+            if (!clienteId || !motoId) {
+                alert('Por favor, selecione o cliente e a moto.');
+                return;
+            }
+
+            let currentServico = null;
+            if (id) {
+                currentServico = servicos.find(s => s.id === id);
+            }
+
+            const oldStatus = currentServico ? currentServico.status : '';
+            const oldPartsUsed = currentServico ? (currentServico.partsUsed || []) : [];
+
+
+            // --- Stock adjustment logic ---
+            const stockAdjustmentSuccessful = applyStockAdjustments(oldPartsUsed, partsUsed);
+            if (!stockAdjustmentSuccessful) {
+                return; // Prevent saving if stock is insufficient
+            }
+
+            // --- Financial transaction logic ---
+            // If status changes to 'Concluido', create a financial entry
+            if (newStatus === 'Concluido' && oldStatus !== 'Concluido') {
+                const moto = motos.find(m => m.id === motoId);
+                const financialDescription = `Serviço: ${descricaoServico} - ${moto ? moto.modelo + ' (' + moto.placa + ')' : 'Moto Desconhecida'}`;
+                
+                financeiroItems.push({ 
+                    id: generateUniqueId(), 
+                    tipo: 'Entrada', 
+                    descricao: financialDescription, 
+                    valor: custoTotal, 
+                    data: dataConclusao || new Date().toISOString().split('T')[0], 
+                    categoria: 'Serviços de Oficina',
+                    originType: 'service',
+                    originId: id || generateUniqueId() // Use existing service ID or temp for new service
+                });
+                saveData('financeiroItems', financeiroItems);
+            } 
+            // If status changes FROM 'Concluido' to something else, remove financial entry
+            else if (newStatus !== 'Concluido' && oldStatus === 'Concluido' && currentServico) {
+                financeiroItems = financeiroItems.filter(item => item.originId !== currentServico.id || item.originType !== 'service');
+                saveData('financeiroItems', financeiroItems);
+            }
+            // If it was Concluido and still is, but amount or date changed, update the financial entry
+            else if (newStatus === 'Concluido' && oldStatus === 'Concluido' && currentServico) {
+                const financialEntryIndex = financeiroItems.findIndex(item => item.originId === currentServico.id && item.originType === 'service');
+                if (financialEntryIndex !== -1) {
+                    financeiroItems[financialEntryIndex].valor = custoTotal;
+                    financeiroItems[financialEntryIndex].data = dataConclusao || financeiroItems[financialEntryIndex].data;
+                    saveData('financeiroItems', financeiroItems);
+                }
+            }
+
+            // --- Save service data ---
+            const serviceData = { id: id || generateUniqueId(), clienteId, motoId, funcionarioId, descricaoServico, dataAgendamento, horaAgendamento, status: newStatus, laborCost, custoTotal, budgetNotes, dataConclusao, observacoes, partsUsed };
+
+            if (id) {
+                const index = servicos.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    servicos[index] = serviceData;
+                }
+            } else {
+                servicos.push(serviceData);
+            }
+            saveData('servicos', servicos);
+            renderServicos();
+            renderEstoque(); // Re-render estoque to reflect changes
+            renderFinanceiro(); // Re-render financeiro to reflect changes
+            const modal = bootstrap.Modal.getInstance(document.getElementById('servicoModal'));
+            modal.hide();
+        });
+
+        function deleteServico(id) {
+            if (confirm('Tem certeza que deseja excluir esta Ordem de Serviço? Todas as peças serão repostas ao estoque e a transação financeira (se houver) será removida.')) {
+                const serviceToDelete = servicos.find(s => s.id === id);
+
+                // Revert stock for parts used
+                if (serviceToDelete && serviceToDelete.partsUsed && serviceToDelete.partsUsed.length > 0) {
+                    serviceToDelete.partsUsed.forEach(part => {
+                        const itemIndex = estoqueItems.findIndex(item => item.id === part.itemId);
+                        if (itemIndex !== -1) {
+                            estoqueItems[itemIndex].quantidade += part.quantity;
+                        }
+                    });
+                    saveData('estoqueItems', estoqueItems);
+                }
+
+                // Remove financial entry if it was concluded
+                if (serviceToDelete && serviceToDelete.status === 'Concluido') {
+                    financeiroItems = financeiroItems.filter(item => item.originId !== id || item.originType !== 'service');
+                    saveData('financeiroItems', financeiroItems);
+                }
+
+                servicos = servicos.filter(item => item.id !== id);
+                saveData('servicos', servicos);
+                renderServicos();
+                renderEstoque();
+                renderFinanceiro();
+            }
+        }
+
+        // --- Financeiro Logic ---
+        function renderFinanceiro() {
+            const list = document.getElementById('listaFinanceiro');
+            list.innerHTML = '';
+
+            let totalEntradas = 0;
+            let totalSaidas = 0;
+
+            if (financeiroItems.length === 0) {
+                list.innerHTML = '<tr><td colspan="7" class="text-center empty-list-message">Nenhuma transação financeira registrada.</td></tr>';
+            }
+
+            const sortedFinanceiro = [...financeiroItems].sort((a, b) => new Date(b.data) - new Date(a.data));
+
+            sortedFinanceiro.forEach(item => {
+                if (item.tipo === 'Entrada') {
+                    totalEntradas += item.valor;
+                } else {
+                    totalSaidas += item.valor;
+                }
+
+                const row = document.createElement('tr');
+                const rowClass = item.tipo === 'Entrada' ? 'table-success' : 'table-danger';
+                row.className = rowClass;
+                row.innerHTML = `
+                    <td>${item.tipo}</td>
+                    <td>${item.descricao}</td>
+                    <td>${formatCurrency(item.valor)}</td>
+                    <td>${formatDate(item.data)}</td>
+                    <td>${item.categoria || '-'}</td>
+                    <td>${item.originType || 'Manual'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#financeiroModal" onclick="prepareFinanceiroModal('edit', '${item.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteFinanceiroItem('${item.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+
+            document.getElementById('totalEntradas').textContent = formatCurrency(totalEntradas);
+            document.getElementById('totalSaidas').textContent = formatCurrency(totalSaidas);
+            document.getElementById('saldoTotal').textContent = formatCurrency(totalEntradas - totalSaidas);
+        }
+
+        function prepareFinanceiroModal(mode, id = null) {
+            const modalLabel = document.getElementById('financeiroModalLabel');
+            const form = document.getElementById('financeiroForm');
+            const financeiroId = document.getElementById('financeiroId');
+            const financeiroTipo = document.getElementById('financeiroTipo');
+            const financeiroDescricao = document.getElementById('financeiroDescricao');
+            const financeiroValor = document.getElementById('financeiroValor');
+            const financeiroData = document.getElementById('financeiroData');
+            const financeiroCategoria = document.getElementById('financeiroCategoria');
+            const financeiroOriginId = document.getElementById('financeiroOriginId');
+            const financeiroOriginType = document.getElementById('financeiroOriginType');
+
+
+            if (mode === 'add') {
+                modalLabel.textContent = 'Adicionar Transação Financeira';
+                form.reset();
+                financeiroId.value = '';
+                financeiroTipo.value = 'Entrada';
+                financeiroData.value = new Date().toISOString().split('T')[0];
+                financeiroOriginId.value = ''; 
+                financeiroOriginType.value = '';
+            } else if (mode === 'edit') {
+                modalLabel.textContent = 'Editar Transação Financeira';
+                const item = financeiroItems.find(i => i.id === id);
+                if (item) {
+                    financeiroId.value = item.id;
+                    financeiroTipo.value = item.tipo;
+                    financeiroDescricao.value = item.descricao;
+                    financeiroValor.value = item.valor;
+                    financeiroData.value = item.data;
+                    financeiroCategoria.value = item.categoria;
+                    financeiroOriginId.value = item.originId || '';
+                    financeiroOriginType.value = item.originType || '';
+
+                    if (item.originType) { // Disable editing for auto-generated transactions
+                        document.querySelectorAll('#financeiroForm input, #financeiroForm select').forEach(el => {
+                            if (el.id !== 'financeiroId' && el.id !== 'financeiroOriginId' && el.id !== 'financeiroOriginType') {
+                                el.disabled = true;
+                            }
+                        });
+                        document.querySelector('#financeiroForm button[type="submit"]').disabled = true;
+                        alert('Transações financeiras vinculadas a outros módulos (Serviço, Compras, Estoque) não podem ser editadas diretamente aqui. Edite-as no módulo de origem.');
+                    } else {
+                        document.querySelectorAll('#financeiroForm input, #financeiroForm select').forEach(el => el.disabled = false);
+                        document.querySelector('#financeiroForm button[type="submit"]').disabled = false;
+                    }
+                }
+            }
+        }
+
+        document.getElementById('financeiroForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('financeiroId').value;
+            const tipo = document.getElementById('financeiroTipo').value;
+            const descricao = document.getElementById('financeiroDescricao').value;
+            const valor = parseFloat(document.getElementById('financeiroValor').value);
+            const data = document.getElementById('financeiroData').value;
+            const categoria = document.getElementById('financeiroCategoria').value;
+            const originId = document.getElementById('financeiroOriginId').value;
+            const originType = document.getElementById('financeiroOriginType').value;
+
+            if (isNaN(valor) || valor <= 0) {
+                alert('Por favor, insira um valor numérico positivo para a transação.');
+                return;
+            }
+            if (originType) { // If it's an auto-generated transaction, should be disabled, but for safety
+                alert('Transações financeiras vinculadas a outros módulos não podem ser editadas manualmente. Por favor, edite no módulo de origem.');
+                return;
+            }
+
+            if (id) {
+                const index = financeiroItems.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    financeiroItems[index] = { id, tipo, descricao, valor, data, categoria, originId: '', originType: '' }; // Ensure manual items have no origin
+                }
+            } else {
+                financeiroItems.push({ id: generateUniqueId(), tipo, descricao, valor, data, categoria, originId: '', originType: '' });
+            }
+            saveData('financeiroItems', financeiroItems);
+            renderFinanceiro();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('financeiroModal'));
+            modal.hide();
+        });
+
+        function deleteFinanceiroItem(id) {
+            const itemToDelete = financeiroItems.find(item => item.id === id);
+            if (itemToDelete && itemToDelete.originType) {
+                 alert('Esta transação está vinculada a um serviço, compra ou ajuste de estoque. Exclua/edite-o(a) no módulo de origem para remover a transação financeira.');
+                 return;
+            }
+            if (confirm('Tem certeza que deseja excluir esta transação financeira manual?')) {
+                financeiroItems = financeiroItems.filter(item => item.id !== id);
+                saveData('financeiroItems', financeiroItems);
+                renderFinanceiro();
+            }
+        }
+
+        // --- Feedback Logic (Mandatory) ---
+        document.getElementById('feedbackForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const feedbackMessage = document.getElementById('feedbackMessage').value;
+
+            try {
+                const response = await fetch(FIREBASE_FEEDBACK_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        texto: feedbackMessage,
+                        data: new Date().toISOString()
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Mensagem enviada para a thIAguinho Soluções!');
+                    document.getElementById('feedbackMessage').value = ''; // Clear form
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
+                    modal.hide();
+                } else {
+                    alert('Erro ao enviar a mensagem. Por favor, tente novamente.');
+                    console.error('Firebase response not OK:', response.status, await response.text());
+                }
+            } catch (error) {
+                alert('Erro ao enviar a mensagem. Verifique sua conexão ou tente novamente.');
+                console.error('Error sending feedback:', error);
+            }
+        });
+
+
+        // --- Initial Load Logic (Admin Panel Only) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('adminPanel').style.display = 'flex';
+            showAdminSection('estoque'); // Default admin section
+        });
+    </script>
+</body>
+</html>

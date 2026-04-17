@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Rio Frame - Telhados e Barracões</title>
+    <style>
+        :root {
+            --dark-bg: #2c3e50;
+            --main-bg: #34495e;
+            --text-color: #ecf0f1;
+            --heading-color: #2ecc71; /* Green accent */
+            --input-bg: #4a6277;
+            --input-border: #5a7d9b;
+            --input-focus-border: #3498db; /* Blue accent */
+            --button-primary: #3498db; /* Blue for calculate */
+            --button-primary-hover: #2980b9;
+            --button-feedback: #e74c3c; /* Red for feedback */
+            --button-feedback-hover: #c0392b;
+            --result-item-bg: #4a6277;
+            --result-item-text: #ecf0f1;
+            --disclaimer-bg: #e67e22; /* Orange for warning */
+            --disclaimer-text: #fff;
+            --footer-text: #7f8c8d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background-color: var(--main-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            flex-grow: 1;
+        }
+        h1, h2 {
+            color: var(--heading-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 2.5em;
+        }
+        h2 {
+            font-size: 1.8em;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 40px;
+        }
+        h3 {
+            color: var(--heading-color);
+            margin-bottom: 15px;
+        }
+
+        .header-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .feedback-button-top {
+            display: block;
+            width: fit-content; /* Adjust width to content */
+            padding: 12px 25px;
+            background-color: var(--button-feedback);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-align: center;
+        }
+        .feedback-button-top:hover {
+            background-color: var(--button-feedback-hover);
+            transform: translateY(-2px);
+        }
+
+        .form-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .form-group input[type="number"],
+        .form-group select {
+            width: calc(100% - 24px); /* Account for padding */
+            padding: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 1em;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input[type="number"]:focus,
+        .form-group select:focus {
+            border-color: var(--input-focus-border);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25); /* Blue shadow */
+        }
+        button:not(.feedback-button-top, .modal-content button) {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--button-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 20px;
+        }
+        button:not(.feedback-button-top, .modal-content button):hover {
+            background-color: var(--button-primary-hover);
+            transform: translateY(-2px);
+        }
+        .results-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .result-item {
+            background-color: var(--result-item-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.05em;
+            color: var(--result-item-text);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        .result-item span:first-child {
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+        .material-list {
+            margin-top: 20px;
+        }
+        .material-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .material-list li {
+            background-color: #4a6277; /* Slightly different shade for list items */
+            border: 1px solid #5a7d9b;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95em;
+            color: var(--text-color);
+        }
+        .material-list li span:first-child {
+            font-weight: 500;
+            color: var(--heading-color);
+        }
+        .material-list li.total-cost { /* Specific style for total cost */
+            background-color: #28a745; /* Darker green */
+            color: white;
+            font-weight: bold;
+            border-color: #218838;
+            font-size: 1.1em;
+        }
+        .disclaimer {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: var(--disclaimer-bg);
+            border: 1px solid #d35400;
+            border-radius: 8px;
+            color: var(--disclaimer-text);
+            font-size: 0.9em;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .disclaimer strong {
+            color: var(--disclaimer-text);
+        }
+
+        .cost-section h3 {
+            color: var(--heading-color);
+            margin-top: 25px;
+        }
+        .cost-input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+        }
+
+        /* Modal for Feedback */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1001; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: var(--main-bg);
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            color: var(--text-color);
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--heading-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-content h3 {
+            text-align: center;
+            color: var(--heading-color);
+            margin-bottom: 20px;
+        }
+        .modal-content textarea {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 100px;
+            font-size: 1em;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+        .modal-content button {
+            background-color: var(--heading-color); /* Green for modal submit */
+            width: auto;
+            padding: 12px 25px;
+            margin: 0 auto;
+            display: block;
+            border-radius: 8px;
+            color: white;
+            border: none;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .modal-content button:hover {
+            background-color: #27ae60;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+            color: var(--footer-text);
+            font-size: 0.9em;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background-color: #2c3e50;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .form-section {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 20px;
+                margin: 20px auto;
+            }
+            .feedback-button-top {
+                width: 90%; /* Wider on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <h1>Calculadora Rio Frame</h1>
+            <p style="text-align: center; color: var(--text-color); font-size: 1.1em; margin-bottom: 0;">
+                Ferramenta de estimativa para telhados e barracões de estruturas metálicas.
+            </p>
+            <button class="feedback-button-top" onclick="openFeedbackModal()">Gostou do sistema? Fale com o Thiago</button>
+        </div>
+
+        <div class="disclaimer">
+            <strong>ATENÇÃO:</strong> Esta ferramenta fornece apenas *estimativas preliminares* para planejamento e cálculo de materiais.
+            É fundamental que todas as medidas, cálculos estruturais (cargas, perfis, etc.) e especificações de segurança
+            sejam <strong>verificados e aprovados por um engenheiro estrutural qualificado</strong> antes de qualquer fabricação ou montagem.
+            A thIAguinho Soluções e a Rio Frame não se responsabilizam por quaisquer erros decorrentes do uso desta ferramenta sem a devida verificação profissional.
+        </div>
+
+        <h2>Dados do Barracão/Telhado</h2>
+        <div class="form-section">
+            <div class="form-group">
+                <label for="largura_barracao">Largura do Barracão (m):</label>
+                <input type="number" id="largura_barracao" value="10" min="1" step="0.1" required>
+            </div>
+            <div class="form-group">
+                <label for="comprimento_barracao">Comprimento do Barracão (m):</label>
+                <input type="number" id="comprimento_barracao" value="20" min="1" step="0.1" required>
+            </div>
+            <div class="form-group">
+                <label for="altura_pe_direito">Altura do Pé Direito (m):</label>
+                <input type="number" id="altura_pe_direito" value="6" min="1" step="0.1" required>
+            </div>
+            <div class="form-group">
+                <label for="inclinacao_telhado_graus">Inclinação do Telhado (°):</label>
+                <input type="number" id="inclinacao_telhado_graus" value="10" min="5" max="45" step="1" required>
+            </div>
+            <div class="form-group">
+                <label for="balanco_lateral_eaves">Balanço Lateral (Beiral - m):</label>
+                <input type="number" id="balanco_lateral_eaves" value="0.5" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="balanco_frontal_traseiro">Balanço Frontal/Traseiro (m):</label>
+                <input type="number" id="balanco_frontal_traseiro" value="0.5" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="espacamento_tesouras">Espaçamento Tesouras (m):</label>
+                <input type="number" id="espacamento_tesouras" value="5" min="2" step="0.5" required>
+            </div>
+            <div class="form-group">
+                <label for="espacamento_tercas">Espaçamento Terças (m):</label>
+                <input type="number" id="espacamento_tercas" value="1.5" min="0.5" step="0.1" required>
+            </div>
+             <div class="form-group">
+                <label for="largura_util_telha">Largura Útil da Telha (m):</label>
+                <input type="number" id="largura_util_telha" value="1.05" min="0.5" step="0.01" required>
+            </div>
+        </div>
+
+        <h2>Parâmetros de Custo e Otimização (Estimativa)</h2>
+        <div class="cost-input-group">
+            <div class="form-group">
+                <label for="custo_m_perfil">Custo por Metro Linear de Perfil (R$):</label>
+                <input type="number" id="custo_m_perfil" value="35" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="custo_m2_telha">Custo por M² de Telha (R$):</label>
+                <input type="number" id="custo_m2_telha" value="60" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="custo_m_cumeeira">Custo por Metro Linear de Cumeeira (R$):</label>
+                <input type="number" id="custo_m_cumeeira" value="45" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="custo_m_calha">Custo por Metro Linear de Calha (R$):</label>
+                <input type="number" id="custo_m_calha" value="30" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="custo_un_parafuso">Custo por Unid. Parafuso/Fixador (R$):</label>
+                <input type="number" id="custo_un_parafuso" value="1.5" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="tempo_h_m2_fabricacao">Horas/Homem por M² Fabricação:</label>
+                <input type="number" id="tempo_h_m2_fabricacao" value="0.5" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="tempo_h_m2_montagem">Horas/Homem por M² Montagem:</label>
+                <input type="number" id="tempo_h_m2_montagem" value="0.3" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="custo_h_mao_obra">Custo da Hora/Homem (R$):</label>
+                <input type="number" id="custo_h_mao_obra" value="30" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="perda_material_percent">Perda de Material (%) - ex: 5 para 5%:</label>
+                <input type="number" id="perda_material_percent" value="5" min="0" max="100" step="1">
+            </div>
+             <div class="form-group">
+                <label for="fator_complexidade_tesoura">Fator Complexidade Tesoura (m/unid):</label>
+                <input type="number" id="fator_complexidade_tesoura" value="10" min="1" step="0.1" title="Estimativa de metros lineares de perfil por tesoura, para cálculo de peso/custo.">
+            </div>
+        </div>
+        
+        <button onclick="calcularMateriais()">Calcular Materiais e Custos</button>
+
+        <div class="results-section">
+            <h2>Resultados da Estimativa</h2>
+            <div id="results">
+                <p style="text-align: center; color: var(--footer-text);">Preencha os dados e clique em 'Calcular' para ver os resultados.</p>
+            </div>
+
+            <div class="material-list" id="material_list_section" style="display: none;">
+                <h3>Lista de Materiais Sugerida</h3>
+                <ul id="material_list_ul">
+                    <!-- Dynamic content here -->
+                </ul>
+            </div>
+            
+            <div class="material-list" id="cost_summary_section" style="display: none;">
+                <h3>Resumo de Custos e Tempo</h3>
+                <ul id="cost_summary_ul">
+                    <!-- Dynamic content here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeFeedbackModal()">&times;</span>
+            <h3>Seu Feedback é Importante!</h3>
+            <p style="text-align: center; margin-bottom: 20px;">Nos ajude a melhorar esta ferramenta.</p>
+            <textarea id="feedbackText" placeholder="Digite seu feedback aqui..." rows="5"></textarea>
+            <button onclick="sendFeedback()">Enviar Feedback</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        Powered by thIAguinho Soluções
+    </footer>
+
+    <script>
+        const CLIENT_ID = '-OofRf97bm6nPDkzgS1d';
+        const FIREBASE_URL = `https://thiaguinho-40a14-default-rtdb.firebaseio.com/projetos_capturados/${CLIENT_ID}/feedbacks.json`;
+
+        function calcularMateriais() {
+            const larguraBarracao = parseFloat(document.getElementById('largura_barracao').value);
+            const comprimentoBarracao = parseFloat(document.getElementById('comprimento_barracao').value);
+            const alturaPeDireito = parseFloat(document.getElementById('altura_pe_direito').value);
+            const inclinacaoTelhadoGraus = parseFloat(document.getElementById('inclinacao_telhado_graus').value);
+            const balancoLateralEaves = parseFloat(document.getElementById('balanco_lateral_eaves').value);
+            const balancoFrontalTraseiro = parseFloat(document.getElementById('balanco_frontal_traseiro').value);
+            const espacamentoTesouras = parseFloat(document.getElementById('espacamento_tesouras').value);
+            const espacamentoTercas = parseFloat(document.getElementById('espacamento_tercas').value);
+            const larguraUtilTelha = parseFloat(document.getElementById('largura_util_telha').value);
+
+            // Cost/Optimization parameters
+            const custoMPerfil = parseFloat(document.getElementById('custo_m_perfil').value);
+            const custoM2Telha = parseFloat(document.getElementById('custo_m2_telha').value);
+            const custoMCumeeira = parseFloat(document.getElementById('custo_m_cumeeira').value);
+            const custoMCalha = parseFloat(document.getElementById('custo_m_calha').value);
+            const custoUnParafuso = parseFloat(document.getElementById('custo_un_parafuso').value);
+            const tempoHM2Fabricacao = parseFloat(document.getElementById('tempo_h_m2_fabricacao').value);
+            const tempoHM2Montagem = parseFloat(document.getElementById('tempo_h_m2_montagem').value);
+            const custoHMaoObra = parseFloat(document.getElementById('custo_h_mao_obra').value);
+            const perdaMaterialPercent = parseFloat(document.getElementById('perda_material_percent').value);
+            const fatorComplexidadeTesoura = parseFloat(document.getElementById('fator_complexidade_tesoura').value);
+
+
+            // Input validation
+            if (isNaN(larguraBarracao) || isNaN(comprimentoBarracao) || isNaN(alturaPeDireito) || isNaN(inclinacaoTelhadoGraus) ||
+                isNaN(balancoLateralEaves) || isNaN(balancoFrontalTraseiro) || isNaN(espacamentoTesouras) ||
+                isNaN(espacamentoTercas) || isNaN(larguraUtilTelha) ||
+                isNaN(custoMPerfil) || isNaN(custoM2Telha) || isNaN(custoMCumeeira) || isNaN(custoMCalha) ||
+                isNaN(custoUnParafuso) || isNaN(tempoHM2Fabricacao) || isNaN(tempoHM2Montagem) ||
+                isNaN(custoHMaoObra) || isNaN(perdaMaterialPercent) || isNaN(fatorComplexidadeTesoura)) {
+                alert("Por favor, preencha todos os campos com valores numéricos válidos.");
+                return;
+            }
+            if (larguraBarracao <= 0 || comprimentoBarracao <= 0 || alturaPeDireito <= 0 || inclinacaoTelhadoGraus <= 0 ||
+                espacamentoTesouras <= 0 || espacamentoTercas <= 0 || larguraUtilTelha <= 0) {
+                 alert("Valores para Largura, Comprimento, Altura, Inclinação, Espaçamentos e Largura Útil da Telha devem ser maiores que zero.");
+                 return;
+             }
+
+
+            // --- Cálculos Geométricos ---
+            const inclinacaoRad = inclinacaoTelhadoGraus * (Math.PI / 180);
+            const run = larguraBarracao / 2; // Metade da largura do barracão
+            const rise = run * Math.tan(inclinacaoRad); // Elevação da cumeeira em relação à altura do pé direito
+
+            const comprimentoAgua = run / Math.cos(inclinacaoRad); // Comprimento da água (diagonal do telhado)
+            const alturaTotalCumeeira = alturaPeDireito + rise;
+
+            // Área total do telhado (2 águas)
+            const larguraCoberturaTelhado = larguraBarracao + 2 * balancoLateralEaves; // Largura total de cobertura incluindo beirais
+            const comprimentoCoberturaTelhado = comprimentoBarracao + 2 * balancoFrontalTraseiro; // Comprimento total de cobertura
+
+            // Considerando o balanço lateral (eaves) no comprimento da água para o cálculo real de telhas
+            const comprimentoAguaComBeiral = comprimentoAgua + balancoLateralEaves;
+            const areaTelhadoTotal = 2 * comprimentoAguaComBeiral * comprimentoCoberturaTelhado;
+
+            // Comprimento total da cumeeira
+            const comprimentoCumeeira = comprimentoCoberturaTelhado;
+
+            // Comprimento total das calhas (nas duas águas)
+            const comprimentoCalha = 2 * comprimentoCoberturaTelhado;
+
+            // --- Estrutura Metálica ---
+
+            // Colunas (pés-direitos): Assume-se 2 colunas por tesoura/pórtico + 2 para o pórtico final
+            // Number of segments in length direction
+            const numSegments = Math.ceil(comprimentoBarracao / espacamentoTesouras);
+            const numTesouras = numSegments + 1; // E.g., for 20m and 5m spacing: 20/5 = 4 segments, so 5 tesouras.
+            const numColunas = 2 * numTesouras;
+            const comprimentoTotalColunas = numColunas * alturaPeDireito;
+
+            // Tesouras (pórticos): Quantidade de tesouras
+            // Estimativa simplificada de perfis para uma tesoura. Um fator mais preciso dependeria do tipo de tesoura (Howe, Pratt, etc.)
+            // Adicionado um termo que considera a largura da tesoura e o fator de complexidade
+            // Largura efetiva da tesoura (sem balanço para o cálculo da estrutura em si)
+            const larguraEfetivaTesoura = larguraBarracao;
+            // A largura da tesoura pode ser considerada como a hipotenusa de cada lado, então 2*comprimentoAgua
+            // e somar com a base (largura_barracao) e adicionar um fator para as diagonais e montantes internos
+            const compPerfilBaseTesoura = (larguraEfetivaTesoura / Math.cos(inclinacaoRad)) * 2; // Comprimento dos dois banzos superiores
+            const compPerfilTesouraAprox = compPerfilBaseTesoura + (larguraEfetivaTesoura * fatorComplexidadeTesoura / 10); // Heurística para partes internas
+
+            const comprimentoTotalPerfisTesouras = numTesouras * compPerfilTesouraAprox;
+
+            // Terças (Purlins)
+            // Cada água tem comprimentoAgua. O número de terças é baseado nesse comprimento.
+            const numTercasPorAgua = Math.ceil(comprimentoAgua / espacamentoTercas) + 1; // Inclui terça de beiral e de cumeeira (se cumeeira for de terça)
+            const comprimentoCadaTerca = comprimentoCoberturaTelhado;
+            const comprimentoTotalTercas = 2 * numTercasPorAgua * comprimentoCadaTerca;
+
+            // Total de Perfis Metálicos (Colunas + Tesouras + Terças)
+            const totalMPerfis = comprimentoTotalColunas + comprimentoTotalPerfisTesouras + comprimentoTotalTercas;
+
+            // --- Telhas Galvanizadas ---
+            // Número de telhas necessárias no comprimento da água (subindo o telhado)
+            const numTelhasAoLongoAgua = Math.ceil(comprimentoAguaComBeiral / 6); // Assumindo telhas de 6m ou similar, e cortando. Melhor seria calcular por peças.
+                                                                                // Para simplificar, vou considerar que telha tem o comprimento da água.
+                                                                                // A quantidade de peças ao longo da água é 1 se o comprimento da água for menor que o comprimento máximo da telha.
+                                                                                // O comprimento da telha é o comprimentoAguaComBeiral.
+            
+            // Número de peças de telha na largura (horizontal)
+            const numPecasLargura = Math.ceil(comprimentoCoberturaTelhado / larguraUtilTelha);
+
+            // Total de telhas em m² já está sendo calculado pela área total do telhado
+            const totalM2Telhas = areaTelhadoTotal;
+
+            // Parafusos/Fixadores - Estimativa: X parafusos por m² de telha + Y parafusos por metro de perfil
+            const parafusosPorM2Telha = 2; // Ex: 2 parafusos por m² de telha
+            const parafusosPorMPerfil = 0.5; // Ex: 0.5 parafusos por metro linear de perfil (para fixar terças nas tesouras, telhas nas terças)
+            const numParafusosEstimado = Math.ceil(totalM2Telhas * parafusosPorM2Telha + totalMPerfis * parafusosPorMPerfil);
+
+
+            // --- Cálculos de Custos e Tempo (com fator de perda) ---
+            const fatorPerda = 1 + (perdaMaterialPercent / 100);
+
+            const custoTotalPerfis = (totalMPerfis * custoMPerfil) * fatorPerda;
+            const custoTotalTelhas = (totalM2Telhas * custoM2Telha) * fatorPerda;
+            const custoTotalCumeeira = (comprimentoCumeeira * custoMCumeeira) * fatorPerda;
+            const custoTotalCalha = (comprimentoCalha * custoMCalha) * fatorPerda;
+            const custoTotalParafusos = numParafusosEstimado * custoUnParafuso; // Perda de parafuso pode ser menor, ou já inclusa no custo unitário
+
+            const custoTotalMateriais = custoTotalPerfis + custoTotalTelhas + custoTotalCumeeira + custoTotalCalha + custoTotalParafusos;
+
+            const tempoTotalFabricacao = areaTelhadoTotal * tempoHM2Fabricacao;
+            const tempoTotalMontagem = areaTelhadoTotal * tempoHM2Montagem;
+            const tempoTotalMaoObra = tempoTotalFabricacao + tempoTotalMontagem;
+            const custoTotalMaoObra = tempoTotalMaoObra * custoHMaoObra;
+
+            const custoTotalEstimadoProjeto = custoTotalMateriais + custoTotalMaoObra;
+
+
+            // --- Exibir Resultados ---
+            const resultsDiv = document.getElementById('results');
+            const materialListUl = document.getElementById('material_list_ul');
+            const costSummaryUl = document.getElementById('cost_summary_ul');
+
+            resultsDiv.innerHTML = `
+                <div class="result-item"><span>Largura do Barracão:</span> <span>${larguraBarracao.toFixed(2)} m</span></div>
+                <div class="result-item"><span>Comprimento do Barracão:</span> <span>${comprimentoBarracao.toFixed(2)} m</span></div>
+                <div class="result-item"><span>Altura do Pé Direito:</span> <span>${alturaPeDireito.toFixed(2)} m</span></div>
+                <div class="result-item"><span>Altura da Cumeeira (do chão):</span> <span>${alturaTotalCumeeira.toFixed(2)} m</span></div>
+                <div class="result-item"><span>Comprimento da Água do Telhado (incl. beiral):</span> <span>${comprimentoAguaComBeiral.toFixed(2)} m</span></div>
+                <div class="result-item"><span>Área Total do Telhado (2 águas):</span> <span>${areaTelhadoTotal.toFixed(2)} m²</span></div>
+                <div class="result-item"><span>Número de Tesouras/Pórticos:</span> <span>${numTesouras} unidades</span></div>
+                <div class="result-item"><span>Número de Colunas (Pés-direitos):</span> <span>${numColunas} unidades</span></div>
+                <div class="result-item"><span>Comprimento da Cumeeira:</span> <span>${comprimentoCumeeira.toFixed(2)} m</span></div>
+                <div class="result-item"><span>Comprimento Total de Calhas:</span> <span>${comprimentoCalha.toFixed(2)} m</span></div>
+            `;
+
+            materialListUl.innerHTML = `
+                <li><span>Perfis Metálicos (Colunas, Tesouras, Terças):</span> <span>${totalMPerfis.toFixed(2)} m lineares (aprox.)</span></li>
+                <li><span>Telhas Galvanizadas/Metálicas:</span> <span>${totalM2Telhas.toFixed(2)} m² (aprox.)</span></li>
+                <li><span>Cumeeiras:</span> <span>${comprimentoCumeeira.toFixed(2)} m lineares</span></li>
+                <li><span>Calhas:</span> <span>${comprimentoCalha.toFixed(2)} m lineares</span></li>
+                <li><span>Parafusos/Fixadores:</span> <span>${numParafusosEstimado} unidades (aprox.)</span></li>
+            `;
+            document.getElementById('material_list_section').style.display = 'block';
+
+            costSummaryUl.innerHTML = `
+                <li><span>Custo Total Estimado de Materiais:</span> <span>R$ ${custoTotalMateriais.toFixed(2)}</span></li>
+                <li><span>Custo Estimado de Perfis Metálicos:</span> <span>R$ ${custoTotalPerfis.toFixed(2)}</span></li>
+                <li><span>Custo Estimado de Telhas:</span> <span>R$ ${custoTotalTelhas.toFixed(2)}</span></li>
+                <li><span>Custo Estimado de Cumeeiras:</span> <span>R$ ${custoTotalCumeeira.toFixed(2)}</span></li>
+                <li><span>Custo Estimado de Calhas:</span> <span>R$ ${custoTotalCalha.toFixed(2)}</span></li>
+                <li><span>Custo Estimado de Parafusos/Fixadores:</span> <span>R$ ${custoTotalParafusos.toFixed(2)}</span></li>
+                <li><span>Tempo Estimado de Fabricação:</span> <span>${tempoTotalFabricacao.toFixed(2)} horas</span></li>
+                <li><span>Tempo Estimado de Montagem:</span> <span>${tempoTotalMontagem.toFixed(2)} horas</span></li>
+                <li><span>Custo Estimado de Mão de Obra:</span> <span>R$ ${custoTotalMaoObra.toFixed(2)}</span></li>
+                <li class="total-cost"><span>Custo Total Estimado do Projeto:</span> <span>R$ ${custoTotalEstimadoProjeto.toFixed(2)}</span></li>
+            `;
+            document.getElementById('cost_summary_section').style.display = 'block';
+        }
+
+        // --- Feedback Modal Functions ---
+        function openFeedbackModal() {
+            document.getElementById('feedbackModal').style.display = 'flex';
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').style.display = 'none';
+        }
+
+        async function sendFeedback() {
+            const feedbackText = document.getElementById('feedbackText').value;
+
+            if (feedbackText.trim() === '') {
+                alert('Por favor, digite seu feedback antes de enviar.');
+                return;
+            }
+
+            try {
+                const response = await fetch(FIREBASE_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        texto: feedbackText,
+                        data: new Date().toISOString()
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Mensagem enviada para a thIAguinho Soluções! Agradecemos seu feedback.');
+                    document.getElementById('feedbackText').value = ''; // Limpa o formulário
+                    closeFeedbackModal();
+                } else {
+                    alert('Ocorreu um erro ao enviar seu feedback. Por favor, tente novamente.');
+                }
+            } catch (error) {
+                console.error('Erro ao enviar feedback:', error);
+                alert('Ocorreu um erro de conexão ao enviar seu feedback. Verifique sua internet e tente novamente.');
+            }
+        }
+
+        // Close modal if clicked outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('feedbackModal');
+            if (event.target == modal) {
+                closeFeedbackModal();
+            }
+        }
+    </script>
+</body>
+</html>

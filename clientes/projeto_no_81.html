@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>thIAguinho Soluções - Simulador de Prospecção Inteligente</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
+    <style>
+        /* Estilos globais e tipografia */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5; /* Light grey background */
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Container principal */
+        .container {
+            max-width: 1280px;
+            margin: 20px auto;
+            padding: 25px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            flex-grow: 1;
+        }
+
+        /* Header */
+        header {
+            background-color: #1a2a3a; /* Dark Blue-Grey */
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 5px solid #28a745; /* Green accent */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* Títulos de Seção */
+        h2, h3 {
+            color: #1a2a3a; /* Dark Blue-Grey */
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; }
+
+        /* Mapa Simulado */
+        #map-container {
+            position: relative;
+            height: 600px; /* Mais alto para destaque */
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden; /* Garante que os marcadores não saiam */
+            background-color: #e6f2f7; /* Fallback for map background */
+            /* Imagem de mapa simulado que parece desenhado */
+            background-image: url('https://via.placeholder.com/1280x600/e6f2f7/4a617a?text=Mapa+Simulado+da+Região+Urbana');
+            background-size: cover;
+            background-position: center;
+            /* Texto para indicar que é uma simulação */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-weight: 600;
+        }
+        #map-container > p {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            background-color: rgba(255,255,255,0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 1;
+        }
+
+
+        #map-overlay-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5; /* Acima da imagem do mapa */
+        }
+        
+        /* Marcadores do Mapa */
+        .map-marker {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 0.8em;
+            transform: translate(-50%, -50%); /* Centraliza o marcador */
+            z-index: 10;
+        }
+        .map-marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            z-index: 11;
+        }
+
+        .map-marker.existing { background-color: #28a745; } /* Green */
+        .map-marker.potential_lead { background-color: #ffc107; } /* Gold/Orange */
+        .map-marker.high_potential { background-color: #dc3545; } /* Red */
+
+        .map-circle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(0, 123, 255, 0.2); /* Light blue transparent */
+            border: 2px solid rgba(0, 123, 255, 0.5);
+            transform: translate(-50%, -50%);
+            z-index: 8;
+            pointer-events: none; /* Não interfere com cliques em marcadores */
+        }
+
+
+        /* Dashboard de Métricas */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-card {
+            background-color: #e9f5f9; /* Light Blue */
+            border-left: 6px solid #007bff; /* Primary Blue */
+            border-radius: 8px;
+            padding: 20px 25px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
+            text-align: center;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .dashboard-card.success { border-left-color: #28a745; background-color: #e6f7ee; } /* Green */
+        .dashboard-card.warning { border-left-color: #ffc107; background-color: #fff9e6; } /* Gold/Orange */
+        .dashboard-card.info { border-left-color: #17a2b8; background-color: #e8f7fa; } /* Teal */
+        .dashboard-card.danger { border-left-color: #dc3545; background-color: #fbe9ea; } /* Red */
+
+
+        .dashboard-card h4 {
+            margin-top: 0;
+            color: #1a2a3a;
+            font-size: 1.2em;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .dashboard-card p {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #007bff;
+            margin: 0;
+        }
+        .dashboard-card.success p { color: #28a745; }
+        .dashboard-card.warning p { color: #ffc107; }
+        .dashboard-card.info p { color: #17a2b8; }
+        .dashboard-card.danger p { color: #dc3545; }
+
+        /* Listas de Imóveis */
+        .property-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .property-card {
+            background-color: #fefefe;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease-in-out, border-color 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .property-card:hover {
+            transform: translateY(-7px);
+            border-color: #007bff;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .property-card .street-view-thumb {
+            width: 100%;
+            height: 150px;
+            background-color: #e9ecef;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 0.9em;
+            overflow: hidden;
+            position: relative;
+        }
+        .property-card .street-view-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .property-card .street-view-thumb span {
+             z-index: 1; /* Make sure text is above image */
+             background-color: rgba(255,255,255,0.7);
+             padding: 5px 10px;
+             border-radius: 5px;
+        }
+
+
+        .property-card h3 {
+            margin-top: 0;
+            color: #1a2a3a;
+            font-size: 1.3em;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .property-card p {
+            margin: 4px 0;
+            font-size: 0.95em;
+            color: #555;
+            text-align: left;
+        }
+
+        .property-card strong {
+            color: #333;
+        }
+
+        .property-card .status {
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 15px;
+            font-size: 0.85em;
+            text-align: left;
+        }
+
+        .status.existing {
+            background-color: #e6f7ee; /* Light Green */
+            color: #28a745; /* Dark Green */
+        }
+
+        .status.potential_lead {
+            background-color: #fff9e6; /* Light Gold */
+            color: #ffc107; /* Gold */
+        }
+
+        .status.high_potential {
+            background-color: #fbe9ea; /* Light Red */
+            color: #dc3545; /* Dark Red */
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Controles e Botões */
+        .controls {
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls button {
+            background-color: #28a745; /* Green */
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.15em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls button:hover {
+            background-color: #218838; /* Darker Green */
+            transform: translateY(-2px);
+        }
+
+        .controls button:disabled {
+            background-color: #6c757d; /* Grey */
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .controls .info-button {
+            background-color: #17a2b8; /* Teal */
+            padding: 12px 22px;
+            font-size: 1em;
+        }
+
+        .controls .info-button:hover {
+            background-color: #138496; /* Darker Teal */
+        }
+
+        /* Feedback Button */
+        .feedback-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #007bff; /* Primary Blue */
+            color: white;
+            padding: 18px 30px;
+            border-radius: 35px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-decoration: none;
+            z-index: 10000; /* Alto z-index para garantir visibilidade */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .feedback-button:hover {
+            background-color: #0056b3; /* Darker Blue */
+            transform: translateY(-3px);
+        }
+
+        /* Modal Base Styles (Feedback & IA Info) */
+        .modal-base {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 10001; /* Sit on top of everything */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.6); /* Darker overlay */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 35px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-content h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #1a2a3a;
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .modal-content textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 25px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1em;
+        }
+
+        .modal-content button[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        .modal-content button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #333;
+            text-decoration: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 15px auto 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Specific IA Info Modal styles */
+        #ia-info-modal .modal-content {
+            max-width: 750px;
+        }
+        #ia-info-modal p {
+            margin-bottom: 12px;
+            font-size: 1em;
+            color: #444;
+        }
+        #ia-info-modal strong {
+            color: #1a2a3a;
+        }
+        #ia-info-modal ul {
+            list-style-type: disc;
+            margin-left: 25px;
+            margin-bottom: 20px;
+            color: #444;
+        }
+        #ia-info-modal li {
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        #ia-info-modal li strong {
+            font-weight: 600;
+            color: #1a2a3a;
+        }
+        #ia-info-modal .emphasis-text {
+            background-color: #e8f7fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #17a2b8;
+            margin-top: 20px;
+            font-style: italic;
+            color: #1a2a3a;
+        }
+        #ia-info-modal .highlight-key {
+            background-color: #ffedd8; /* Light orange for key terms */
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #e65200;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            background-color: #1a2a3a;
+            color: #bbb;
+            font-size: 0.9em;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+        footer p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>thIAguinho Soluções: Simulador de Prospecção Inteligente</h1>
+        <p>Potencializando a Captação de Imóveis para Locação com Inteligência Artificial</p>
+    </header>
+
+    <div class="container">
+        <p style="text-align: center; margin-bottom: 30px; font-size: 1.15em; font-weight: 400; color: #444;">
+            Bem-vindo ao simulador! Explore como a Inteligência Artificial pode otimizar a captação de novos imóveis para sua imobiliária.
+        </p>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card success">
+                <h4>Imóveis Ativos (Seu Portfólio)</h4>
+                <p id="active-properties-count">0</p>
+            </div>
+            <div class="dashboard-card warning">
+                <h4>Novos Leads para Captação</h4>
+                <p id="new-leads-count">0</p>
+            </div>
+            <div class="dashboard-card info">
+                <h4>Bairros Foco da IA</h4>
+                <p id="suggested-neighborhoods">N/A</p>
+            </div>
+            <div class="dashboard-card danger">
+                <h4>Leads de Alta Prioridade (IA)</h4>
+                <p id="high-potential-count">0</p>
+            </div>
+        </div>
+
+        <h2>Mapa de Prospecção Inteligente (Visualização Simulada)</h2>
+        <div id="map-container">
+            <p>Este é um mapa fictício para demonstrar visualmente o conceito.</p>
+            <div id="map-overlay-elements">
+                <!-- Marcadores e círculos serão adicionados aqui via JS -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="activateRadar">
+                <span id="radar-icon">📡</span> Ativar Simulação do Radar de Oportunidades
+            </button>
+            <button class="info-button" id="open-ia-info-modal">
+                Entenda a Lógica da IA thIAguinho
+            </button>
+        </div>
+
+        <h2>Seu Portfólio de Imóveis Ativos</h2>
+        <div id="existing-properties-list" class="property-list">
+            <p style="text-align: center; color: #666;">Carregando imóveis existentes...</p>
+        </div>
+
+        <h2>Novos Leads para Captação (Identificados pela IA)</h2>
+        <div id="new-leads-list" class="property-list">
+            <p style="text-align: center; color: #666;">Clique em "Ativar Simulação do Radar de Oportunidades" para descobrir novos leads!</p>
+        </div>
+    </div>
+
+    <!-- Botão de Feedback -->
+    <a href="#" class="feedback-button" id="open-feedback-modal">Gostou do sistema? Fale com o Thiago</a>
+
+    <!-- Modal de Feedback -->
+    <div id="feedback-modal" class="modal-base">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>Seu Feedback para a thIAguinho Soluções</h3>
+            <form id="feedback-form">
+                <label for="feedback-text">Sua mensagem:</label>
+                <textarea id="feedback-text" placeholder="Compartilhe suas impressões, sugestões ou dúvidas..." required></textarea>
+                <button type="submit">Enviar Feedback</button>
+                <div class="loading-spinner" id="feedback-spinner"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Informações sobre a IA -->
+    <div id="ia-info-modal" class="modal-base">
+        <div class="modal-content">
+            <span class="close-button" id="close-ia-info-modal">&times;</span>
+            <h3>Entenda o Potencial da Inteligência Artificial thIAguinho para sua Imobiliária</h3>
+            <p><strong>A plataforma "Simulador de Prospecção Inteligente" que você está explorando é uma <span class="highlight-key">demonstração visual e funcional</span> de como a IA pode revolucionar sua estratégia de captação de imóveis para locação.</strong></p>
+
+            <h4>Como a Inteligência Artificial "Verdadeira" da thIAguinho Soluções opera:</h4>
+            <ul>
+                <li><strong><span class="highlight-key">Varredura e Monitoramento Contínuo:</span></strong> Nossa IA é projetada para monitorar ativamente e em tempo real centenas de fontes: outros portais imobiliários (concorrência), classificados online, redes sociais, notícias locais, dados demográficos e de zoneamento. Ela busca por imóveis recém-listados, com potencial para locação.</li>
+                <li><strong><span class="highlight-key">Análise Preditiva Avançada:</span></strong> Utilizando algoritmos de Machine Learning, a IA avalia cada potencial imóvel. Fatores como a demanda na região, o perfil do imóvel, o histórico de aluguéis, o tempo de anúncio no concorrente e até mesmo a qualidade das fotos são processados para gerar uma pontuação de potencial de captação.</li>
+                <li><strong><span class="highlight-key">Identificação de Zonas Estratégicas:</span></strong> A IA não apenas encontra imóveis, mas identifica "<span class="highlight-key">Zonas de Foco</span>" – bairros ou micro-regiões onde a demanda por locação é alta, sua oferta atual é baixa, ou a concorrência está ativa, mas vulnerável. Isso direciona seus esforços para onde há maior chance de sucesso.</li>
+                <li><strong><span class="highlight-key">Geração de Leads Qualificados e Acionáveis:</span></strong> Ao invés de uma busca manual e demorada, você recebe uma lista de leads pré-qualificados, com informações cruciais e sugestões de prioridade (Alta, Média). Com o Street View simulado, você pode ter uma "primeira visita" virtual.</li>
+            </ul>
+
+            <div class="emphasis-text">
+                <p><strong><span class="highlight-key">O que você vê agora é a interface e a simulação de resultados dessa IA.</span></strong> Para uma implementação completa, a thIAguinho Soluções desenvolve um poderoso <strong>backend</strong> (servidor) que executa todas essas varreduras, análises e processamentos de dados.</p>
+                <p>O banco de dados thIAguinho Soluções (onde seus feedbacks são enviados) atua como a infraestrutura de dados para essa solução, gerenciando informações de imóveis, leads e análises da IA de forma segura e em tempo real, garantindo que sua equipe sempre tenha os dados mais atualizados para agir.</p>
+            </div>
+            <p>Este protótipo é a prova do conceito. Estamos prontos para transformar essa visão em uma ferramenta real e estratégica que garantirá sua liderança na captação de imóveis!</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>Powered by thIAguinho Soluções</p>
+    </footer>
+
+    <script>
+        // Coordenadas fictícias para a demo (dentro de uma área relativa para simular proximidade)
+        const BASE_LAT = -23.550520; // Centro de São Paulo
+        const BASE_LNG = -46.633309;
+
+        // Dimensões do mapa em pixels (para posicionamento dos marcadores)
+        const MAP_WIDTH = 1280; // Largura da imagem de fundo simulada
+        const MAP_HEIGHT = 600; // Altura da imagem de fundo simulada
+
+        // Fatores de conversão de lat/lng para pixels (simulados)
+        // Estes valores são empíricos e servem para espalhar os marcadores razoavelmente na imagem.
+        const LAT_RANGE_DISPLAY = 0.10; // Quão larga é a 'área' de lat/lng que queremos mostrar
+        const LNG_RANGE_DISPLAY = 0.15; // Quão larga é a 'área' de lat/lng que queremos mostrar
+
+        const LAT_TO_PX = MAP_HEIGHT / LAT_RANGE_DISPLAY;
+        const LNG_TO_PX = MAP_WIDTH / LNG_RANGE_DISPLAY;
+
+        const mapOverlay = document.getElementById('map-overlay-elements');
+
+        let markersData = []; // Armazena dados dos marcadores para fácil acesso
+        let circlesData = []; // Armazena dados dos círculos
+
+        let existingProperties = [
+            { id: 'prop1', lat: BASE_LAT + 0.01, lng: BASE_LNG - 0.02, title: 'Apto Centro SP', address: 'Rua da Consolação, 100', neighborhood: 'Centro', type: 'Apartamento' },
+            { id: 'prop2', lat: BASE_LAT - 0.02, lng: BASE_LNG - 0.01, title: 'Casa Jardim Paulista', address: 'Alameda Lorena, 1500', neighborhood: 'Jardim Paulista', type: 'Casa' },
+            { id: 'prop3', lat: BASE_LAT + 0.005, lng: BASE_LNG + 0.01, title: 'Sala Bela Vista', address: 'Rua Augusta, 500', neighborhood: 'Bela Vista', type: 'Sala Comercial' },
+            { id: 'prop4', lat: BASE_LAT - 0.03, lng: BASE_LNG + 0.005, title: 'Sobrado Vila Mariana', address: 'Rua Joaquim Távora, 800', neighborhood: 'Vila Mariana', type: 'Casa' },
+            { id: 'prop5', lat: BASE_LAT + 0.015, lng: BASE_LNG - 0.01, title: 'Kitnet Higienópolis', address: 'Av. Angélica, 1200', neighborhood: 'Higienópolis', type: 'Kitnet' },
+        ];
+
+        let newLeads = [];
+        let interestZones = [];
+
+        // Imagens fictícias de Street View
+        const streetViewPlaceholders = [
+            'https://via.placeholder.com/400x250/b3d9ff/ffffff?text=Fachada+Imóvel+1',
+            'https://via.placeholder.com/400x250/c0e7ff/ffffff?text=Fachada+Imóvel+2',
+            'https://via.placeholder.com/400x250/ccf0ff/ffffff?text=Fachada+Imóvel+3',
+            'https://via.placeholder.com/400x250/d9f7ff/ffffff?text=Fachada+Imóvel+4',
+        ];
+
+        function getMarkerPosition(lat, lng) {
+            // Converte lat/lng fictícias para posições em pixels no mapa simulado
+            // A coordenada (0,0) do mapa fictício é o canto superior esquerdo
+            const mapCenterLat = BASE_LAT;
+            const mapCenterLng = BASE_LNG;
+
+            const pxX = MAP_WIDTH / 2 + (lng - mapCenterLng) * LNG_TO_PX;
+            const pxY = MAP_HEIGHT / 2 - (lat - mapCenterLat) * LAT_TO_PX; // Latitude aumenta para cima, pixels diminuem
+
+            return { x: pxX, y: pxY };
+        }
+
+        function renderMapElements() {
+            mapOverlay.innerHTML = ''; // Limpa elementos anteriores
+            markersData = []; // Reset markers data
+
+            // Renderiza círculos (Zonas de Foco)
+            circlesData.forEach(zone => {
+                const pos = getMarkerPosition(zone.lat, zone.lng);
+                const circleElement = document.createElement('div');
+                circleElement.className = 'map-circle';
+                // Raio em pixels (ex: 1 grau de lat/lng = 111km. 1000m = ~0.009 deg)
+                // Ajustamos o raio para pixels de forma simulada
+                const radiusPx = zone.radius * (LAT_TO_PX / 111111); // Conversão aproximada de metros para pixels
+                circleElement.style.width = `${radiusPx * 2}px`;
+                circleElement.style.height = `${radiusPx * 2}px`;
+                circleElement.style.left = `${pos.x}px`;
+                circleElement.style.top = `${pos.y}px`;
+                mapOverlay.appendChild(circleElement);
+            });
+
+            // Renderiza marcadores existentes
+            existingProperties.forEach((property, index) => {
+                const pos = getMarkerPosition(property.lat, property.lng);
+                const marker = document.createElement('div');
+                marker.className = 'map-marker existing';
+                marker.style.left = `${pos.x}px`;
+                marker.style.top = `${pos.y}px`;
+                marker.textContent = (index + 1); // Número para identificar
+                mapOverlay.appendChild(marker);
+                markersData.push({ element: marker, property: property, isExisting: true });
+
+                marker.onclick = () => highlightCard(property.id, true);
+            });
+
+            // Renderiza novos leads
+            newLeads.forEach((property, index) => {
+                const pos = getMarkerPosition(property.lat, property.lng);
+                const marker = document.createElement('div');
+                const markerClass = property.potential >= 80 ? 'map-marker high_potential' : 'map-marker potential_lead';
+                marker.className = markerClass;
+                marker.style.left = `${pos.x}px`;
+                marker.style.top = `${pos.y}px`;
+                marker.textContent = (existingProperties.length + index + 1); // Número sequencial
+                mapOverlay.appendChild(marker);
+                markersData.push({ element: marker, property: property, isExisting: false });
+
+                marker.onclick = () => highlightCard(property.id, false);
+            });
+        }
+
+        function renderPropertiesAndDashboard() {
+            const existingList = document.getElementById('existing-properties-list');
+            existingList.innerHTML = existingProperties.length > 0 ? '' : '<p style="text-align: center; color: #666;">Nenhum imóvel ativo cadastrado. Cadastre para ativar o Radar!</p>';
+
+            existingProperties.forEach(property => {
+                const card = createPropertyCard(property, 'existing');
+                card.id = `card-${property.id}`;
+                card.onclick = () => highlightMarker(property.id, true);
+                existingList.appendChild(card);
+            });
+
+            const newLeadsList = document.getElementById('new-leads-list');
+            newLeadsList.innerHTML = newLeads.length > 0 ? '' : '<p style="text-align: center; color: #666;">Clique em "Ativar Simulação do Radar de Oportunidades" para descobrir novos leads!</p>';
+
+            newLeads.forEach(property => {
+                const statusType = property.potential >= 80 ? 'high_potential' : 'potential_lead';
+                const card = createPropertyCard(property, statusType);
+                card.id = `card-${property.id}`;
+                card.onclick = () => highlightMarker(property.id, false);
+                newLeadsList.appendChild(card);
+            });
+
+            renderMapElements(); // Atualiza os elementos no mapa simulado
+            updateDashboard();
+        }
+
+        function getStreetViewImageUrl(lat, lng) {
+            // Esta função retorna uma imagem fictícia de Street View.
+            return streetViewPlaceholders[Math.floor(Math.random() * streetViewPlaceholders.length)];
+        }
+
+        function createPropertyCard(property, statusType) {
+            const card = document.createElement('div');
+            let statusClass = statusType;
+            let statusText = '';
+            if (statusType === 'existing') statusText = 'Imóvel Ativo';
+            else if (statusType === 'potential_lead') statusText = 'Nova Oportunidade';
+            else if (statusType === 'high_potential') statusText = 'ALTA PRIORIDADE';
+
+            card.className = `property-card`;
+
+            let streetViewContent = '';
+            if (statusType !== 'existing') { // Apenas para leads, simular Street View
+                 streetViewContent = `
+                    <div class="street-view-thumb">
+                        <img src="${getStreetViewImageUrl(property.lat, property.lng)}" alt="Street View Miniatura">
+                        <span>Ver fachada (Sim.)</span>
+                    </div>
+                 `;
+            }
+
+            card.innerHTML = `
+                ${streetViewContent}
+                <h3>${property.title}</h3>
+                <p><strong>Endereço:</strong> ${property.address}</p>
+                <p><strong>Bairro:</strong> ${property.neighborhood}</p>
+                ${property.type ? `<p><strong>Tipo:</strong> ${property.type}</p>` : ''}
+                ${property.potential ? `<p><strong>Potencial:</strong> ${property.potential}% (via IA)</p>` : ''}
+                ${property.origin ? `<p><strong>Origem (sim.):</strong> ${property.origin}</p>` : ''}
+                ${property.nextStep ? `<p><strong>Próximo Passo (IA):</strong> ${property.nextStep}</p>` : ''}
+                <p class="status ${statusClass}">${statusText}</p>
+            `;
+            return card;
+        }
+
+        function highlightCard(id, isExisting) {
+            // Remove destaque de todos os cards
+            document.querySelectorAll('.property-card').forEach(c => c.style.border = '1px solid #e0e6ed');
+            // Destaca o card clicado
+            const cardElement = document.getElementById(`card-${id}`);
+            if (cardElement) {
+                cardElement.style.border = '2px solid #007bff';
+                cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // Também simula um destaque no marcador do mapa
+            highlightMarker(id, isExisting);
+        }
+
+        function highlightMarker(id) {
+            // Remove destaque de todos os marcadores no mapa
+            markersData.forEach(m => m.element.style.transform = 'translate(-50%, -50%)');
+
+            // Encontra e destaca o marcador correspondente
+            const markerEntry = markersData.find(m => m.property.id === id);
+            if (markerEntry) {
+                markerEntry.element.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                markerEntry.element.style.zIndex = '12'; // Traz para frente
+                // Ocultar após um tempo, simulando um "flash"
+                setTimeout(() => {
+                    markerEntry.element.style.transform = 'translate(-50%, -50%)';
+                    markerEntry.element.style.zIndex = '10';
+                }, 1000);
+            }
+        }
+
+
+        function updateDashboard() {
+            document.getElementById('active-properties-count').textContent = existingProperties.length;
+            document.getElementById('new-leads-count').textContent = newLeads.length;
+            document.getElementById('high-potential-count').textContent = newLeads.filter(lead => lead.potential >= 80).length;
+
+            const uniqueNeighborhoods = new Set(interestZones.map(zone => zone.name).filter(n => n));
+            document.getElementById('suggested-neighborhoods').textContent = uniqueNeighborhoods.size > 0 ? Array.from(uniqueNeighborhoods).slice(0, 3).join(', ') : 'N/A';
+        }
+
+        document.getElementById('activateRadar').addEventListener('click', () => {
+            const button = document.getElementById('activateRadar');
+            const icon = document.getElementById('radar-icon');
+            button.disabled = true;
+            icon.textContent = '🔄'; // Ícone de carregamento
+
+            // Limpa leads e zonas anteriores
+            newLeads = [];
+            interestZones = [];
+            circlesData = []; // Limpa dados de círculos
+
+            const neighborhoods = ['Centro', 'Jardim Paulista', 'Bela Vista', 'Vila Mariana', 'Higienópolis', 'Pinheiros', 'Moema', 'Consolação', 'República', 'Brooklin', 'Morumbi'];
+            const propertyTypes = ['Apartamento 1Q', 'Apartamento 2Q', 'Apartamento 3Q', 'Casa Padrão', 'Sobrado Moderno', 'Kitnet Studio', 'Loft'];
+            const origins = ['Análise de Concorrência Digital', 'Radar de Oportunidades em Redes Sociais', 'Monitoramento de Portais Imobiliários', 'Contato Direto (Sim.)', 'Análise de Mercado'];
+            const nextSteps = [
+                'Contato Imediato: Proprietário com imóvel em desocupação',
+                'Agendar Visita: Alto interesse na região',
+                'Monitorar: Potencial de alta valorização',
+                'Ofertar: Imóvel com preço atrativo',
+                'Análise de Portfólio: Geração de valor para o imóvel'
+            ];
+
+            // Geração mais inteligente de Zonas de Foco
+            neighborhoods.forEach(nb => {
+                const existingInNb = existingProperties.filter(p => p.neighborhood === nb);
+                if (existingInNb.length < 2 || Math.random() > 0.6) {
+                    const latOffset = (Math.random() - 0.02) * 0.05; // Ajuste para ficar mais próximo do centro simulado
+                    const lngOffset = (Math.random() - 0.02) * 0.05;
+                    const centralLat = existingInNb.length > 0 ? existingInNb[0].lat + latOffset : (BASE_LAT + latOffset);
+                    const centralLng = existingInNb.length > 0 ? existingInNb[0].lng + lngOffset : (BASE_LNG + lngOffset);
+
+                    const radius = Math.floor(Math.random() * 1000) + 700; // 700 a 1700 metros
+
+                    interestZones.push({
+                        id: `zone${interestZones.length + 1}`,
+                        lat: centralLat,
+                        lng: centralLng,
+                        radius: radius,
+                        name: nb,
+                        description: `Alta demanda de locação ou baixa oferta da imobiliária no bairro ${nb}. Priorize a prospecção aqui!`
+                    });
+                    circlesData.push({lat: centralLat, lng: centralLng, radius: radius});
+                }
+            });
+
+            // Geração de Oportunidades (Leads)
+            // Leads próximos a imóveis existentes
+            existingProperties.forEach(prop => {
+                for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+                    const newLat = prop.lat + (Math.random() - 0.5) * 0.015;
+                    const newLng = prop.lng + (Math.random() - 0.5) * 0.02;
+                    const potential = Math.floor(Math.random() * 40) + 60;
+                    const randomOrigin = origins[Math.floor(Math.random() * origins.length)];
+                    const randomType = propertyTypes[Math.floor(Math.random() * propertyTypes.length)];
+                    const randomNextStep = nextSteps[Math.floor(Math.random() * nextSteps.length)];
+
+                    newLeads.push({
+                        id: `lead${newLeads.length + 1}`,
+                        lat: newLat,
+                        lng: newLng,
+                        title: `${randomType} Disponível`,
+                        address: `Rua Descoberta, ${Math.floor(Math.random() * 500) + 100}, ${prop.neighborhood || 'Região Vizinha'}`,
+                        potential: potential,
+                        status: potential >= 80 ? 'high_potential' : 'potential_lead',
+                        neighborhood: prop.neighborhood || neighborhoods[Math.floor(Math.random() * neighborhoods.length)],
+                        origin: randomOrigin,
+                        type: randomType,
+                        nextStep: randomNextStep
+                    });
+                }
+            });
+
+            // Leads dentro das Zonas de Foco
+            interestZones.forEach(zone => {
+                for (let i = 0; i < Math.floor(Math.random() * 4) + 1; i++) {
+                    // Gera coordenadas dentro do raio da zona de forma mais realista
+                    const angle = Math.random() * 2 * Math.PI;
+                    const distance = Math.random() * zone.radius / 111111; // Converte metros para graus de lat/lng aprox.
+                    const newLat = zone.lat + distance * Math.cos(angle);
+                    const newLng = zone.lng + distance * Math.sin(angle) / Math.cos(zone.lat * Math.PI / 180); // Ajuste para longitude
+
+                    const potential = Math.floor(Math.random() * 50) + 50;
+                    const randomOrigin = origins[Math.floor(Math.random() * origins.length)];
+                    const randomType = propertyTypes[Math.floor(Math.random() * propertyTypes.length)];
+                    const randomNextStep = nextSteps[Math.floor(Math.random() * nextSteps.length)];
+
+                    newLeads.push({
+                        id: `lead${newLeads.length + 1}`,
+                        lat: newLat,
+                        lng: newLng,
+                        title: `${randomType} com Alta Demanda`,
+                        address: `Av. da Oportunidade, ${Math.floor(Math.random() * 900) + 50}, ${zone.name}`,
+                        potential: potential,
+                        status: potential >= 80 ? 'high_potential' : 'potential_lead',
+                        neighborhood: zone.name,
+                        origin: randomOrigin,
+                        type: randomType,
+                        nextStep: randomNextStep
+                    });
+                }
+            });
+
+            // Pequeno atraso para simular processamento da IA
+            setTimeout(() => {
+                alert('Radar de Oportunidades ativado! Novas oportunidades e zonas de foco foram identificadas pela IA.');
+                renderPropertiesAndDashboard();
+                button.disabled = false;
+                icon.textContent = '📡';
+            }, 3000); // 3 segundos de simulação para maior impacto
+        });
+
+        // Chamada inicial para renderizar os dados e o dashboard
+        renderPropertiesAndDashboard();
+
+        // --- Lógica dos Modais (Feedback e Informações da IA) ---
+        const feedbackModal = document.getElementById('feedback-modal');
+        const openFeedbackButton = document.getElementById('open-feedback-modal');
+        const closeFeedbackButton = feedbackModal.querySelector('.close-button');
+        const feedbackForm = document.getElementById('feedback-form');
+        const feedbackText = document.getElementById('feedback-text');
+        const feedbackSpinner = document.getElementById('feedback-spinner');
+
+        const iaInfoModal = document.getElementById('ia-info-modal');
+        const openIaInfoButton = document.getElementById('open-ia-info-modal');
+        const closeIaInfoButton = document.getElementById('close-ia-info-modal');
+
+        function openModal(modal) {
+            modal.style.display = 'flex';
+        }
+
+        function closeModal(modal) {
+            modal.style.display = 'none';
+        }
+
+        openFeedbackButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            openModal(feedbackModal);
+        });
+        closeFeedbackButton.addEventListener('click', () => closeModal(feedbackModal));
+
+        openIaInfoButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            openModal(iaInfoModal);
+        });
+        closeIaInfoButton.addEventListener('click', () => closeModal(iaInfoModal));
+
+        window.addEventListener('click', (event) => {
+            if (event.target == feedbackModal) {
+                closeModal(feedbackModal);
+            }
+            if (event.target == iaInfoModal) {
+                closeModal(iaInfoModal);
+            }
+        });
+
+        feedbackForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mensagem_do_cliente = feedbackText.value;
+
+            if (!mensagem_do_cliente.trim()) {
+                alert('Por favor, digite seu feedback antes de enviar.');
+                return;
+            }
+
+            feedbackSpinner.style.display = 'block';
+            feedbackForm.querySelector('button[type="submit"]').disabled = true;
+
+            try {
+                const response = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/projetos_capturados/-Oof4psfTazNg8bLoZYM/feedbacks.json', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        texto: mensagem_do_cliente,
+                        data: new Date().toISOString()
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Mensagem enviada para a thIAguinho Soluções!');
+                    feedbackText.value = '';
+                    closeModal(feedbackModal);
+                } else {
+                    alert('Erro ao enviar mensagem. Tente novamente mais tarde.');
+                }
+            } catch (error) {
+                console.error('Erro no fetch do feedback:', error);
+                alert('Ocorreu um erro de rede. Verifique sua conexão e tente novamente.');
+            } finally {
+                feedbackSpinner.style.display = 'none';
+                feedbackForm.querySelector('button[type="submit"]').disabled = false;
+            }
+        });
+
+    </script>
+</body>
+</html>

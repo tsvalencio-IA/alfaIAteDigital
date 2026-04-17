@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Estoque Kumon - thIAguinho Soluções</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-bg: #f8f9fa;
+            --dark-text: #343a40;
+            --border-color: #dee2e6;
+            --kumon-blue: #00A6DA; /* Azul Kumon */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        h1, h2, h3 {
+            color: var(--kumon-blue);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header-kumon {
+            background-color: var(--kumon-blue);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+
+        .header-kumon h1 {
+            color: white;
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        /* Formulário de Adição/Edição de Material */
+        .form-section {
+            background-color: #f0f8ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #e0f0ff;
+        }
+
+        .form-section h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--dark-text);
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="date"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1em;
+            font-family: 'Roboto', sans-serif;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-secondary { background-color: var(--secondary-color); color: white; }
+        .btn-secondary:hover { background-color: #5a6268; }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { background-color: #218838; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-info { background-color: var(--info-color); color: white; }
+        .btn-info:hover { background-color: #138496; }
+        .btn-warning { background-color: var(--warning-color); color: var(--dark-text); }
+        .btn-warning:hover { background-color: #e0a800; }
+
+
+        /* Seções de Tabela */
+        .stock-section, .log-section, .order-suggestion-section {
+            margin-top: 30px;
+        }
+
+        .stock-section h2, .log-section h2, .order-suggestion-section h2 {
+            color: var(--kumon-blue);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: var(--kumon-blue);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .data-table tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .stock-level-low { background-color: #ffe0e0; }
+        .stock-level-high { background-color: #fffacd; }
+
+        .table-actions {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            flex-wrap: wrap; /* Para botões em várias linhas em telas pequenas */
+        }
+
+        .table-actions .btn {
+            padding: 6px 10px;
+            font-size: 0.85em;
+        }
+        
+        .table-actions .btn-entrada,
+        .table-actions .btn-baixa {
+            min-width: 70px; /* Para garantir que os botões "Entrada" e "Baixa" tenham largura similar */
+        }
+
+
+        /* Alertas */
+        .alert-container {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            font-weight: bold;
+        }
+
+        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+        /* Modals (existing styles apply) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.8em;
+            cursor: pointer;
+            color: var(--secondary-color);
+        }
+        .close-modal:hover {
+            color: var(--dark-text);
+        }
+
+        /* Feedback Button specific styling (more prominent) */
+        #feedback-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #FF5722; /* Um laranja vibrante para destaque */
+            color: white;
+            padding: 15px 30px; /* Um pouco mais de padding */
+            border-radius: 30px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Sombra mais forte */
+            font-size: 1.2em; /* Fonte um pouco maior */
+            font-weight: bold;
+            text-decoration: none;
+            z-index: 1000;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Maior espaçamento */
+            border: 2px solid #E64A19; /* Borda para mais contraste */
+        }
+
+        #feedback-btn:hover {
+            background-color: #E64A19; /* Tom mais escuro no hover */
+            transform: translateY(-3px) scale(1.02); /* Leve levantamento e aumento */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        #feedback-btn img {
+            width: 24px; /* Ícone um pouco maior */
+            height: 24px;
+            filter: invert(1); /* Deixa o ícone branco */
+        }
+
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--secondary-color);
+            font-size: 0.9em;
+            border-top: 1px solid var(--border-color);
+            background-color: #f1f1f1;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            .header-kumon h1 {
+                font-size: 2em;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+            }
+            .data-table th, .data-table td {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+            .table-actions {
+                flex-direction: column; /* Botões de ação em coluna em telas pequenas */
+                gap: 8px;
+            }
+            .table-actions .btn {
+                width: 100%;
+                box-sizing: border-box; /* Garante que padding e border não aumentem a largura */
+            }
+            #feedback-btn {
+                font-size: 1em;
+                padding: 12px 20px;
+                bottom: 15px;
+                right: 15px;
+                gap: 5px;
+            }
+            #feedback-btn img {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-kumon">
+            <h1>Sistema de Gestão de Estoque Kumon</h1>
+            <p>Controle preciso e transparente para sua unidade.</p>
+        </div>
+
+        <section class="form-section">
+            <h2>Adicionar/Editar Material</h2>
+            <form id="material-form">
+                <input type="hidden" id="material-id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="material-name">Nome do Material:</label>
+                        <input type="text" id="material-name" placeholder="Ex: Matemática - Nível A - Lição 1-10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="material-type">Tipo de Material:</label>
+                        <select id="material-type" required>
+                            <option value="">Selecione</option>
+                            <option value="Folhas Matemática">Folhas de Matemática (Bloco de 10 folhas)</option>
+                            <option value="Folhas Português">Folhas de Português (Bloco de 10 folhas)</option>
+                            <option value="Folhas Inglês">Folhas de Inglês (Bloco de 10 folhas)</option>
+                            <option value="Livro Respostas Matemática">Livro de Respostas Matemática</option>
+                            <option value="Livro Respostas Português">Livro de Respostas Português</option>
+                            <option value="Livro Respostas Inglês">Livro de Respostas Inglês</option>
+                            <option value="Caderno Correção">Caderno de Correção</option>
+                            <option value="Lápis">Lápis</option>
+                            <option value="Borracha">Borracha</option>
+                            <option value="Teste Diagnóstico">Teste Diagnóstico (Folha)</option>
+                            <option value="Material de Apoio">Material de Apoio (Cartazes/Fichas)</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="initial-stock-group">
+                        <label for="initial-stock">Estoque Inicial:</label>
+                        <input type="number" id="initial-stock" value="0" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="min-stock">Estoque Mínimo (Alerta):</label>
+                        <input type="number" id="min-stock" value="10" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="max-stock">Estoque Máximo (Alerta):</label>
+                        <input type="number" id="max-stock" value="100" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="estimated-monthly-consumption">Consumo Mensal Estimado (em unidades do material):</label>
+                        <input type="number" id="estimated-monthly-consumption" value="0" min="0" placeholder="Ex: 500 (blocos ou unidades)" required>
+                        <small>Este é o consumo total mensal de *unidades do material* (e.g., blocos de 10 folhas, lápis). Calcule considerando o seu número de alunos por estágio. Ex: 20 alunos * 10 blocos/mês = 200 blocos.</small>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary" id="save-material-btn">Adicionar Material</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-edit-btn" style="display: none;">Cancelar Edição</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="stock-section">
+            <h2>Estoque Atual</h2>
+            <div id="alerts-container"></div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome do Material</th>
+                            <th>Tipo</th>
+                            <th>Estoque Atual</th>
+                            <th>Estoque Mín.</th>
+                            <th>Estoque Máx.</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-list">
+                        <!-- Itens do estoque serão carregados aqui pelo JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="order-suggestion-section">
+            <h2>Sugestão de Pedido</h2>
+            <div class="form-grid" style="grid-template-columns: 1fr auto; max-width: 450px; margin: 0 auto 20px auto;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="months-to-forecast">Meses de Estoque Desejado (Fator Multiplicador):</label>
+                    <input type="number" id="months-to-forecast" value="3" min="1" required>
+                    <small>Insira a quantidade de meses de consumo que você deseja ter em estoque. Ex: '3' para atender à demanda de seus alunos pelos próximos 3 meses (referência ao "multiplico por três" dos alunos).</small>
+                </div>
+                <div class="button-group" style="justify-content: flex-start; margin-top: 0; align-items: flex-end;">
+                    <button type="button" class="btn btn-info" id="generate-order-suggestion">Gerar Sugestão de Pedido</button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Estoque Atual</th>
+                            <th>Consumo Mensal Estimado</th>
+                            <th>Estoque Desejado (<span id="forecast-months-display">3</span> meses)</th>
+                            <th>Quantidade a Pedir</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-suggestion-list">
+                        <tr><td colspan="5" style="text-align: center;">Clique em "Gerar Sugestão de Pedido" para ver as recomendações.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section class="log-section">
+            <h2>Log de Auditoria de Movimentações</h2>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Material</th>
+                            <th>Ação</th>
+                            <th>Qtd.</th>
+                            <th>Responsável</th>
+                            <th>Detalhes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transaction-log-list">
+                        <!-- Transações serão carregadas aqui pelo JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Botão de Feedback -->
+    <a href="#" id="feedback-btn" title="Gostou do sistema? Converse com o Thiago!">
+        <img src="https://www.svgrepo.com/show/532326/speech-bubble.svg" alt="Feedback Icon">
+        Conversar com o desenvolvedor
+    </a>
+
+    <!-- Modal de Entrada de Material -->
+    <div class="modal-overlay" id="entrada-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-entrada-modal">&times;</span>
+            <h3>Registrar Entrada de Material</h3>
+            <form id="entrada-form">
+                <input type="hidden" id="entrada-material-id">
+                <div class="form-group">
+                    <label for="entrada-material-name">Material:</label>
+                    <input type="text" id="entrada-material-name" readonly>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="entrada-quantity">Quantidade:</label>
+                        <input type="number" id="entrada-quantity" min="1" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="entrada-responsible">Responsável:</label>
+                        <input type="text" id="entrada-responsible" placeholder="Nome do funcionário" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="entrada-invoice">Número da Nota Fiscal:</label>
+                        <input type="text" id="entrada-invoice" placeholder="Opcional">
+                    </div>
+                    <div class="form-group">
+                        <label for="entrada-date">Data da Entrada:</label>
+                        <input type="date" id="entrada-date" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Registrar Entrada</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-entrada-modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Baixa de Material -->
+    <div class="modal-overlay" id="baixa-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-baixa-modal">&times;</span>
+            <h3>Registrar Baixa de Material</h3>
+            <form id="baixa-form">
+                <input type="hidden" id="baixa-material-id">
+                <div class="form-group">
+                    <label for="baixa-material-name">Material:</label>
+                    <input type="text" id="baixa-material-name" readonly>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="baixa-quantity">Quantidade:</label>
+                        <input type="number" id="baixa-quantity" min="1" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="baixa-responsible">Responsável:</label>
+                        <input type="text" id="baixa-responsible" placeholder="Nome do funcionário" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="baixa-student">Nome do Aluno (Opcional):</label>
+                        <input type="text" id="baixa-student" placeholder="Aluno que recebeu o material">
+                    </div>
+                    <div class="form-group">
+                        <label for="baixa-purpose">Finalidade:</label>
+                        <select id="baixa-purpose" required>
+                            <option value="">Selecione</option>
+                            <option value="Uso Diário (Sala)">Uso Diário (Sala de Estudo)</option>
+                            <option value="Entrega Aluno">Entrega a Aluno</option>
+                            <option value="Avaliação">Para Avaliação</option>
+                            <option value="Reposicao">Reposição de Estoque Interno</option>
+                            <option value="Perda/Dano">Perda / Dano</option>
+                            <option value="Ajuste">Ajuste de Inventário</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="baixa-destination">Destino/Local de Uso:</label>
+                        <input type="text" id="baixa-destination" placeholder="Ex: Sala de Matemática, Aluno João Silva, etc." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="baixa-date">Data da Baixa:</label>
+                        <input type="date" id="baixa-date" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-danger">Registrar Baixa</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-baixa-modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Feedback (existing) -->
+    <div class="modal-overlay" id="feedback-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-feedback-modal">&times;</span>
+            <h3>Seu Feedback é Importante!</h3>
+            <p>Obrigado por testar o sistema. Gostaríamos muito de saber sua opinião.</p>
+            <form id="feedback-form">
+                <textarea id="feedback-message" placeholder="Escreva sua mensagem aqui..." required></textarea>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Enviar Feedback</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-feedback-modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        Powered by thIAguinho Soluções
+    </footer>
+
+    <script>
+        // DIRETRIZ MÁXIMA PARA O MOTOR DE VOZ DO MASCOTE:
+        let globalAudioCtx = null;
+        async function falarComMascote(textoParaFalar) {
+            if (!globalAudioCtx) globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (globalAudioCtx.state === 'suspended') globalAudioCtx.resume();
+            
+            try {
+                const resKey = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_api_key.json');
+                const adminApiKey = await resKey.json();
+                const resVoice = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_voice_name.json');
+                const voiceName = await resVoice.json() || "Aoede";
+
+                if (!adminApiKey) throw new Error("Chave do Admin não encontrada.");
+
+                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + adminApiKey;
+                const payload = {
+                    contents: [{ parts: [{ text: textoParaFalar }] }],
+                    generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } } }
+                };
+
+                const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                const base64Audio = data.candidates[0].content.parts[0].inlineData.data;
+
+                const binaryString = window.atob(base64Audio);
+                const buffer = new ArrayBuffer(binaryString.length);
+                const view = new Uint8Array(buffer);
+                for (let i = 0; i < binaryString.length; i++) { view[i] = binaryString.charCodeAt(i); }
+                const int16View = new Int16Array(buffer);
+                const audioBuffer = globalAudioCtx.createBuffer(1, int16View.length, 24000);
+                const channelData = audioBuffer.getChannelData(0);
+                for (let i = 0; i < int16View.length; i++) { channelData[i] = int16View[i] / 32768.0; }
+                const source = globalAudioCtx.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(globalAudioCtx.destination);
+                source.start();
+
+            } catch(e) {
+                console.warn("Falha no Motor Gemini, ativando plano B local: ", e);
+                const fallback = new SpeechSynthesisUtterance(textoParaFalar);
+                fallback.lang = 'pt-BR';
+                window.speechSynthesis.speak(fallback);
+            }
+        }
+        // FIM DA DIRETRIZ MÁXIMA PARA O MOTOR DE VOZ DO MASCOTE
+
+        const STORAGE_KEY_INVENTORY = 'kumon_inventory_v4'; // Versão atualizada do storage
+        const STORAGE_KEY_LOGS = 'kumon_transaction_log_v4'; // Versão atualizada do storage
+        let inventory = [];
+        let transactionLog = [];
+        let editingId = null;
+
+        const materialForm = document.getElementById('material-form');
+        const materialIdInput = document.getElementById('material-id');
+        const materialNameInput = document.getElementById('material-name');
+        const materialTypeInput = document.getElementById('material-type');
+        const initialStockInput = document.getElementById('initial-stock');
+        const initialStockGroup = document.getElementById('initial-stock-group');
+        const minStockInput = document.getElementById('min-stock');
+        const maxStockInput = document.getElementById('max-stock');
+        const estimatedMonthlyConsumptionInput = document.getElementById('estimated-monthly-consumption'); // Campo de consumo mensal
+        const saveMaterialBtn = document.getElementById('save-material-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const stockList = document.getElementById('stock-list');
+        const alertsContainer = document.getElementById('alerts-container');
+        const transactionLogList = document.getElementById('transaction-log-list');
+
+        // Feedback Elements
+        const feedbackBtn = document.getElementById('feedback-btn');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const closeFeedbackModal = document.getElementById('close-feedback-modal');
+        const cancelFeedbackModal = document.getElementById('cancel-feedback-modal');
+        const feedbackForm = document.getElementById('feedback-form');
+        const feedbackMessageInput = document.getElementById('feedback-message');
+        const CLIENT_ID = '-OoeZPWwTgAD6x2nxbvH'; // ID ÚNICO do Cliente
+        const FIREBASE_URL = `https://thiaguinho-40a14-default-rtdb.firebaseio.com/projetos_capturados/${CLIENT_ID}/feedbacks.json`;
+
+        // Entrada Modal Elements
+        const entradaModal = document.getElementById('entrada-modal');
+        const closeEntradaModal = document.getElementById('close-entrada-modal');
+        const cancelEntradaModal = document.getElementById('cancel-entrada-modal');
+        const entradaForm = document.getElementById('entrada-form');
+        const entradaMaterialIdInput = document.getElementById('entrada-material-id');
+        const entradaMaterialNameInput = document.getElementById('entrada-material-name');
+        const entradaQuantityInput = document.getElementById('entrada-quantity');
+        const entradaResponsibleInput = document.getElementById('entrada-responsible');
+        const entradaInvoiceInput = document.getElementById('entrada-invoice');
+        const entradaDateInput = document.getElementById('entrada-date');
+
+        // Baixa Modal Elements
+        const baixaModal = document.getElementById('baixa-modal');
+        const closeBaixaModal = document.getElementById('close-baixa-modal');
+        const cancelBaixaModal = document.getElementById('cancel-baixa-modal');
+        const baixaForm = document.getElementById('baixa-form');
+        const baixaMaterialIdInput = document.getElementById('baixa-material-id');
+        const baixaMaterialNameInput = document.getElementById('baixa-material-name');
+        const baixaQuantityInput = document.getElementById('baixa-quantity');
+        const baixaResponsibleInput = document.getElementById('baixa-responsible');
+        const baixaStudentInput = document.getElementById('baixa-student');
+        const baixaPurposeInput = document.getElementById('baixa-purpose');
+        const baixaDestinationInput = document.getElementById('baixa-destination');
+        const baixaDateInput = document.getElementById('baixa-date');
+
+        // Order Suggestion Elements
+        const monthsToForecastInput = document.getElementById('months-to-forecast');
+        const generateOrderSuggestionBtn = document.getElementById('generate-order-suggestion');
+        const orderSuggestionList = document.getElementById('order-suggestion-list');
+        const forecastMonthsDisplay = document.getElementById('forecast-months-display');
+
+
+        // Load data from localStorage
+        function loadData() {
+            const storedInventory = localStorage.getItem(STORAGE_KEY_INVENTORY);
+            const storedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
+            if (storedInventory) {
+                inventory = JSON.parse(storedInventory);
+            }
+            if (storedLogs) {
+                transactionLog = JSON.parse(storedLogs);
+            }
+            renderAll();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY_INVENTORY, JSON.stringify(inventory));
+            localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(transactionLog));
+            renderAll();
+        }
+
+        // Render all sections
+        function renderAll() {
+            renderInventory();
+            checkStockAlerts();
+            renderTransactionLog();
+            // Clear order suggestion when data changes, user needs to re-generate
+            orderSuggestionList.innerHTML = `<tr><td colspan="5" style="text-align: center;">Clique em "Gerar Sugestão de Pedido" para ver as recomendações.</td></tr>`;
+        }
+
+        // Render inventory list
+        function renderInventory() {
+            stockList.innerHTML = '';
+            if (inventory.length === 0) {
+                stockList.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhum material cadastrado ainda.</td></tr>`;
+                return;
+            }
+            inventory.forEach(item => {
+                const row = document.createElement('tr');
+                let rowClass = '';
+                if (item.currentStock < item.minStock) {
+                    rowClass = 'stock-level-low';
+                } else if (item.currentStock > item.maxStock) {
+                    rowClass = 'stock-level-high';
+                }
+                row.className = rowClass;
+
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.type}</td>
+                    <td>${item.currentStock}</td>
+                    <td>${item.minStock}</td>
+                    <td>${item.maxStock}</td>
+                    <td class="table-actions">
+                        <button class="btn btn-success btn-entrada" onclick="openEntradaModal('${item.id}')" title="Registrar Entrada">Entrada</button>
+                        <button class="btn btn-danger btn-baixa" onclick="openBaixaModal('${item.id}')" title="Registrar Baixa">Baixa</button>
+                        <button class="btn btn-info" onclick="editMaterial('${item.id}')" title="Editar Material">Editar</button>
+                        <button class="btn btn-warning" onclick="deleteMaterial('${item.id}')" title="Excluir Material">Excluir</button>
+                    </td>
+                `;
+                stockList.appendChild(row);
+            });
+        }
+
+        // Render transaction log
+        function renderTransactionLog() {
+            transactionLogList.innerHTML = '';
+            if (transactionLog.length === 0) {
+                transactionLogList.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhuma movimentação registrada.</td></tr>`;
+                return;
+            }
+            // Sort by date descending
+            const sortedLog = [...transactionLog].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            sortedLog.forEach(log => {
+                const row = document.createElement('tr');
+                const date = new Date(log.timestamp).toLocaleString('pt-BR');
+                let detailsHtml = '';
+
+                if (log.action === 'Entrada') {
+                    detailsHtml = `Nota: ${log.details.invoiceNumber || 'N/A'}`;
+                } else if (log.action === 'Saída') {
+                    detailsHtml = `Aluno: ${log.details.studentName || 'N/A'}, Finalidade: ${log.details.purpose}, Destino: ${log.details.destination}`;
+                } else if (log.action === 'Criação') {
+                    detailsHtml = `Estoque inicial: ${log.quantity}`;
+                } else if (log.action === 'Edição') {
+                     detailsHtml = `Nome: '${log.details.oldName}' &rarr; '${log.details.newName}', Tipo: '${log.details.oldType}' &rarr; '${log.details.newType}', Min: ${log.details.oldMinStock} &rarr; ${log.details.newMinStock}, Max: ${log.details.oldMaxStock} &rarr; ${log.details.newMaxStock}, Consumo/Mês: ${log.details.oldEstimatedMonthlyConsumption} &rarr; ${log.details.newEstimatedMonthlyConsumption}`;
+                } else if (log.action === 'Exclusão') {
+                    detailsHtml = `Motivo: ${log.details.reason || 'N/A'}`;
+                }
+
+
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${log.materialName}</td>
+                    <td>${log.action}</td>
+                    <td>${log.quantity}</td>
+                    <td>${log.responsible}</td>
+                    <td>${detailsHtml}</td>
+                `;
+                transactionLogList.appendChild(row);
+            });
+        }
+
+        // Generate unique ID
+        function generateId() {
+            return '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Handle form submission (add/edit material)
+        materialForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const name = materialNameInput.value;
+            const type = materialTypeInput.value;
+            const initialStock = parseInt(initialStockInput.value);
+            const minStock = parseInt(minStockInput.value);
+            const maxStock = parseInt(maxStockInput.value);
+            const estimatedMonthlyConsumption = parseInt(estimatedMonthlyConsumptionInput.value); // Campo de consumo mensal
+            const responsible = 'Sistema'; // Para criação/edição via formulário principal
+
+            if (editingId) {
+                // Edit existing material
+                const index = inventory.findIndex(item => item.id === editingId);
+                if (index !== -1) {
+                    const oldMaterial = { ...inventory[index] };
+                    inventory[index] = { ...oldMaterial, name, type, minStock, maxStock, estimatedMonthlyConsumption };
+
+                    // Log update action (no stock change here, only properties)
+                    addTransactionLog({
+                        materialId: oldMaterial.id,
+                        materialName: oldMaterial.name,
+                        action: 'Edição',
+                        quantity: 0, // No stock change
+                        responsible: responsible,
+                        details: {
+                            oldName: oldMaterial.name,
+                            newName: name,
+                            oldType: oldMaterial.type,
+                            newType: type,
+                            oldMinStock: oldMaterial.minStock,
+                            newMinStock: minStock,
+                            oldMaxStock: oldMaterial.maxStock,
+                            newMaxStock: maxStock,
+                            oldEstimatedMonthlyConsumption: oldMaterial.estimatedMonthlyConsumption,
+                            newEstimatedMonthlyConsumption: estimatedMonthlyConsumption
+                        }
+                    });
+                    alert('Material atualizado com sucesso!');
+                }
+            } else {
+                // Add new material
+                const newMaterial = {
+                    id: generateId(),
+                    name,
+                    type,
+                    currentStock: initialStock,
+                    minStock,
+                    maxStock,
+                    estimatedMonthlyConsumption // Campo de consumo mensal
+                };
+                inventory.push(newMaterial);
+
+                // Log creation and initial stock
+                addTransactionLog({
+                    materialId: newMaterial.id,
+                    materialName: newMaterial.name,
+                    action: 'Criação',
+                    quantity: newMaterial.currentStock,
+                    responsible: responsible,
+                    details: { initialStock: newMaterial.currentStock }
+                });
+                alert('Material adicionado com sucesso!');
+            }
+
+            // Reset form
+            materialForm.reset();
+            materialIdInput.value = '';
+            editingId = null;
+            saveMaterialBtn.textContent = 'Adicionar Material';
+            cancelEditBtn.style.display = 'none';
+            initialStockGroup.style.display = 'block'; // Mostrar estoque inicial novamente
+            saveData();
+        });
+
+        // Edit material
+        function editMaterial(id) {
+            const material = inventory.find(item => item.id === id);
+            if (material) {
+                editingId = id;
+                materialIdInput.value = material.id;
+                materialNameInput.value = material.name;
+                materialTypeInput.value = material.type;
+                initialStockInput.value = material.currentStock;
+                initialStockGroup.style.display = 'none'; // Esconder estoque inicial ao editar
+                minStockInput.value = material.minStock;
+                maxStockInput.value = material.maxStock;
+                estimatedMonthlyConsumptionInput.value = material.estimatedMonthlyConsumption; // Carregar novo campo
+
+                saveMaterialBtn.textContent = 'Salvar Alterações';
+                cancelEditBtn.style.display = 'inline-block';
+                window.scrollTo({ top: 0, behavior: 'smooth' }); // Rola para o topo para o formulário
+            }
+        }
+
+        // Cancel edit mode
+        cancelEditBtn.addEventListener('click', () => {
+            materialForm.reset();
+            materialIdInput.value = '';
+            editingId = null;
+            saveMaterialBtn.textContent = 'Adicionar Material';
+            cancelEditBtn.style.display = 'none';
+            initialStockGroup.style.display = 'block'; // Mostrar estoque inicial
+        });
+
+        // Delete material
+        function deleteMaterial(id) {
+            if (confirm('Tem certeza que deseja excluir este material? Esta ação não pode ser desfeita.')) {
+                const materialIndex = inventory.findIndex(item => item.id === id);
+                if (materialIndex !== -1) {
+                    const deletedMaterial = inventory[materialIndex];
+                    inventory.splice(materialIndex, 1); // Remove from inventory
+
+                    addTransactionLog({
+                        materialId: deletedMaterial.id,
+                        materialName: deletedMaterial.name,
+                        action: 'Exclusão',
+                        quantity: deletedMaterial.currentStock, // Record stock at deletion
+                        responsible: 'Sistema',
+                        details: { reason: 'Material excluído do sistema' }
+                    });
+                    saveData();
+                    alert('Material excluído com sucesso!');
+                }
+            }
+        }
+
+        // Check and display stock alerts
+        function checkStockAlerts() {
+            alertsContainer.innerHTML = '';
+            let lowStockItems = [];
+            let highStockItems = [];
+
+            inventory.forEach(item => {
+                if (item.currentStock < item.minStock) {
+                    lowStockItems.push(item);
+                }
+                if (item.currentStock > item.maxStock) {
+                    highStockItems.push(item);
+                }
+            });
+
+            if (lowStockItems.length > 0) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert-container alert-danger';
+                let message = '<strong>Atenção:</strong> Os seguintes materiais estão abaixo do estoque mínimo:<ul>';
+                lowStockItems.forEach(item => {
+                    message += `<li>${item.name} (${item.type}) - Estoque atual: ${item.currentStock} (Mínimo: ${item.minStock})</li>`;
+                });
+                message += '</ul>';
+                alertDiv.innerHTML = message;
+                alertDiv.style.display = 'block';
+                alertsContainer.appendChild(alertDiv);
+            }
+
+            if (highStockItems.length > 0) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert-container alert-warning';
+                let message = '<strong>Alerta:</strong> Os seguintes materiais estão acima do estoque máximo:<ul>';
+                highStockItems.forEach(item => {
+                    message += `<li>${item.name} (${item.type}) - Estoque atual: ${item.currentStock} (Máximo: ${item.maxStock})</li>`;
+                });
+                message += '</ul>';
+                alertDiv.innerHTML = message;
+                alertDiv.style.display = 'block';
+                alertsContainer.appendChild(alertDiv);
+            }
+        }
+
+        // --- Transaction Log Management ---
+        function addTransactionLog(logEntry) {
+            transactionLog.push({
+                id: generateId(),
+                timestamp: new Date().toISOString(),
+                ...logEntry
+            });
+        }
+
+        // --- Entrada Modal Logic ---
+        function openEntradaModal(materialId) {
+            const material = inventory.find(item => item.id === materialId);
+            if (material) {
+                entradaMaterialIdInput.value = material.id;
+                entradaMaterialNameInput.value = material.name;
+                entradaQuantityInput.value = 1;
+                entradaResponsibleInput.value = ''; // Clear for new input
+                entradaInvoiceInput.value = ''; // Clear for new input
+                entradaDateInput.valueAsDate = new Date(); // Set to current date
+
+                entradaModal.style.display = 'flex';
+            }
+        }
+
+        closeEntradaModal.addEventListener('click', () => {
+            entradaModal.style.display = 'none';
+        });
+
+        cancelEntradaModal.addEventListener('click', () => {
+            entradaModal.style.display = 'none';
+            entradaForm.reset();
+        });
+
+        entradaModal.addEventListener('click', (e) => {
+            if (e.target === entradaModal) {
+                entradaModal.style.display = 'none';
+                entradaForm.reset();
+            }
+        });
+
+        entradaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const materialId = entradaMaterialIdInput.value;
+            const quantity = parseInt(entradaQuantityInput.value);
+            const responsible = entradaResponsibleInput.value.trim();
+            const invoiceNumber = entradaInvoiceInput.value.trim();
+            const date = entradaDateInput.value;
+
+            if (quantity <= 0 || !responsible || !date) {
+                alert('Por favor, preencha todos os campos obrigatórios (Quantidade, Responsável, Data).');
+                return;
+            }
+
+            const material = inventory.find(item => item.id === materialId);
+            if (material) {
+                material.currentStock += quantity;
+                addTransactionLog({
+                    materialId: material.id,
+                    materialName: material.name,
+                    action: 'Entrada',
+                    quantity: quantity,
+                    responsible: responsible,
+                    timestamp: new Date(date).toISOString(), // Use selected date for log
+                    details: { invoiceNumber: invoiceNumber }
+                });
+                saveData();
+                entradaModal.style.display = 'none';
+                entradaForm.reset();
+                alert(`Entrada de ${quantity} unidades de ${material.name} registrada com sucesso!`);
+            }
+        });
+
+        // --- Baixa Modal Logic ---
+        function openBaixaModal(materialId) {
+            const material = inventory.find(item => item.id === materialId);
+            if (material) {
+                baixaMaterialIdInput.value = material.id;
+                baixaMaterialNameInput.value = material.name;
+                baixaQuantityInput.max = material.currentStock; // Limit baixa to current stock
+                baixaQuantityInput.value = 1;
+                baixaResponsibleInput.value = '';
+                baixaStudentInput.value = '';
+                baixaPurposeInput.value = '';
+                baixaDestinationInput.value = '';
+                baixaDateInput.valueAsDate = new Date();
+
+                baixaModal.style.display = 'flex';
+            }
+        }
+
+        closeBaixaModal.addEventListener('click', () => {
+            baixaModal.style.display = 'none';
+        });
+
+        cancelBaixaModal.addEventListener('click', () => {
+            baixaModal.style.display = 'none';
+            baixaForm.reset();
+        });
+
+        baixaModal.addEventListener('click', (e) => {
+            if (e.target === baixaModal) {
+                baixaModal.style.display = 'none';
+                baixaForm.reset();
+            }
+        });
+
+        baixaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const materialId = baixaMaterialIdInput.value;
+            const quantity = parseInt(baixaQuantityInput.value);
+            const responsible = baixaResponsibleInput.value.trim();
+            const studentName = baixaStudentInput.value.trim();
+            const purpose = baixaPurposeInput.value;
+            const destination = baixaDestinationInput.value.trim();
+            const date = baixaDateInput.value;
+
+            if (quantity <= 0 || !responsible || !purpose || !destination || !date) {
+                alert('Por favor, preencha todos os campos obrigatórios (Quantidade, Responsável, Finalidade, Destino, Data).');
+                return;
+            }
+
+            const material = inventory.find(item => item.id === materialId);
+            if (material) {
+                if (quantity > material.currentStock) {
+                    alert(`Não é possível dar baixa em ${quantity} unidades. Estoque atual: ${material.currentStock}`);
+                    return;
+                }
+
+                material.currentStock -= quantity;
+                addTransactionLog({
+                    materialId: material.id,
+                    materialName: material.name,
+                    action: 'Saída',
+                    quantity: quantity,
+                    responsible: responsible,
+                    timestamp: new Date(date).toISOString(), // Use selected date for log
+                    details: {
+                        studentName: studentName,
+                        purpose: purpose,
+                        destination: destination
+                    }
+                });
+                saveData();
+                baixaModal.style.display = 'none';
+                baixaForm.reset();
+                alert(`Baixa de ${quantity} unidades de ${material.name} registrada com sucesso!`);
+            }
+        });
+
+        // --- Order Suggestion Logic ---
+        monthsToForecastInput.addEventListener('input', () => {
+            const months = parseInt(monthsToForecastInput.value);
+            if (!isNaN(months) && months > 0) {
+                forecastMonthsDisplay.textContent = months;
+            } else {
+                forecastMonthsDisplay.textContent = '?';
+            }
+        });
+
+        generateOrderSuggestionBtn.addEventListener('click', () => {
+            const monthsToForecast = parseInt(monthsToForecastInput.value);
+            if (isNaN(monthsToForecast) || monthsToForecast <= 0) {
+                alert('Por favor, insira um número válido para os meses de estoque desejado.');
+                return;
+            }
+
+            forecastMonthsDisplay.textContent = monthsToForecast; // Update display
+            orderSuggestionList.innerHTML = ''; // Clear previous suggestions
+
+            if (inventory.length === 0) {
+                orderSuggestionList.innerHTML = `<tr><td colspan="5" style="text-align: center;">Nenhum material cadastrado para gerar sugestões.</td></tr>`;
+                return;
+            }
+
+            let hasMaterialsWithConsumption = false;
+            inventory.forEach(item => {
+                const desiredStock = item.estimatedMonthlyConsumption * monthsToForecast;
+                const quantityToOrder = Math.max(0, desiredStock - item.currentStock); // Order if current stock is less than desired
+
+                if (item.estimatedMonthlyConsumption > 0 || quantityToOrder > 0) { // Only show items with consumption or needing order
+                    hasMaterialsWithConsumption = true;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.currentStock}</td>
+                        <td>${item.estimatedMonthlyConsumption}</td>
+                        <td>${desiredStock}</td>
+                        <td><strong>${quantityToOrder}</strong></td>
+                    `;
+                    orderSuggestionList.appendChild(row);
+                }
+            });
+
+            if (!hasMaterialsWithConsumption) {
+                orderSuggestionList.innerHTML = `<tr><td colspan="5" style="text-align: center;">Nenhum material com consumo estimado ou abaixo do estoque desejado.</td></tr>`;
+            }
+        });
+
+
+        // --- Feedback Modal Logic ---
+        feedbackBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            feedbackModal.style.display = 'flex';
+        });
+
+        closeFeedbackModal.addEventListener('click', () => {
+            feedbackModal.style.display = 'none';
+        });
+
+        cancelFeedbackModal.addEventListener('click', () => {
+            feedbackModal.style.display = 'none';
+            feedbackForm.reset();
+        });
+
+        // Close modal if clicked outside content
+        feedbackModal.addEventListener('click', (e) => {
+            if (e.target === feedbackModal) {
+                feedbackModal.style.display = 'none';
+                feedbackForm.reset();
+            }
+        });
+
+        // Handle feedback form submission
+        feedbackForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = feedbackMessageInput.value;
+
+            if (message.trim() === '') {
+                alert('Por favor, digite sua mensagem antes de enviar.');
+                return;
+            }
+
+            try {
+                const response = await fetch(FIREBASE_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        texto: message,
+                        data: new Date().toISOString()
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Mensagem enviada para a thIAguinho Soluções! Agradecemos seu feedback.');
+                    feedbackModal.style.display = 'none';
+                    feedbackForm.reset();
+                } else {
+                    alert('Houve um erro ao enviar seu feedback. Por favor, tente novamente.');
+                }
+            } catch (error) {
+                console.error('Erro ao enviar feedback:', error);
+                alert('Houve um erro de conexão ao enviar seu feedback. Por favor, tente novamente.');
+            }
+        });
+
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            // Pre-fill date inputs with current date
+            const today = new Date().toISOString().split('T')[0];
+            entradaDateInput.value = today;
+            baixaDateInput.value = today;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Oficina Mecânica - thIAguinho Soluções</title>
+    <style>
+        /* General Styling */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; border-bottom: 1px solid #eee; }
+        .btn { background-color: #3498db; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; margin-right: 10px; font-size: 0.9em; }
+        .btn:hover { background-color: #2980b9; }
+        .btn-danger { background-color: #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; }
+        .btn-success { background-color: #2ecc71; }
+        .btn-success:hover { background-color: #27ae60; }
+        input[type="text"], input[type="number"], input[type="email"], input[type="tel"], input[type="date"], input[type="time"], textarea, select {
+            width: calc(100% - 20px); padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;
+            font-size: 0.9em;
+        }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-group { margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table th, table td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        table th { background-color: #f8f8f8; font-weight: bold; color: #444; }
+        table tr:nth-child(even) { background-color: #f9f9f9; }
+        table tr:hover { background-color: #f1f1f1; }
+        .flex-container { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+        .flex-item { flex: 1; min-width: 150px; } /* Adjusted for better responsiveness */
+        .flex-container .form-group { margin-bottom: 0; }
+        .flex-container .form-group input, .flex-container .form-group select { margin-bottom: 0; }
+
+        /* Navigation */
+        nav { background-color: #2c3e50; padding: 15px 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        nav a { color: white; text-decoration: none; padding: 10px 20px; margin: 0 5px; border-radius: 5px; transition: background-color 0.3s ease; font-weight: bold; }
+        nav a:hover, nav a.active { background-color: #3498db; }
+
+        /* Module Specific Styling */
+        .module-content { display: none; padding-top: 10px;}
+        .module-content.active { display: block; }
+
+        /* Dashboard */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
+        .dashboard-card { background-color: #ecf0f1; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .dashboard-card h3 { margin-top: 0; color: #2c3e50; border-bottom: none; padding-bottom: 0; margin-bottom: 10px; }
+        .dashboard-card p { font-size: 2.2em; margin: 10px 0; color: #3498db; font-weight: bold; }
+
+        /* Forms */
+        .form-section { border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px; background-color: #fdfdfd; }
+        .form-section h3 { margin-top: 0; color: #34495e; border-bottom: 1px dashed #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+
+        /* Stock Status */
+        .status-low-stock { color: #e74c3c; font-weight: bold; }
+        .status-ok-stock { color: #2ecc71; }
+        
+        /* Financeiro Status */
+        .text-success { color: #28a745; font-weight: bold; }
+        .text-danger { color: #dc3545; font-weight: bold; }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            nav a { padding: 8px 12px; margin: 0 3px; font-size: 0.9em; }
+            .container { margin: 10px; padding: 15px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .flex-container { flex-direction: column; align-items: stretch; }
+            .flex-container input, .flex-container button { width: 100% !important; margin-right: 0 !important; }
+        }
+
+        /* Feedback Button */
+        #feedback-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #e74c3c; /* Red color */
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        #feedback-button:hover {
+            background-color: #c0392b; /* Darker red on hover */
+            transform: scale(1.05);
+        }
+
+        /* Feedback Modal */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1001; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+            backdrop-filter: blur(5px); /* Blurred background */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; /* 15% from the top and centered */
+            padding: 30px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 90%; /* Could be more responsive */
+            max-width: 500px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-content h2 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .modal-content textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .modal-content button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#" data-module="dashboard" class="active">Dashboard</a>
+        <a href="#" data-module="clientes">Clientes</a>
+        <a href="#" data-module="veiculos">Veículos</a>
+        <a href="#" data-module="agendamentos">Agendamentos</a>
+        <a href="#" data-module="ordens-servico">Ordens de Serviço</a>
+        <a href="#" data-module="estoque">Estoque</a>
+        <a href="#" data-module="financeiro">Financeiro</a>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard Module -->
+        <div id="dashboard" class="module-content active">
+            <h2>Dashboard</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>Agendamentos Hoje</h3>
+                    <p id="card-agendamentos-hoje">0</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>OS em Andamento</h3>
+                    <p id="card-os-andamento">0</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Estoque Baixo</h3>
+                    <p id="card-estoque-baixo">0</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Receita Mês</h3>
+                    <p id="card-receita-mes">R$ 0,00</p>
+                </div>
+            </div>
+
+            <h3>Próximos Agendamentos</h3>
+            <table id="dashboard-agendamentos-table">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th>Serviço</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Agendamentos go here -->
+                </tbody>
+            </table>
+
+            <h3>Ordens de Serviço Recentes</h3>
+            <table id="dashboard-os-table">
+                <thead>
+                    <tr>
+                        <th>OS #</th>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- OS go here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Clientes Module -->
+        <div id="clientes" class="module-content">
+            <h2>Gestão de Clientes</h2>
+            <button class="btn" onclick="showClienteForm()">Adicionar Cliente</button>
+            <div id="cliente-form-section" class="form-section" style="display: none; margin-top: 20px;">
+                <h3><span id="cliente-form-title">Adicionar</span> Cliente</h3>
+                <form id="cliente-form">
+                    <input type="hidden" id="cliente-id">
+                    <div class="form-group">
+                        <label for="cliente-nome">Nome:</label>
+                        <input type="text" id="cliente-nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente-email">Email:</label>
+                        <input type="email" id="cliente-email">
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente-telefone">Telefone:</label>
+                        <input type="tel" id="cliente-telefone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente-endereco">Endereço:</label>
+                        <input type="text" id="cliente-endereco">
+                    </div>
+                    <button type="submit" class="btn btn-success">Salvar Cliente</button>
+                    <button type="button" class="btn btn-danger" onclick="hideClienteForm()">Cancelar</button>
+                </form>
+            </div>
+            <h3>Lista de Clientes</h3>
+            <table id="clientes-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th>Endereço</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Clientes go here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Veículos Module -->
+        <div id="veiculos" class="module-content">
+            <h2>Gestão de Veículos</h2>
+            <button class="btn" onclick="showVeiculoForm()">Adicionar Veículo</button>
+            <div id="veiculo-form-section" class="form-section" style="display: none; margin-top: 20px;">
+                <h3><span id="veiculo-form-title">Adicionar</span> Veículo</h3>
+                <form id="veiculo-form">
+                    <input type="hidden" id="veiculo-id">
+                    <div class="form-group">
+                        <label for="veiculo-cliente-id">Cliente:</label>
+                        <select id="veiculo-cliente-id" required>
+                            <option value="">Selecione um Cliente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="veiculo-marca">Marca:</label>
+                        <input type="text" id="veiculo-marca" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="veiculo-modelo">Modelo:</label>
+                        <input type="text" id="veiculo-modelo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="veiculo-ano">Ano:</label>
+                        <input type="number" id="veiculo-ano" required min="1900" max="2100">
+                    </div>
+                    <div class="form-group">
+                        <label for="veiculo-placa">Placa:</label>
+                        <input type="text" id="veiculo-placa" required maxlength="7">
+                    </div>
+                    <div class="form-group">
+                        <label for="veiculo-vin">VIN (Chassi):</label>
+                        <input type="text" id="veiculo-vin" maxlength="17">
+                    </div>
+                    <button type="submit" class="btn btn-success">Salvar Veículo</button>
+                    <button type="button" class="btn btn-danger" onclick="hideVeiculoForm()">Cancelar</button>
+                </form>
+            </div>
+            <h3>Lista de Veículos</h3>
+            <table id="veiculos-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Ano</th>
+                        <th>Placa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Veículos go here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Agendamentos Module -->
+        <div id="agendamentos" class="module-content">
+            <h2>Gestão de Agendamentos</h2>
+            <button class="btn" onclick="showAgendamentoForm()">Adicionar Agendamento</button>
+            <div id="agendamento-form-section" class="form-section" style="display: none; margin-top: 20px;">
+                <h3><span id="agendamento-form-title">Adicionar</span> Agendamento</h3>
+                <form id="agendamento-form">
+                    <input type="hidden" id="agendamento-id">
+                    <div class="form-group">
+                        <label for="agendamento-cliente-id">Cliente:</label>
+                        <select id="agendamento-cliente-id" required onchange="loadVeiculosForAgendamento()">
+                            <option value="">Selecione um Cliente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="agendamento-veiculo-id">Veículo:</label>
+                        <select id="agendamento-veiculo-id" required>
+                            <option value="">Selecione um Veículo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="agendamento-servico">Serviço:</label>
+                        <input type="text" id="agendamento-servico" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="agendamento-data">Data:</label>
+                        <input type="date" id="agendamento-data" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="agendamento-hora">Hora:</label>
+                        <input type="time" id="agendamento-hora" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="agendamento-status">Status:</label>
+                        <select id="agendamento-status">
+                            <option value="Agendado">Agendado</option>
+                            <option value="Confirmado">Confirmado</option>
+                            <option value="Cancelado">Cancelado</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Salvar Agendamento</button>
+                    <button type="button" class="btn btn-danger" onclick="hideAgendamentoForm()">Cancelar</button>
+                </form>
+            </div>
+            <h3>Lista de Agendamentos</h3>
+            <table id="agendamentos-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th>Serviço</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Agendamentos go here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Ordens de Serviço Module -->
+        <div id="ordens-servico" class="module-content">
+            <h2>Gestão de Ordens de Serviço</h2>
+            <button class="btn" onclick="showOSForm()">Criar Nova OS</button>
+            <div id="os-form-section" class="form-section" style="display: none; margin-top: 20px;">
+                <h3><span id="os-form-title">Criar</span> Ordem de Serviço</h3>
+                <form id="os-form">
+                    <input type="hidden" id="os-id">
+                    <div class="form-group">
+                        <label for="os-cliente-id">Cliente:</label>
+                        <select id="os-cliente-id" required onchange="loadVeiculosForOS()">
+                            <option value="">Selecione um Cliente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="os-veiculo-id">Veículo:</label>
+                        <select id="os-veiculo-id" required>
+                            <option value="">Selecione um Veículo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="os-data-abertura">Data de Abertura:</label>
+                        <input type="date" id="os-data-abertura" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="os-descricao">Descrição do Problema/Serviço Solicitado:</label>
+                        <textarea id="os-descricao" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="os-status">Status:</label>
+                        <select id="os-status">
+                            <option value="Aberta">Aberta</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Aguardando Peças">Aguardando Peças</option>
+                            <option value="Concluída">Concluída</option>
+                            <option value="Faturada">Faturada</option>
+                            <option value="Cancelada">Cancelada</option>
+                        </select>
+                    </div>
+
+                    <h3>Serviços Realizados</h3>
+                    <div id="os-servicos-list">
+                        <!-- dynamic services go here -->
+                    </div>
+                    <button type="button" class="btn" onclick="addServiceToOS()">+ Adicionar Serviço</button>
+
+                    <h3>Peças Utilizadas</h3>
+                    <div id="os-pecas-list">
+                        <!-- dynamic parts go here -->
+                    </div>
+                    <button type="button" class="btn" onclick="addPartToOS()">+ Adicionar Peça</button>
+
+                    <h3 style="margin-top: 20px;">Total da OS: <span id="os-total">R$ 0,00</span></h3>
+
+                    <button type="submit" class="btn btn-success">Salvar OS</button>
+                    <button type="button" class="btn btn-danger" onclick="hideOSForm()">Cancelar</button>
+                </form>
+            </div>
+            <h3>Lista de Ordens de Serviço</h3>
+            <table id="os-table">
+                <thead>
+                    <tr>
+                        <th>OS #</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th>Data Abertura</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- OS go here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Estoque Module -->
+        <div id="estoque" class="module-content">
+            <h2>Gestão de Estoque</h2>
+            <button class="btn" onclick="showEstoqueForm()">Adicionar Peça</button>
+            <div id="estoque-form-section" class="form-section" style="display: none; margin-top: 20px;">
+                <h3><span id="estoque-form-title">Adicionar</span> Peça</h3>
+                <form id="estoque-form">
+                    <input type="hidden" id="estoque-id">
+                    <div class="form-group">
+                        <label for="estoque-nome">Nome da Peça:</label>
+                        <input type="text" id="estoque-nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="estoque-codigo">Código:</label>
+                        <input type="text" id="estoque-codigo">
+                    </div>
+                    <div class="form-group">
+                        <label for="estoque-quantidade">Quantidade:</label>
+                        <input type="number" id="estoque-quantidade" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="estoque-preco-compra">Preço de Compra:</label>
+                        <input type="number" id="estoque-preco-compra" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="estoque-preco-venda">Preço de Venda:</label>
+                        <input type="number" id="estoque-preco-venda" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="estoque-fornecedor">Fornecedor:</label>
+                        <input type="text" id="estoque-fornecedor">
+                    </div>
+                    <div class="form-group">
+                        <label for="estoque-minimo">Estoque Mínimo para Alerta:</label>
+                        <input type="number" id="estoque-minimo" min="0" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Salvar Peça</button>
+                    <button type="button" class="btn btn-danger" onclick="hideEstoqueForm()">Cancelar</button>
+                </form>
+            </div>
+            <h3>Lista de Peças em Estoque</h3>
+            <table id="estoque-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Código</th>
+                        <th>Qtd.</th>
+                        <th>Preço Venda</th>
+                        <th>Fornecedor</th>
+                        <th>Estoque Mín.</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Peças go here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Financeiro Module -->
+        <div id="financeiro" class="module-content">
+            <h2>Gestão Financeira</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card" style="background-color: #d4edda; color: #155724;">
+                    <h3>Total de Receitas (Mês)</h3>
+                    <p id="financeiro-receitas-mes">R$ 0,00</p>
+                </div>
+                <div class="dashboard-card" style="background-color: #f8d7da; color: #721c24;">
+                    <h3>Total de Despesas (Mês)</h3>
+                    <p id="financeiro-despesas-mes">R$ 0,00</p>
+                </div>
+                <div class="dashboard-card" style="background-color: #cce5ff; color: #004085;">
+                    <h3>Saldo (Mês)</h3>
+                    <p id="financeiro-saldo-mes">R$ 0,00</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">Lançar Nova Despesa</h3>
+            <div class="form-section">
+                <form id="despesa-form">
+                    <div class="form-group">
+                        <label for="despesa-descricao">Descrição:</label>
+                        <input type="text" id="despesa-descricao" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="despesa-valor">Valor:</label>
+                        <input type="number" id="despesa-valor" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="despesa-data">Data:</label>
+                        <input type="date" id="despesa-data" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Lançar Despesa</button>
+                </form>
+            </div>
+
+            <h3>Extrato Financeiro</h3>
+            <table id="financeiro-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Tipo</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Financeiro entries go here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Feedback Button -->
+    <div id="feedback-button">
+        Gostou do sistema? Fale com o Thiago!
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Seu Feedback para a thIAguinho Soluções</h2>
+            <p>Sua opinião é muito importante para nós! Deixe sua mensagem e ajude-nos a melhorar.</p>
+            <form id="feedback-form">
+                <div class="form-group">
+                    <label for="feedback-text">Sua mensagem:</label>
+                    <textarea id="feedback-text" placeholder="Digite seu feedback aqui..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Enviar Feedback</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data storage in localStorage
+        const STORAGE_KEY_PREFIX = 'thiaguinho_crm_oficina_';
+        const getStoredData = (key) => JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + key)) || [];
+        const setStoredData = (key, data) => localStorage.setItem(STORAGE_KEY_PREFIX + key, JSON.stringify(data));
+
+        let clientes = getStoredData('clientes');
+        let veiculos = getStoredData('veiculos');
+        let agendamentos = getStoredData('agendamentos');
+        let ordensServico = getStoredData('ordensServico');
+        let estoque = getStoredData('estoque');
+        let financeiro = getStoredData('financeiro'); // { id, data, tipo ('receita'/'despesa'), descricao, valor }
+
+        // --- Utility Functions ---
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); // Shorter ID for display
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString + 'T00:00:00'); // Add T00:00:00 to treat as local date and prevent timezone issues
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        function formatDateTime(dateString, timeString) {
+            if (!dateString || !timeString) return '';
+            const date = new Date(`${dateString}T${timeString}`);
+            return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function populateSelect(selectElementId, data, valueKey, textKey, selectedValue = '') {
+            const select = document.getElementById(selectElementId);
+            if (!select) return; // Guard clause in case element doesn't exist
+            select.innerHTML = '<option value="">Selecione...</option>';
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[valueKey];
+                option.textContent = item[textKey];
+                if (item[valueKey] === selectedValue) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+        // --- Navigation ---
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.module-content').forEach(content => content.classList.remove('active'));
+                document.querySelectorAll('nav a').forEach(navLink => navLink.classList.remove('active'));
+
+                const moduleId = this.dataset.module;
+                document.getElementById(moduleId).classList.add('active');
+                this.classList.add('active');
+
+                // Load data for the active module
+                if (moduleId === 'dashboard') loadDashboard();
+                if (moduleId === 'clientes') loadClientes();
+                if (moduleId === 'veiculos') loadVeiculos();
+                if (moduleId === 'agendamentos') loadAgendamentos();
+                if (moduleId === 'ordens-servico') loadOrdensServico();
+                if (moduleId === 'estoque') loadEstoque();
+                if (moduleId === 'financeiro') loadFinanceiro();
+            });
+        });
+
+        // --- Dashboard Module ---
+        function loadDashboard() {
+            // Agendamentos Hoje
+            const today = new Date().toISOString().split('T')[0];
+            const agendamentosHoje = agendamentos.filter(a => a.data === today && a.status !== 'Concluído' && a.status !== 'Cancelado').length;
+            document.getElementById('card-agendamentos-hoje').textContent = agendamentosHoje;
+
+            // OS em Andamento
+            const osEmAndamento = ordensServico.filter(os => os.status === 'Aberta' || os.status === 'Em Andamento' || os.status === 'Aguardando Peças').length;
+            document.getElementById('card-os-andamento').textContent = osEmAndamento;
+
+            // Estoque Baixo
+            const estoqueBaixo = estoque.filter(p => p.quantidade <= p.estoqueMinimo).length;
+            document.getElementById('card-estoque-baixo').textContent = estoqueBaixo;
+
+            // Receita do Mês
+            const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+            const receitasMes = financeiro
+                .filter(f => f.tipo === 'receita' && f.data.startsWith(currentMonth))
+                .reduce((sum, item) => sum + parseFloat(item.valor), 0);
+            document.getElementById('card-receita-mes').textContent = formatCurrency(receitasMes);
+
+            // Próximos Agendamentos (max 5)
+            const nextAgendamentos = agendamentos
+                .filter(a => new Date(`${a.data}T${a.hora}`) >= new Date() && a.status !== 'Concluído' && a.status !== 'Cancelado')
+                .sort((a, b) => new Date(`${a.data}T${a.hora}`) - new Date(`${b.data}T${b.hora}`))
+                .slice(0, 5);
+
+            const dashboardAgendamentosTableBody = document.querySelector('#dashboard-agendamentos-table tbody');
+            dashboardAgendamentosTableBody.innerHTML = '';
+            nextAgendamentos.forEach(a => {
+                const cliente = clientes.find(c => c.id === a.clienteId);
+                const veiculo = veiculos.find(v => v.id === a.veiculoId);
+                const row = dashboardAgendamentosTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${formatDateTime(a.data, a.hora)}</td>
+                    <td>${cliente ? cliente.nome : 'N/A'}</td>
+                    <td>${veiculo ? `${veiculo.marca} ${veiculo.modelo} (${veiculo.placa})` : 'N/A'}</td>
+                    <td>${a.servico}</td>
+                `;
+            });
+
+            // Ordens de Serviço Recentes (max 5)
+            const recentOS = ordensServico
+                .sort((a, b) => new Date(b.dataAbertura) - new Date(a.dataAbertura))
+                .slice(0, 5);
+
+            const dashboardOSTableBody = document.querySelector('#dashboard-os-table tbody');
+            dashboardOSTableBody.innerHTML = '';
+            recentOS.forEach(os => {
+                const cliente = clientes.find(c => c.id === os.clienteId);
+                const veiculo = veiculos.find(v => v.id === os.veiculoId);
+                const row = dashboardOSTableBody.insertRow();
+                row.innerHTML = `
+                    <td>OS-${os.id.slice(0, 5)}</td>
+                    <td>${formatDate(os.dataAbertura)}</td>
+                    <td>${cliente ? cliente.nome : 'N/A'}</td>
+                    <td>${veiculo ? `${veiculo.marca} ${veiculo.modelo} (${veiculo.placa})` : 'N/A'}</td>
+                    <td>${os.status}</td>
+                    <td>${formatCurrency(calculateOSTotal(os))}</td>
+                `;
+            });
+        }
+
+
+        // --- Cliente Module ---
+        function loadClientes() {
+            const tableBody = document.querySelector('#clientes-table tbody');
+            tableBody.innerHTML = '';
+            clientes.forEach(cliente => {
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${cliente.nome}</td>
+                    <td>${cliente.email}</td>
+                    <td>${cliente.telefone}</td>
+                    <td>${cliente.endereco}</td>
+                    <td>
+                        <button class="btn" onclick="editCliente('${cliente.id}')">Editar</button>
+                        <button class="btn btn-danger" onclick="deleteCliente('${cliente.id}')">Excluir</button>
+                    </td>
+                `;
+            });
+            populateClienteSelects(); // Update client dropdowns for other modules
+        }
+
+        function showClienteForm(cliente = null) {
+            document.getElementById('cliente-form-section').style.display = 'block';
+            document.getElementById('cliente-form-title').textContent = cliente ? 'Editar' : 'Adicionar';
+            document.getElementById('cliente-id').value = cliente ? cliente.id : '';
+            document.getElementById('cliente-nome').value = cliente ? cliente.nome : '';
+            document.getElementById('cliente-email').value = cliente ? cliente.email : '';
+            document.getElementById('cliente-telefone').value = cliente ? cliente.telefone : '';
+            document.getElementById('cliente-endereco').value = cliente ? cliente.endereco : '';
+        }
+
+        function hideClienteForm() {
+            document.getElementById('cliente-form-section').style.display = 'none';
+            document.getElementById('cliente-form').reset();
+        }
+
+        document.getElementById('cliente-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('cliente-id').value;
+            const newCliente = {
+                id: id || generateId(),
+                nome: document.getElementById('cliente-nome').value,
+                email: document.getElementById('cliente-email').value,
+                telefone: document.getElementById('cliente-telefone').value,
+                endereco: document.getElementById('cliente-endereco').value,
+            };
+
+            if (id) {
+                // Edit existing
+                const index = clientes.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    clientes[index] = newCliente;
+                }
+            } else {
+                // Add new
+                clientes.push(newCliente);
+            }
+            setStoredData('clientes', clientes);
+            loadClientes();
+            hideClienteForm();
+        });
+
+        function editCliente(id) {
+            const cliente = clientes.find(c => c.id === id);
+            if (cliente) {
+                showClienteForm(cliente);
+            }
+        }
+
+        function deleteCliente(id) {
+            // Check for associated vehicles, appointments, or OS
+            const hasAssociatedData = veiculos.some(v => v.clienteId === id) ||
+                                      agendamentos.some(a => a.clienteId === id) ||
+                                      ordensServico.some(os => os.clienteId === id);
+
+            if (hasAssociatedData) {
+                alert('Não é possível excluir este cliente pois existem veículos, agendamentos ou ordens de serviço associados a ele. Exclua-os primeiro.');
+                return;
+            }
+
+            if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                clientes = clientes.filter(c => c.id !== id);
+                setStoredData('clientes', clientes);
+                loadClientes();
+            }
+        }
+
+        function populateClienteSelects() {
+            populateSelect('veiculo-cliente-id', clientes, 'id', 'nome');
+            populateSelect('agendamento-cliente-id', clientes, 'id', 'nome');
+            populateSelect('os-cliente-id', clientes, 'id', 'nome');
+        }
+
+
+        // --- Veículo Module ---
+        function loadVeiculos() {
+            const tableBody = document.querySelector('#veiculos-table tbody');
+            tableBody.innerHTML = '';
+            veiculos.forEach(veiculo => {
+                const cliente = clientes.find(c => c.id === veiculo.clienteId);
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${cliente ? cliente.nome : 'Cliente Desconhecido'}</td>
+                    <td>${veiculo.marca}</td>
+                    <td>${veiculo.modelo}</td>
+                    <td>${veiculo.ano}</td>
+                    <td>${veiculo.placa}</td>
+                    <td>
+                        <button class="btn" onclick="editVeiculo('${veiculo.id}')">Editar</button>
+                        <button class="btn btn-danger" onclick="deleteVeiculo('${veiculo.id}')">Excluir</button>
+                    </td>
+                `;
+            });
+        }
+
+        function showVeiculoForm(veiculo = null) {
+            document.getElementById('veiculo-form-section').style.display = 'block';
+            document.getElementById('veiculo-form-title').textContent = veiculo ? 'Editar' : 'Adicionar';
+            document.getElementById('veiculo-id').value = veiculo ? veiculo.id : '';
+            populateSelect('veiculo-cliente-id', clientes, 'id', 'nome', veiculo ? veiculo.clienteId : '');
+            document.getElementById('veiculo-marca').value = veiculo ? veiculo.marca : '';
+            document.getElementById('veiculo-modelo').value = veiculo ? veiculo.modelo : '';
+            document.getElementById('veiculo-ano').value = veiculo ? veiculo.ano : '';
+            document.getElementById('veiculo-placa').value = veiculo ? veiculo.placa : '';
+            document.getElementById('veiculo-vin').value = veiculo ? veiculo.vin : '';
+        }
+
+        function hideVeiculoForm() {
+            document.getElementById('veiculo-form-section').style.display = 'none';
+            document.getElementById('veiculo-form').reset();
+        }
+
+        document.getElementById('veiculo-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('veiculo-id').value;
+            const newVeiculo = {
+                id: id || generateId(),
+                clienteId: document.getElementById('veiculo-cliente-id').value,
+                marca: document.getElementById('veiculo-marca').value,
+                modelo: document.getElementById('veiculo-modelo').value,
+                ano: document.getElementById('veiculo-ano').value,
+                placa: document.getElementById('veiculo-placa').value.toUpperCase(),
+                vin: document.getElementById('veiculo-vin').value.toUpperCase(),
+            };
+
+            if (id) {
+                const index = veiculos.findIndex(v => v.id === id);
+                if (index !== -1) {
+                    veiculos[index] = newVeiculo;
+                }
+            } else {
+                veiculos.push(newVeiculo);
+            }
+            setStoredData('veiculos', veiculos);
+            loadVeiculos();
+            hideVeiculoForm();
+        });
+
+        function editVeiculo(id) {
+            const veiculo = veiculos.find(v => v.id === id);
+            if (veiculo) {
+                showVeiculoForm(veiculo);
+            }
+        }
+
+        function deleteVeiculo(id) {
+            // Check for associated appointments or OS
+            const hasAssociatedData = agendamentos.some(a => a.veiculoId === id) ||
+                                      ordensServico.some(os => os.veiculoId === id);
+
+            if (hasAssociatedData) {
+                alert('Não é possível excluir este veículo pois existem agendamentos ou ordens de serviço associados a ele. Exclua-os primeiro.');
+                return;
+            }
+
+            if (confirm('Tem certeza que deseja excluir este veículo?')) {
+                veiculos = veiculos.filter(v => v.id !== id);
+                setStoredData('veiculos', veiculos);
+                loadVeiculos();
+            }
+        }
+
+        // --- Agendamento Module ---
+        function loadAgendamentos() {
+            const tableBody = document.querySelector('#agendamentos-table tbody');
+            tableBody.innerHTML = '';
+            agendamentos.sort((a, b) => new Date(`${a.data}T${a.hora}`) - new Date(`${b.data}T${b.hora}`)).forEach(agendamento => {
+                const cliente = clientes.find(c => c.id === agendamento.clienteId);
+                const veiculo = veiculos.find(v => v.id === agendamento.veiculoId);
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${formatDate(agendamento.data)}</td>
+                    <td>${agendamento.hora}</td>
+                    <td>${cliente ? cliente.nome : 'N/A'}</td>
+                    <td>${veiculo ? `${veiculo.marca} ${veiculo.modelo} (${veiculo.placa})` : 'N/A'}</td>
+                    <td>${agendamento.servico}</td>
+                    <td>${agendamento.status}</td>
+                    <td>
+                        <button class="btn" onclick="editAgendamento('${agendamento.id}')">Editar</button>
+                        <button class="btn btn-danger" onclick="deleteAgendamento('${agendamento.id}')">Excluir</button>
+                    </td>
+                `;
+            });
+        }
+
+        function showAgendamentoForm(agendamento = null) {
+            document.getElementById('agendamento-form-section').style.display = 'block';
+            document.getElementById('agendamento-form-title').textContent = agendamento ? 'Editar' : 'Adicionar';
+            document.getElementById('agendamento-id').value = agendamento ? agendamento.id : '';
+            populateSelect('agendamento-cliente-id', clientes, 'id', 'nome', agendamento ? agendamento.clienteId : '');
+
+            // Load vehicles after client selection
+            if (agendamento && agendamento.clienteId) {
+                loadVeiculosForAgendamento(agendamento.clienteId, agendamento.veiculoId);
+            } else {
+                document.getElementById('agendamento-veiculo-id').innerHTML = '<option value="">Selecione um Veículo</option>';
+            }
+
+            document.getElementById('agendamento-servico').value = agendamento ? agendamento.servico : '';
+            document.getElementById('agendamento-data').value = agendamento ? agendamento.data : '';
+            document.getElementById('agendamento-hora').value = agendamento ? agendamento.hora : '';
+            document.getElementById('agendamento-status').value = agendamento ? agendamento.status : 'Agendado';
+        }
+
+        function hideAgendamentoForm() {
+            document.getElementById('agendamento-form-section').style.display = 'none';
+            document.getElementById('agendamento-form').reset();
+        }
+
+        function loadVeiculosForAgendamento(selectedClientId = null, selectedVeiculoId = null) {
+            const clientId = selectedClientId || document.getElementById('agendamento-cliente-id').value;
+            const veiculosDoCliente = veiculos.filter(v => v.clienteId === clientId);
+            populateSelect('agendamento-veiculo-id', veiculosDoCliente, 'id', 'placa', selectedVeiculoId);
+        }
+
+        document.getElementById('agendamento-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('agendamento-id').value;
+            const newAgendamento = {
+                id: id || generateId(),
+                clienteId: document.getElementById('agendamento-cliente-id').value,
+                veiculoId: document.getElementById('agendamento-veiculo-id').value,
+                servico: document.getElementById('agendamento-servico').value,
+                data: document.getElementById('agendamento-data').value,
+                hora: document.getElementById('agendamento-hora').value,
+                status: document.getElementById('agendamento-status').value,
+            };
+
+            if (id) {
+                const index = agendamentos.findIndex(a => a.id === id);
+                if (index !== -1) {
+                    agendamentos[index] = newAgendamento;
+                }
+            } else {
+                agendamentos.push(newAgendamento);
+            }
+            setStoredData('agendamentos', agendamentos);
+            loadAgendamentos();
+            hideAgendamentoForm();
+            loadDashboard(); // Update dashboard
+        });
+
+        function editAgendamento(id) {
+            const agendamento = agendamentos.find(a => a.id === id);
+            if (agendamento) {
+                showAgendamentoForm(agendamento);
+            }
+        }
+
+        function deleteAgendamento(id) {
+            if (confirm('Tem certeza que deseja excluir este agendamento?')) {
+                agendamentos = agendamentos.filter(a => a.id !== id);
+                setStoredData('agendamentos', agendamentos);
+                loadAgendamentos();
+                loadDashboard(); // Update dashboard
+            }
+        }
+
+        // --- Ordens de Serviço Module ---
+        let currentOSServices = [];
+        let currentOSParts = [];
+
+        function calculateOSTotal(os) {
+            let total = 0;
+            if (os.servicos) {
+                total += os.servicos.reduce((sum, s) => sum + parseFloat(s.valor || 0), 0);
+            }
+            if (os.pecas) {
+                total += os.pecas.reduce((sum, p) => sum + (parseFloat(p.valorUnitario || 0) * parseFloat(p.quantidade || 0)), 0);
+            }
+            return total;
+        }
+
+        function updateOSTotalDisplay() {
+            const os = { servicos: currentOSServices, pecas: currentOSParts };
+            document.getElementById('os-total').textContent = formatCurrency(calculateOSTotal(os));
+        }
+
+        function renderOSServices() {
+            const listDiv = document.getElementById('os-servicos-list');
+            listDiv.innerHTML = '';
+            currentOSServices.forEach((s, index) => {
+                const serviceItem = document.createElement('div');
+                serviceItem.className = 'flex-container form-group'
+                serviceItem.style.alignItems = 'center';
+                serviceItem.innerHTML = `
+                    <div class="flex-item">
+                        <input type="text" placeholder="Descrição do Serviço" value="${s.descricao}" onchange="currentOSServices[${index}].descricao = this.value" >
+                    </div>
+                    <div class="flex-item" style="flex: 0 0 120px;">
+                        <input type="number" step="0.01" min="0" placeholder="Valor" value="${s.valor}" onchange="currentOSServices[${index}].valor = parseFloat(this.value || 0); updateOSTotalDisplay();" >
+                    </div>
+                    <button type="button" class="btn btn-danger" onclick="removeServiceFromOS(${index})" style="flex: 0 0 auto; margin-right: 0;">Remover</button>
+                `;
+                listDiv.appendChild(serviceItem);
+            });
+            updateOSTotalDisplay();
+        }
+
+        function addServiceToOS() {
+            currentOSServices.push({ descricao: '', valor: 0 });
+            renderOSServices();
+        }
+
+        function removeServiceFromOS(index) {
+            currentOSServices.splice(index, 1);
+            renderOSServices();
+        }
+
+        function renderOSParts() {
+            const listDiv = document.getElementById('os-pecas-list');
+            listDiv.innerHTML = '';
+            currentOSParts.forEach((p, index) => {
+                const partItem = document.createElement('div');
+                partItem.className = 'flex-container form-group';
+                partItem.style.alignItems = 'center';
+                partItem.innerHTML = `
+                    <div class="flex-item">
+                        <input type="text" placeholder="Nome da Peça" value="${p.nome}" onchange="currentOSParts[${index}].nome = this.value">
+                    </div>
+                    <div class="flex-item" style="flex: 0 0 80px;">
+                        <input type="number" placeholder="Qtd" value="${p.quantidade}" onchange="currentOSParts[${index}].quantidade = parseInt(this.value || 0); updateOSTotalDisplay();" min="1">
+                    </div>
+                    <div class="flex-item" style="flex: 0 0 120px;">
+                        <input type="number" step="0.01" min="0" placeholder="Valor Unit." value="${p.valorUnitario}" onchange="currentOSParts[${index}].valorUnitario = parseFloat(this.value || 0); updateOSTotalDisplay();" >
+                    </div>
+                    <button type="button" class="btn btn-danger" onclick="removePartFromOS(${index})" style="flex: 0 0 auto; margin-right: 0;">Remover</button>
+                `;
+                listDiv.appendChild(partItem);
+            });
+            updateOSTotalDisplay();
+        }
+
+        function addPartToOS() {
+            currentOSParts.push({ nome: '', quantidade: 1, valorUnitario: 0 });
+            renderOSParts();
+        }
+
+        function removePartFromOS(index) {
+            currentOSParts.splice(index, 1);
+            renderOSParts();
+        }
+
+        function loadOrdensServico() {
+            const tableBody = document.querySelector('#os-table tbody');
+            tableBody.innerHTML = '';
+            ordensServico.sort((a, b) => new Date(b.dataAbertura) - new Date(a.dataAbertura)).forEach(os => {
+                const cliente = clientes.find(c => c.id === os.clienteId);
+                const veiculo = veiculos.find(v => v.id === os.veiculoId);
+                const total = calculateOSTotal(os);
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>OS-${os.id.slice(0, 5)}</td>
+                    <td>${cliente ? cliente.nome : 'N/A'}</td>
+                    <td>${veiculo ? `${veiculo.marca} ${veiculo.modelo} (${veiculo.placa})` : 'N/A'}</td>
+                    <td>${formatDate(os.dataAbertura)}</td>
+                    <td>${os.status}</td>
+                    <td>${formatCurrency(total)}</td>
+                    <td>
+                        <button class="btn" onclick="editOS('${os.id}')">Editar</button>
+                        <button class="btn btn-danger" onclick="deleteOS('${os.id}')">Excluir</button>
+                        ${os.status !== 'Faturada' ? `<button class="btn btn-success" onclick="invoiceOS('${os.id}', ${total})">Faturar</button>` : ''}
+                    </td>
+                `;
+            });
+        }
+
+        function showOSForm(os = null) {
+            document.getElementById('os-form-section').style.display = 'block';
+            document.getElementById('os-form-title').textContent = os ? 'Editar' : 'Criar';
+            document.getElementById('os-id').value = os ? os.id : '';
+            document.getElementById('os-data-abertura').value = os ? os.dataAbertura : new Date().toISOString().split('T')[0];
+            document.getElementById('os-descricao').value = os ? os.descricao : '';
+            document.getElementById('os-status').value = os ? os.status : 'Aberta';
+
+            populateSelect('os-cliente-id', clientes, 'id', 'nome', os ? os.clienteId : '');
+
+            if (os && os.clienteId) {
+                loadVeiculosForOS(os.clienteId, os.veiculoId);
+            } else {
+                document.getElementById('os-veiculo-id').innerHTML = '<option value="">Selecione um Veículo</option>';
+            }
+
+            currentOSServices = os ? [...os.servicos] : [];
+            currentOSParts = os ? [...os.pecas] : [];
+            renderOSServices();
+            renderOSParts();
+        }
+
+        function hideOSForm() {
+            document.getElementById('os-form-section').style.display = 'none';
+            document.getElementById('os-form').reset();
+            currentOSServices = [];
+            currentOSParts = [];
+            renderOSServices(); // Clear rendered services/parts
+            renderOSParts();
+        }
+
+        function loadVeiculosForOS(selectedClientId = null, selectedVeiculoId = null) {
+            const clientId = selectedClientId || document.getElementById('os-cliente-id').value;
+            const veiculosDoCliente = veiculos.filter(v => v.clienteId === clientId);
+            populateSelect('os-veiculo-id', veiculosDoCliente, 'id', 'placa', selectedVeiculoId);
+        }
+
+        document.getElementById('os-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('os-id').value;
+            const newOS = {
+                id: id || generateId(),
+                clienteId: document.getElementById('os-cliente-id').value,
+                veiculoId: document.getElementById('os-veiculo-id').value,
+                dataAbertura: document.getElementById('os-data-abertura').value,
+                descricao: document.getElementById('os-descricao').value,
+                status: document.getElementById('os-status').value,
+                servicos: currentOSServices.map(s => ({ ...s, valor: parseFloat(s.valor || 0) })), // Ensure numbers
+                pecas: currentOSParts.map(p => ({ ...p, quantidade: parseInt(p.quantidade || 0), valorUnitario: parseFloat(p.valorUnitario || 0) })), // Ensure numbers
+            };
+
+            if (id) {
+                const index = ordensServico.findIndex(o => o.id === id);
+                if (index !== -1) {
+                    ordensServico[index] = newOS;
+                }
+            } else {
+                ordensServico.push(newOS);
+            }
+            setStoredData('ordensServico', ordensServico);
+            loadOrdensServico();
+            hideOSForm();
+            loadDashboard(); // Update dashboard
+        });
+
+        function editOS(id) {
+            const os = ordensServico.find(o => o.id === id);
+            if (os) {
+                showOSForm(os);
+            }
+        }
+
+        function deleteOS(id) {
+            if (confirm('Tem certeza que deseja excluir esta Ordem de Serviço?')) {
+                ordensServico = ordensServico.filter(o => o.id !== id);
+                setStoredData('ordensServico', ordensServico);
+                loadOrdensServico();
+                loadDashboard(); // Update dashboard
+            }
+        }
+
+        function invoiceOS(id, total) {
+            const os = ordensServico.find(o => o.id === id);
+            if (os && os.status !== 'Faturada') {
+                if (confirm(`Confirmar faturamento da OS-${id.slice(0,5)} no valor de ${formatCurrency(total)}? Isso irá atualizar o financeiro e o estoque.`)) {
+                    os.status = 'Faturada';
+                    setStoredData('ordensServico', ordensServico);
+
+                    // Add revenue entry
+                    financeiro.push({
+                        id: generateId(),
+                        data: new Date().toISOString().split('T')[0],
+                        tipo: 'receita',
+                        descricao: `Faturamento OS-${id.slice(0,5)}`,
+                        valor: total,
+                    });
+                    setStoredData('financeiro', financeiro);
+
+                    // Deduct parts from stock
+                    if (os.pecas && os.pecas.length > 0) {
+                        os.pecas.forEach(partUsed => {
+                            const stockItem = estoque.find(item => item.nome.toLowerCase() === partUsed.nome.toLowerCase()); // Simple match by name
+                            if (stockItem) {
+                                stockItem.quantidade -= partUsed.quantidade;
+                                if (stockItem.quantidade < 0) stockItem.quantidade = 0; // Prevent negative stock
+                            }
+                        });
+                        setStoredData('estoque', estoque);
+                    }
+
+
+                    alert('OS faturada, receita lançada e estoque atualizado com sucesso!');
+                    loadOrdensServico();
+                    loadFinanceiro(); // Update financeiro view
+                    loadEstoque(); // Update estoque view
+                    loadDashboard(); // Update dashboard
+                }
+            } else if (os && os.status === 'Faturada') {
+                alert('Esta OS já foi faturada.');
+            }
+        }
+
+        // --- Estoque Module ---
+        function loadEstoque() {
+            const tableBody = document.querySelector('#estoque-table tbody');
+            tableBody.innerHTML = '';
+            estoque.forEach(item => {
+                const statusClass = item.quantidade <= item.estoqueMinimo ? 'status-low-stock' : 'status-ok-stock';
+                const statusText = item.quantidade <= item.estoqueMinimo ? 'Baixo' : 'OK';
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${item.nome}</td>
+                    <td>${item.codigo}</td>
+                    <td>${item.quantidade}</td>
+                    <td>${formatCurrency(item.precoVenda)}</td>
+                    <td>${item.fornecedor}</td>
+                    <td>${item.estoqueMinimo}</td>
+                    <td><span class="${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="btn" onclick="editEstoque('${item.id}')">Editar</button>
+                        <button class="btn btn-danger" onclick="deleteEstoque('${item.id}')">Excluir</button>
+                    </td>
+                `;
+            });
+        }
+
+        function showEstoqueForm(item = null) {
+            document.getElementById('estoque-form-section').style.display = 'block';
+            document.getElementById('estoque-form-title').textContent = item ? 'Editar' : 'Adicionar';
+            document.getElementById('estoque-id').value = item ? item.id : '';
+            document.getElementById('estoque-nome').value = item ? item.nome : '';
+            document.getElementById('estoque-codigo').value = item ? item.codigo : '';
+            document.getElementById('estoque-quantidade').value = item ? item.quantidade : 0;
+            document.getElementById('estoque-preco-compra').value = item ? item.precoCompra : 0;
+            document.getElementById('estoque-preco-venda').value = item ? item.precoVenda : 0;
+            document.getElementById('estoque-fornecedor').value = item ? item.fornecedor : '';
+            document.getElementById('estoque-minimo').value = item ? item.estoqueMinimo : 0;
+        }
+
+        function hideEstoqueForm() {
+            document.getElementById('estoque-form-section').style.display = 'none';
+            document.getElementById('estoque-form').reset();
+        }
+
+        document.getElementById('estoque-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('estoque-id').value;
+            const newItem = {
+                id: id || generateId(),
+                nome: document.getElementById('estoque-nome').value,
+                codigo: document.getElementById('estoque-codigo').value,
+                quantidade: parseInt(document.getElementById('estoque-quantidade').value || 0),
+                precoCompra: parseFloat(document.getElementById('estoque-preco-compra').value || 0),
+                precoVenda: parseFloat(document.getElementById('estoque-preco-venda').value || 0),
+                fornecedor: document.getElementById('estoque-fornecedor').value,
+                estoqueMinimo: parseInt(document.getElementById('estoque-minimo').value || 0),
+            };
+
+            if (id) {
+                const index = estoque.findIndex(i => i.id === id);
+                if (index !== -1) {
+                    estoque[index] = newItem;
+                }
+            } else {
+                estoque.push(newItem);
+            }
+            setStoredData('estoque', estoque);
+            loadEstoque();
+            hideEstoqueForm();
+            loadDashboard(); // Update dashboard
+        });
+
+        function editEstoque(id) {
+            const item = estoque.find(i => i.id === id);
+            if (item) {
+                showEstoqueForm(item);
+            }
+        }
+
+        function deleteEstoque(id) {
+            if (confirm('Tem certeza que deseja excluir esta peça do estoque?')) {
+                estoque = estoque.filter(i => i.id !== id);
+                setStoredData('estoque', estoque);
+                loadEstoque();
+                loadDashboard(); // Update dashboard
+            }
+        }
+
+        // --- Financeiro Module ---
+        function loadFinanceiro() {
+            const tableBody = document.querySelector('#financeiro-table tbody');
+            tableBody.innerHTML = '';
+
+            const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+            let totalReceitas = 0;
+            let totalDespesas = 0;
+
+            const sortedFinanceiro = financeiro.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+            sortedFinanceiro.forEach(entry => {
+                if (entry.data.startsWith(currentMonth)) {
+                    if (entry.tipo === 'receita') {
+                        totalReceitas += parseFloat(entry.valor);
+                    } else if (entry.tipo === 'despesa') {
+                        totalDespesas += parseFloat(entry.valor);
+                    }
+                }
+
+                const row = tableBody.insertRow();
+                const valueClass = entry.tipo === 'receita' ? 'text-success' : 'text-danger';
+                row.innerHTML = `
+                    <td>${formatDate(entry.data)}</td>
+                    <td>${entry.tipo === 'receita' ? 'Receita' : 'Despesa'}</td>
+                    <td>${entry.descricao}</td>
+                    <td class="${valueClass}">${formatCurrency(entry.valor)}</td>
+                `;
+            });
+
+            document.getElementById('financeiro-receitas-mes').textContent = formatCurrency(totalReceitas);
+            document.getElementById('financeiro-despesas-mes').textContent = formatCurrency(totalDespesas);
+            document.getElementById('financeiro-saldo-mes').textContent = formatCurrency(totalReceitas - totalDespesas);
+        }
+
+        document.getElementById('despesa-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newDespesa = {
+                id: generateId(),
+                data: document.getElementById('despesa-data').value,
+                tipo: 'despesa',
+                descricao: document.getElementById('despesa-descricao').value,
+                valor: parseFloat(document.getElementById('despesa-valor').value),
+            };
+            financeiro.push(newDespesa);
+            setStoredData('financeiro', financeiro);
+            loadFinanceiro();
+            loadDashboard(); // Update dashboard financial card
+            document.getElementById('despesa-form').reset();
+            alert('Despesa lançada com sucesso!');
+        });
+
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard(); // Load dashboard first
+            populateClienteSelects(); // Populate selects used in other modules
+
+            // Ensure today's date is set for date inputs that might default
+            const today = new Date().toISOString().split('T')[0];
+            const osDataAberturaInput = document.getElementById('os-data-abertura');
+            if (osDataAberturaInput && !osDataAberturaInput.value) {
+                osDataAberturaInput.value = today;
+            }
+            const despesaDataInput = document.getElementById('despesa-data');
+            if (despesaDataInput && !despesaDataInput.value) {
+                despesaDataInput.value = today;
+            }
+            const agendamentoDataInput = document.getElementById('agendamento-data');
+            if (agendamentoDataInput && !agendamentoDataInput.value) {
+                agendamentoDataInput.value = today;
+            }
+        });
+
+        // --- Feedback System (REQUIRED) ---
+        const feedbackButton = document.getElementById('feedback-button');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const closeButton = document.querySelector('.close-button');
+        const feedbackForm = document.getElementById('feedback-form');
+        const feedbackTextarea = document.getElementById('feedback-text');
+
+        feedbackButton.addEventListener('click', () => {
+            feedbackModal.style.display = 'block';
+        });
+
+        closeButton.addEventListener('click', () => {
+            feedbackModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === feedbackModal) {
+                feedbackModal.style.display = 'none';
+            }
+        });
+
+        feedbackForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mensagem = feedbackTextarea.value;
+            if (!mensagem.trim()) {
+                alert('Por favor, digite seu feedback antes de enviar.');
+                return;
+            }
+
+            try {
+                await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/projetos_capturados/-Ooe5r2mZdER1L5iZlrJ/feedbacks.json', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        texto: mensagem,
+                        data: new Date().toISOString(),
+                        clienteId: "-Ooe5r2mZdER1L5iZlrJ",
+                        clienteNome: "Pedro (Oficina Mecânica)"
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                alert('Mensagem enviada para a thIAguinho Soluções!');
+                feedbackTextarea.value = '';
+                feedbackModal.style.display = 'none';
+            } catch (error) {
+                console.error('Erro ao enviar feedback:', error);
+                alert('Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.');
+            }
+        });
+    </script>
+</body>
+</html>

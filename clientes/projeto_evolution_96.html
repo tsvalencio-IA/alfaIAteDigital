@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Projetos para Marcenaria - thIAguinho Soluções</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-dark: #4A3C30;     
+            --secondary-wood: #7F5539;   
+            --accent-gold: #DDA15E;      
+            --light-cream: #FDFCF9;      
+            --soft-beige: #FBF8F4;       
+            --earth-green: #6B8E23;      
+            --text-color: #333333;       
+            --border-soft: #C6B6A5;      
+            --bg-light-panel: #EFEAE5;   
+            --bg-ai-section: #E6F0E0;    
+            --bg-summary: #F2E8DC;       
+            --warning-red: #dc3545;      
+            --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --border-radius-soft: 8px;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 0;
+            background-color: var(--light-cream);
+            color: var(--text-color); line-height: 1.6;
+        }
+        .container {
+            max-width: 960px; margin: 30px auto; padding: 30px;
+            background-color: var(--soft-beige);
+            border-radius: var(--border-radius-soft);
+            box-shadow: var(--shadow-subtle);
+        }
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--primary-dark); text-align: center; margin-bottom: 30px;
+        }
+        h1 { font-size: 2.8em; margin-bottom: 10px; }
+        h2 {
+            font-size: 2em; border-bottom: 2px solid var(--border-soft);
+            padding-bottom: 15px; margin-top: 40px; color: var(--secondary-wood);
+        }
+        .subtitle {
+            text-align: center; color: #6c757d; margin-bottom: 30px; font-size: 1.1em;
+        }
+        .input-group { margin-bottom: 20px; display: flex; flex-direction: column; }
+        .input-group label {
+            display: block; margin-bottom: 8px; font-weight: 600;
+            color: var(--primary-dark); font-size: 0.95em;
+        }
+        .input-group input[type="text"],
+        .input-group input[type="number"],
+        .input-group textarea,
+        .input-group input[type="file"] {
+            width: 100%; padding: 12px; border: 1px solid var(--border-soft);
+            border-radius: var(--border-radius-soft); font-size: 1em;
+            transition: all 0.3s ease; box-sizing: border-box; 
+            background-color: var(--light-cream); color: var(--text-color);
+        }
+        .input-group input:focus, .input-group textarea:focus {
+            border-color: var(--secondary-wood); outline: none;
+            box-shadow: 0 0 0 3px rgba(127, 85, 57, 0.2);
+        }
+        textarea { resize: vertical; }
+
+        .section-panel {
+            padding: 25px; background-color: var(--bg-light-panel);
+            border-radius: var(--border-radius-soft); margin-bottom: 30px;
+            border: 1px solid var(--border-soft);
+        }
+        .grid-layout {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;
+        }
+        .grid-layout .full-width { grid-column: 1 / -1; }
+
+        button {
+            background-color: var(--accent-gold); color: var(--primary-dark);
+            padding: 12px 25px; border: none; border-radius: var(--border-radius-soft);
+            cursor: pointer; font-size: 1em; font-weight: 600;
+            transition: all 0.3s ease; display: inline-flex;
+            align-items: center; justify-content: center; gap: 8px;
+        }
+        button:hover { background-color: #C38C4B; transform: translateY(-2px); }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; transform: none; color: #666; }
+
+        .action-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+        .action-buttons button.primary { background-color: var(--secondary-wood); color: white; }
+        .action-buttons button.primary:hover { background-color: #6a4933; }
+
+        #itemsList { margin-top: 30px; padding-top: 20px; }
+        .item-card {
+            background-color: var(--soft-beige); border: 1px solid var(--border-soft);
+            border-radius: var(--border-radius-soft); padding: 20px 25px; margin-bottom: 15px;
+        }
+        .item-card h3 {
+            margin-top: 0; margin-bottom: 15px; color: var(--primary-dark);
+            text-align: left; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;
+            font-size: 1.5em; display: flex; justify-content: space-between; align-items: center;
+        }
+        .item-card h3 button {
+            padding: 8px 15px; font-size: 0.9em; border-radius: 6px; margin-left: 10px; color: white; 
+        }
+        .item-card .cost-details {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-top: 15px;
+            padding-top: 15px; border-top: 1px dashed var(--border-soft);
+        }
+        .item-card .total-item-price {
+            font-weight: 700; color: var(--accent-gold); font-size: 1.3em;
+            margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-soft); text-align: right;
+        }
+
+        #summary {
+            margin-top: 40px; padding: 30px; background-color: var(--bg-summary);
+            border-radius: var(--border-radius-soft); border: 1px solid #dccca0; text-align: center;
+        }
+        #summary p { font-size: 1.6em; font-weight: 700; color: var(--primary-dark); margin: 15px 0; }
+        #summary button.warning { background-color: var(--secondary-wood); color: white;}
+
+        .ai-output-section {
+            margin-top: 30px; padding: 25px; background-color: var(--bg-ai-section); 
+            border-radius: var(--border-radius-soft); border: 1px solid #B0D7B0; 
+        }
+        .ai-output-section h3 { color: var(--earth-green); text-align: left; border: none; }
+        .description-box {
+            background-color: var(--light-cream); padding: 18px; border-radius: var(--border-radius-soft);
+            border: 1px solid var(--border-soft); white-space: pre-wrap; font-family: monospace; min-height: 150px;
+        }
+
+        .api-config-section {
+            background-color: var(--bg-light-panel); border: 1px solid var(--border-soft);
+            padding: 20px; border-radius: 8px; margin-bottom: 30px;
+        }
+        .warning-message {
+            background-color: #ffe0b2; border-left: 5px solid #ff9800; padding: 15px; margin-bottom: 20px;
+            border-radius: 5px; color: #555; display: flex; align-items: center; gap: 10px;
+        }
+        footer { text-align: center; margin-top: 60px; padding: 25px; color: #777; font-size: 0.9em; }
+        
+        .floating-buttons {
+            position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000;
+        }
+        .floating-button {
+            background-color: #FFC107; color: var(--primary-dark); padding: 12px 20px; border-radius: 30px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); font-weight: 600; display: flex; align-items: center; gap: 10px; border: none; cursor: pointer;
+        }
+        .floating-button:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ Gerador de Projetos de Marcenaria</h1>
+        <p class="subtitle">Faça o upload do áudio do cliente, deixe a IA transcrever e gere o seu orçamento automaticamente.</p>
+
+        <!-- 1. Configuração da IA -->
+        <section id="apiConfigSection" class="api-config-section">
+            <h2><i class="fas fa-key"></i> 1. Chave da Inteligência Artificial</h2>
+            <div class="warning-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div><strong>Atenção:</strong> Cole a sua chave da API do Google Gemini abaixo para que o sistema consiga ouvir o áudio. Ela será guardada no seu navegador.</div>
+            </div>
+            <div class="input-group full-width">
+                <input type="password" id="geminiApiKeyInput" placeholder="Cole a sua chave API aqui (começa com AIza...)">
+            </div>
+            <div class="action-buttons" style="justify-content: flex-start; margin-top: 0;">
+                <button onclick="salvarChave(false)" class="primary" id="btnSalvarChave">
+                    <i class="fas fa-save"></i> Salvar Chave e Ativar
+                </button>
+            </div>
+            <p style="margin-top: 15px; font-weight: 600; font-size: 0.9em;">Status: <span id="currentApiKeyDisplay" style="color:red;">Nenhuma chave registada</span></p>
+        </section>
+
+        <!-- 2. Transcrição de Áudio -->
+        <section id="audioInputSection" class="section-panel">
+            <h2><i class="fas fa-microphone-alt"></i> 2. Áudio do Cliente</h2>
+            <p class="subtitle">Selecione o ficheiro de áudio (MP3, WAV). A IA vai escutar e escrever o que foi pedido.</p>
+            
+            <div class="input-group">
+                <input type="file" id="audioFileInput" accept="audio/*">
+                <small style="color:#666; margin-top:5px;">Para testes, envie áudios curtos (até 2 minutos).</small>
+            </div>
+            
+            <div class="input-group full-width">
+                <label>Texto do Pedido (Gerado pela IA):</label>
+                <textarea id="transcribedTextDisplay" rows="6" placeholder="Carregue o ficheiro de áudio acima. O texto aparecerá aqui..."></textarea>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="processAudioBtn" class="primary" onclick="gerarProjeto()">
+                    <i class="fas fa-magic"></i> Analisar Texto e Gerar Projeto
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. Proposta da IA -->
+        <section id="aiDesignSection" class="ai-output-section" style="display: none;">
+            <h2><i class="fas fa-lightbulb"></i> Proposta da IA</h2>
+            <div class="input-group full-width">
+                <div id="aiDesignDescription" class="description-box">Aguarde...</div>
+            </div>
+            <div class="action-buttons">
+                <button class="primary" onclick="transferirParaOrcamento()">
+                    <i class="fas fa-arrow-down"></i> Adicionar aos Custos do Orçamento
+                </button>
+            </div>
+        </section>
+
+        <!-- 4. Painel de Custos -->
+        <section id="addItemSection" class="section-panel">
+            <h2><i class="fas fa-cube"></i> Edição de Valores</h2>
+            <div class="grid-layout">
+                <div class="input-group full-width">
+                    <label>Nome do Item:</label>
+                    <input type="text" id="itemName" placeholder="Ex: Balcão de Atendimento">
+                </div>
+                <div class="input-group full-width">
+                    <label>Materiais e Características:</label>
+                    <input type="text" id="itemMaterial" placeholder="Ex: MDF Branco, Vidro 8mm">
+                </div>
+                <div class="input-group">
+                    <label>Custo Material (R$):</label>
+                    <input type="number" id="costMaterial" value="0" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Custo Mão de Obra (R$):</label>
+                    <input type="number" id="costLabor" value="0" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Ferragens/Acessórios (R$):</label>
+                    <input type="number" id="costHardware" value="0" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Outros Custos (R$):</label>
+                    <input type="number" id="costOther" value="0" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Margem de Lucro (%):</label>
+                    <input type="number" id="profitMargin" value="20" min="0" max="100" step="1">
+                </div>
+                <div class="input-group full-width action-buttons">
+                    <button class="primary" onclick="addItem()" id="btnSaveItem">
+                        <i class="fas fa-plus"></i> Confirmar Item na Lista
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Lista de Itens -->
+        <section id="itemsList">
+            <h2><i class="fas fa-list-alt"></i> Lista do Projeto</h2>
+            <div id="itemsContainer"></div>
+        </section>
+
+        <!-- Resumo -->
+        <section id="summary">
+            <h2><i class="fas fa-file-invoice-dollar"></i> Total do Orçamento</h2>
+            <p><span id="totalProjectCost">R$ 0,00</span></p>
+            <button onclick="mascoteFalar('O valor total do projeto até agora é ' + document.getElementById('totalProjectCost').textContent)" class="warning">
+                <i class="fas fa-robot"></i> Ouvir Valor
+            </button>
+        </section>
+    </div>
+
+    <!-- Mascote Flutuante -->
+    <div class="floating-buttons">
+        <button class="floating-button" onclick="mascoteFalar('Tudo certo! Cole a sua chave, envie o áudio e vamos começar a trabalhar!')">
+            <i class="fas fa-headset"></i> Mascote
+        </button>
+    </div>
+
+    <footer>Powered by thIAguinho Soluções</footer>
+
+    <script>
+        let currentGeminiApiKey = null;
+        let listaDeItens = [];
+        let indexSendoEditado = -1;
+        const backticks = String.fromCharCode(96, 96, 96); 
+
+        // Ao carregar a página, verifica se a chave já estava guardada no navegador
+        window.onload = function() {
+            atualizarTelaItens();
+            const chaveGuardada = localStorage.getItem('geminiApiKeyLocal');
+            if (chaveGuardada) {
+                document.getElementById('geminiApiKeyInput').value = chaveGuardada;
+                salvarChave(true); // O modo 'true' significa que foi carregado silenciosamente
+            }
+        };
+
+        // 1. SALVAR A CHAVE API
+        function salvarChave(modoSilencioso = false) {
+            try {
+                const inputChave = document.getElementById('geminiApiKeyInput');
+                const chave = inputChave.value.trim();
+                
+                if (chave === "") {
+                    if(!modoSilencioso) alert('Por favor, cole a sua chave da API na caixa de texto antes de clicar em salvar.');
+                    return;
+                }
+
+                currentGeminiApiKey = chave;
+                
+                // Guarda a chave no cofre do navegador (localStorage) para não perder ao dar F5
+                localStorage.setItem('geminiApiKeyLocal', chave);
+                
+                // Feedback visual de sucesso
+                const statusSpan = document.getElementById('currentApiKeyDisplay');
+                statusSpan.textContent = "Chave Ativada (Guardada no Navegador)";
+                statusSpan.style.color = "#6B8E23"; 
+
+                const botao = document.getElementById('btnSalvarChave');
+                const textoOriginal = '<i class="fas fa-save"></i> Salvar Chave e Ativar';
+                botao.innerHTML = '<i class="fas fa-check"></i> Ativada!';
+                botao.style.backgroundColor = "#6B8E23";
+                
+                setTimeout(function() {
+                    botao.innerHTML = textoOriginal;
+                    botao.style.backgroundColor = ""; 
+                }, 3000);
+
+                if(!modoSilencioso) mascoteFalar("Chave ativada e guardada com sucesso! Não vai precisar colar novamente.");
+
+            } catch (erro) {
+                alert("Ocorreu um erro ao salvar: " + erro.message);
+            }
+        }
+
+        // 2. FUNÇÃO DO MASCOTE (VOZ)
+        function mascoteFalar(texto) {
+            try {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel(); 
+                    const fala = new SpeechSynthesisUtterance(texto);
+                    fala.lang = 'pt-BR';
+                    window.speechSynthesis.speak(fala);
+                }
+            } catch (e) {
+                console.error("Erro na voz do mascote", e);
+            }
+        }
+
+        // Função auxiliar para transformar o áudio em dados legíveis
+        function converterArquivoParaBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // 3. OUVIR E TRANSCREVER O ÁUDIO REAL COM TRATAMENTO DE ERROS AVANÇADO
+        document.getElementById('audioFileInput').addEventListener('change', async function(evento) {
+            try {
+                const file = evento.target.files[0];
+                if (!file) return;
+
+                if (!currentGeminiApiKey) {
+                    alert("Atenção! Necessita colar e salvar a Chave da API (Passo 1).");
+                    document.getElementById('audioFileInput').value = '';
+                    return;
+                }
+
+                const caixaTexto = document.getElementById('transcribedTextDisplay');
+                caixaTexto.value = "⏳ A enviar o ficheiro de áudio para a IA... (Aguarde)";
+
+                const base64String = await converterArquivoParaBase64(file);
+                if (!base64String.includes(',')) {
+                    throw new Error("O navegador falhou a ler o ficheiro.");
+                }
+                
+                const base64Data = base64String.split(',')[1];
+                const mimeType = file.type || "audio/mp3";
+
+                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + currentGeminiApiKey;
+                
+                const pacoteDeDados = {
+                    contents: [{
+                        parts: [
+                            { text: "Você é um assistente inteligente. Ouça este áudio e transcreva exatamente o que foi dito." },
+                            { inlineData: { mimeType: mimeType, data: base64Data } }
+                        ]
+                    }]
+                };
+
+                const resposta = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pacoteDeDados)
+                });
+
+                const dadosJson = await resposta.json();
+                
+                // NOVO DETETOR DE ERROS: Aqui capturamos o motivo exato de a chave falhar
+                if (!resposta.ok || dadosJson.error) {
+                    const msgGoogle = dadosJson.error ? dadosJson.error.message : resposta.statusText;
+                    throw new Error(`A Google rejeitou a chave ou o pedido. Motivo: ${msgGoogle}`);
+                }
+
+                if (dadosJson.candidates && dadosJson.candidates[0].content.parts[0].text) {
+                    caixaTexto.value = dadosJson.candidates[0].content.parts[0].text.trim();
+                    mascoteFalar("Áudio transcrito com sucesso.");
+                } else {
+                    caixaTexto.value = "A IA não conseguiu entender a fala.";
+                }
+
+            } catch (erro) {
+                console.error(erro);
+                // Imprime o erro diretamente na caixa de texto para sabermos o que falhou!
+                document.getElementById('transcribedTextDisplay').value = "❌ FALHA NA LIGAÇÃO À IA:\n\n" + erro.message + "\n\nVerifique se a chave que colou é válida e se não está a usar um ficheiro de áudio demasiado grande (mais de 5MB).";
+                mascoteFalar("Erro de comunicação com a chave da Inteligência Artificial.");
+            }
+        });
+
+        // 4. GERAR O PROJETO E CALCULAR VALORES
+        async function gerarProjeto() {
+            try {
+                const textoDoCliente = document.getElementById('transcribedTextDisplay').value.trim();
+                
+                if (!textoDoCliente || textoDoCliente.includes('FALHA') || textoDoCliente.includes('Aguarde')) {
+                    alert('Por favor, certifique-se que existe um texto válido do cliente na caixa.');
+                    return;
+                }
+                if (!currentGeminiApiKey) {
+                    alert('Configure a sua chave da API!');
+                    return;
+                }
+
+                const botaoGerar = document.getElementById('processAudioBtn');
+                botaoGerar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A criar Projeto...';
+                botaoGerar.disabled = true;
+                
+                document.getElementById('aiDesignSection').style.display = 'block';
+                document.getElementById('aiDesignDescription').innerText = "A elaborar o projeto de marcenaria. Aguarde...";
+
+                const textoComando = "Você é um arquiteto sênior especializado em móveis para Lojas de Óticas.\n" +
+                    "Leia o pedido do cliente: \"" + textoDoCliente + "\"\n\n" +
+                    "Crie uma proposta detalhada. No final, adicione OBRIGATORIAMENTE um bloco JSON com os custos.\n\n" +
+                    backticks + "json\n" +
+                    "{\n" +
+                    "  \"nome_projeto\": \"Ex: Balcão Ótica\",\n" +
+                    "  \"materiais_resumo\": \"Ex: MDF Branco, Vidro 8mm\",\n" +
+                    "  \"custo_material\": 1200.00,\n" +
+                    "  \"custo_mao_de_obra\": 800.00,\n" +
+                    "  \"custo_ferragens\": 350.00,\n" +
+                    "  \"outros_custos\": 100.00\n" +
+                    "}\n" +
+                    backticks;
+
+                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + currentGeminiApiKey;
+                
+                const resposta = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: textoComando }] }] })
+                });
+
+                const dadosJson = await resposta.json();
+                
+                if (!resposta.ok || dadosJson.error) {
+                    const msgGoogle = dadosJson.error ? dadosJson.error.message : resposta.statusText;
+                    throw new Error(`A Google rejeitou a chave ou o pedido. Motivo: ${msgGoogle}`);
+                }
+
+                const textoIA = dadosJson.candidates[0].content.parts[0].text;
+                const regexParaLimparTexto = new RegExp(backticks + "(?:json)?[\\s\\S]*?" + backticks, "i");
+                const regexParaExtrairDados = new RegExp(backticks + "(?:json)?\\n?([\\s\\S]*?)\\n?" + backticks, "i");
+
+                document.getElementById('aiDesignDescription').innerText = textoIA.replace(regexParaLimparTexto, ''); 
+                
+                const parteDoJson = textoIA.match(regexParaExtrairDados);
+                
+                if (parteDoJson && parteDoJson[1]) {
+                    try {
+                        const dadosMovel = JSON.parse(parteDoJson[1]);
+                        document.getElementById('itemName').value = dadosMovel.nome_projeto || "Projeto IA";
+                        document.getElementById('itemMaterial').value = dadosMovel.materiais_resumo || "";
+                        document.getElementById('costMaterial').value = dadosMovel.custo_material || 0;
+                        document.getElementById('costLabor').value = dadosMovel.custo_mao_de_obra || 0;
+                        document.getElementById('costHardware').value = dadosMovel.custo_ferragens || 0;
+                        document.getElementById('costOther').value = dadosMovel.outros_custos || 0;
+                        mascoteFalar("O projeto foi gerado com sucesso.");
+                    } catch(err) {
+                        console.error("Erro no JSON:", err);
+                    }
+                }
+
+            } catch(erro) {
+                console.error(erro);
+                document.getElementById('aiDesignDescription').innerText = "❌ FALHA NA LIGAÇÃO À IA:\n\n" + erro.message;
+            } finally {
+                const botaoGerar = document.getElementById('processAudioBtn');
+                botaoGerar.innerHTML = '<i class="fas fa-magic"></i> Analisar Texto e Gerar Projeto';
+                botaoGerar.disabled = false;
+            }
+        }
+
+        function transferirParaOrcamento() {
+            document.getElementById('addItemSection').scrollIntoView({behavior: 'smooth'});
+        }
+
+        // 5. GESTÃO DE CUSTOS E LISTA DE ITENS
+        function atualizarTelaItens() {
+            const container = document.getElementById('itemsContainer');
+            container.innerHTML = '';
+            let somaTotal = 0;
+
+            if (listaDeItens.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888;">Você ainda não adicionou nenhum móvel.</p>';
+                document.getElementById('totalProjectCost').textContent = "R$ 0,00";
+                return;
+            }
+
+            listaDeItens.forEach((item, index) => {
+                const somaCustosBrutos = item.costMaterial + item.costLabor + item.costHardware + item.costOther;
+                const valorVenda = somaCustosBrutos * (1 + (item.profitMargin / 100));
+                somaTotal += valorVenda;
+
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <h3>${item.name} 
+                        <div>
+                            <button onclick="editarItem(${index})" style="background-color: var(--secondary-wood)"><i class="fas fa-edit"></i></button>
+                            <button onclick="deletarItem(${index})" style="background-color: var(--warning-red)"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </h3>
+                    <p><strong>Descrição:</strong> ${item.material}</p>
+                    <div class="cost-details">
+                        <p>Material/Ferragens: R$ ${(item.costMaterial + item.costHardware).toFixed(2)}</p>
+                        <p>Mão de Obra/Outros: R$ ${(item.costLabor + item.costOther).toFixed(2)}</p>
+                        <p>Lucro da Empresa: ${item.profitMargin}%</p>
+                    </div>
+                    <p class="total-item-price">Valor de Venda do Item: R$ ${valorVenda.toFixed(2)}</p>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('totalProjectCost').textContent = `R$ ${somaTotal.toFixed(2)}`;
+        }
+
+        function addItem() {
+            const item = {
+                name: document.getElementById('itemName').value || "Peça do Projeto",
+                material: document.getElementById('itemMaterial').value || "Não especificado",
+                costMaterial: parseFloat(document.getElementById('costMaterial').value) || 0,
+                costLabor: parseFloat(document.getElementById('costLabor').value) || 0,
+                costHardware: parseFloat(document.getElementById('costHardware').value) || 0,
+                costOther: parseFloat(document.getElementById('costOther').value) || 0,
+                profitMargin: parseFloat(document.getElementById('profitMargin').value) || 0
+            };
+
+            if (indexSendoEditado === -1) {
+                listaDeItens.push(item);
+            } else {
+                listaDeItens[indexSendoEditado] = item;
+            }
+
+            limparFormulario();
+            atualizarTelaItens();
+        }
+
+        function editarItem(index) {
+            const item = listaDeItens[index];
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemMaterial').value = item.material;
+            document.getElementById('costMaterial').value = item.costMaterial;
+            document.getElementById('costLabor').value = item.costLabor;
+            document.getElementById('costHardware').value = item.costHardware;
+            document.getElementById('costOther').value = item.costOther;
+            document.getElementById('profitMargin').value = item.profitMargin;
+            indexSendoEditado = index;
+            document.getElementById('btnSaveItem').innerHTML = '<i class="fas fa-sync"></i> Atualizar Item Modificado';
+            document.getElementById('addItemSection').scrollIntoView({behavior: 'smooth'});
+        }
+
+        function deletarItem(index) {
+            if(confirm("Deseja realmente apagar este item do projeto?")) {
+                listaDeItens.splice(index, 1);
+                atualizarTelaItens();
+            }
+        }
+
+        function limparFormulario() {
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemMaterial').value = '';
+            document.getElementById('costMaterial').value = '0';
+            document.getElementById('costLabor').value = '0';
+            document.getElementById('costHardware').value = '0';
+            document.getElementById('costOther').value = '0';
+            document.getElementById('profitMargin').value = '20';
+            indexSendoEditado = -1;
+            document.getElementById('btnSaveItem').innerHTML = '<i class="fas fa-plus"></i> Confirmar Item na Lista';
+        }
+    </script>
+</body>
+</html>

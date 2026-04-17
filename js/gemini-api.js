@@ -73,10 +73,12 @@ export function adicionarAoHistorico(role, text) {
 }
 
 // =========================================================================
-// CAMADA BASE DE REDE
+// CAMADA BASE DE REDE (GROQ E GEMINI)
 // =========================================================================
+
+// Usando o Gemini 1.5 Flash (mais estável para contas gratuitas e limite maior)
 async function sendMessageToGemini(history, text, apiKey) {
-    const model = 'gemini-2.5-flash';
+    const model = 'gemini-1.5-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const safeHistory = history.map(item => ({
@@ -88,7 +90,7 @@ async function sendMessageToGemini(history, text, apiKey) {
 
     for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-            console.log(`[JARVIS][Gemini] Tentativa ${attempt} — ${model}:generateContent`);
+            console.log(`[JARVIS][Gemini] Tentativa ${attempt} — ${model}`);
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -114,7 +116,7 @@ async function sendMessageToGemini(history, text, apiKey) {
     }
 }
 
-async function callGroqAPI(prompt, sys, apiKey, model = "llama-3.3-70b-versatile") {
+async function callGroqAPI(prompt, sys, apiKey, model = "llama-3.3-70b-versatile", tokens = 2000) {
     const url = "https://api.groq.com/openai/v1/chat/completions";
     
     console.log(`[JARVIS][Groq] Chamando ${model}...`);
@@ -131,7 +133,7 @@ async function callGroqAPI(prompt, sys, apiKey, model = "llama-3.3-70b-versatile
                 { role: "user", content: prompt }
             ],
             temperature: 0.5,
-            max_tokens: 6000
+            max_tokens: tokens // Limitado para não estourar a cota gratuita
         })
     });
 
@@ -143,68 +145,6 @@ async function callGroqAPI(prompt, sys, apiKey, model = "llama-3.3-70b-versatile
     const data = await response.json();
     console.log(`[JARVIS][Groq] ${model} OK (${data.choices[0].message.content.length} chars).`);
     return data.choices[0].message.content;
-}
-
-// -------------------------------------------------------------------------
-// NOVA FUNÇÃO: FORÇAR GERADOR DE CÓDIGO HTML/JS PELA GROQ
-// -------------------------------------------------------------------------
-async function callGroqHTMLGenerator(prompt, sys, apiKey) {
-    const model = "llama-3.3-70b-versatile";
-    console.log(`[JARVIS][Groq] Gerando CÓDIGO FINAL via ${model}...`);
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            model: model,
-            messages: [
-                { role: "system", content: sys },
-                { role: "user", content: prompt }
-            ],
-            temperature: 0.2, // Mais baixo para focar em código exato
-            max_tokens: 7500
-        })
-    });
-
-    if (!response.ok) {
-         const err = await response.json();
-         throw new Error(err.error?.message || "Erro Groq API no CÓDIGO");
-    }
-    const data = await response.json();
-    console.log(`[JARVIS][Groq] Geração de Código Concluída.`);
-    return data.choices[0].message.content;
-}
-
-
-async function callGeminiText(prompt, sys, apiKey) {
-    const model = 'gemini-2.5-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    
-    for (let attempt = 1; attempt <= 2; attempt++) {
-        try {
-            console.log(`[JARVIS][Gemini] Tentativa ${attempt} — ${model}:generateContent`);
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                    systemInstruction: { parts: [{ text: sys }] }
-                })
-            });
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(`${response.status}: ${errData.error?.message || 'Erro desconhecido'}`);
-            }
-            const data = await response.json();
-            return data.candidates[0].content.parts[0].text;
-        } catch (error) {
-            console.warn(`[JARVIS][Gemini] Falha tentativa ${attempt}: ${error.message}`);
-            if (attempt === 2) throw error;
-            await new Promise(r => setTimeout(r, 2000));
-        }
-    }
 }
 
 // =========================================================================
@@ -259,7 +199,8 @@ export async function askGemini(text) {
 }
 
 // =========================================================================
-// CÉREBRO 2: DEV CHAT DO ADMIN (Agora otimizado para Groq/Fallback)
+// CÉREBRO 2: DEV CHAT DO ADMIN (ARQUITETURA HÍBRIDA)
+// Carga pesada (HTML) fica com Gemini 1.5, Planejamento (Rápido) com Groq.
 // =========================================================================
 export async function conversarComDesenvolvedorIA(mensagemUsuario, contextoCliente, historicoDev, idProjeto = null) {
     try {
@@ -284,7 +225,7 @@ Sua missão final é SEMPRE retornar código HTML único e completo (HTML+CSS Ta
 Contexto do Cliente Atual:
 ${contextoCliente}
 
-REGRAS OBRIGATÓRIAS DE SISTEMA (SE GERAR HTML):
+REGRAS OBRIGATÓRIAS DE SISTEMA:
 1. Use Tailwind via CDN (<script src="https://cdn.tailwindcss.com"></script>).
 2. TEMA OBRIGATÓRIO: Dark mode (bg-slate-900 text-white), com acentos em Emerald (emerald-500) e Sky (sky-500).
 3. Use a fonte 'Montserrat' do Google Fonts.
@@ -316,181 +257,144 @@ window.tocarAudioNeural = function(texto) {
     .catch(console.error);
 };
 \`\`\`
-Exemplo de uso no HTML: <button onclick="window.tocarAudioNeural('Seu pedido foi adicionado ao carrinho com sucesso.')">Adicionar</button>`;
+Exemplo de uso no HTML: <button onclick="window.tocarAudioNeural('Sua ação foi concluída.')">Ação</button>`;
 
         const temGroq = !!chaveGroqArmazenada;
         
-        console.log(`[JARVIS][Rodizio-Dev] Pipeline iniciado. Groq disponivel: ${temGroq}`);
+        console.log(`[JARVIS][Rodizio-Dev] Pipeline iniciado. Groq disponível: ${temGroq}`);
 
         if (temGroq) {
-            // ==========================================
-            // MODO TURBO (100% GROQ - LLAMA 3)
-            // Ignorando Gemini para evitar erro 503
-            // ==========================================
+            // MODO HÍBRIDO (Bypass Limits):
+            // Groq Planeja (Rápido e Leve) -> Gemini Executa (Longo e Pesado)
             
-            // Passo 1: Análise
+            // Passo 1: Análise (GROQ)
             console.log(`[JARVIS][Rodizio-Dev] Agente 1 (Groq) — Analista Técnico...`);
             const p1 = `Analise este pedido e defina a arquitetura de variáveis e funções JS necessárias.\nPedido: ${mensagemUsuario}`;
             const sys1 = `Você é o Arquiteto Analista. Seja curto e direto. Crie a lista de funções e variáveis necessárias baseada no pedido.`;
-            const r1 = await callGroqAPI(p1, sys1, chaveGroqArmazenada);
+            const r1 = await callGroqAPI(p1, sys1, chaveGroqArmazenada, "llama-3.3-70b-versatile", 800); // Token baixo para economizar
 
-            // Passo 2: Layout
+            // Passo 2: Layout (GROQ)
             console.log(`[JARVIS][Rodizio-Dev] Agente 2 (Groq) — Arquiteto Layout...`);
             const p2 = `Com base nesta análise: ${r1}\nCrie o rascunho de estrutura HTML (Wireframe escrito, sem código) para o layout de Tailwind escuro. O que vai em cada DIV?`;
             const sys2 = `Você é UX Designer sênior. Responda apenas com a estrutura da tela em tópicos rápidos.`;
-            const r2 = await callGroqAPI(p2, sys2, chaveGroqArmazenada);
+            const r2 = await callGroqAPI(p2, sys2, chaveGroqArmazenada, "llama-3.3-70b-versatile", 800); // Token baixo
 
-            // Passo 3: GERAÇÃO FINAL DO CÓDIGO (100% Groq)
-            console.log(`[JARVIS][Rodizio-Dev] Agente 3 (Groq) — Gerador de Código...`);
+            // Passo 3: GERAÇÃO FINAL DO CÓDIGO (GEMINI 1.5 FLASH)
+            // O Gemini aguenta milhões de tokens, então passamos o trabalho pesado para ele.
+            console.log(`[JARVIS][Rodizio-Dev] Agente 3 (Gemini 1.5) — Gerador de Código...`);
             const pFinal = `Você possui:
-1. Funções/Lógica: ${r1}
-2. Estrutura UX: ${r2}
+1. Funções/Lógica (criadas pelo Arquiteto): ${r1}
+2. Estrutura UX (criada pelo Designer): ${r2}
 3. Pedido Original: ${mensagemUsuario}
-4. Chat Anterior (Contexto): ${JSON.stringify(historicoDev.slice(-3))}
+4. Chat Anterior (Contexto): ${JSON.stringify(historicoDev.slice(-2))}
 
 GERE O CÓDIGO HTML COMPLETO AGORA, JUNTANDO TUDO NUM ÚNICO ARQUIVO.
-Lembre-se da regra da função 'window.tocarAudioNeural' exigida no seu System Prompt e aplique-a nos botões de interação.
-Use a tag \`\`\`html no início e \`\`\` no fim da resposta. NÃO DIGA MAIS NADA ALÉM DO CÓDIGO.`;
+Lembre-se da regra da função 'window.tocarAudioNeural' exigida nas suas instruções de sistema. Use a tag \`\`\`html no início e \`\`\` no fim da resposta. Não dê explicações.`;
 
-            // Usamos a função focada em Código
-            const respostaFinalCode = await callGroqHTMLGenerator(pFinal, devSystemPrompt, chaveGroqArmazenada);
+            // Chamada para o Gemini 1.5 Flash
+            const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${chaveApiArmazenada}`;
+            const respGemini = await fetch(urlGemini, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: pFinal }] }],
+                    systemInstruction: { parts: [{ text: devSystemPrompt }] }
+                })
+            });
+            
+            if(!respGemini.ok) throw new Error("Falha ao gerar o código no Agente 3 (Gemini).");
+            const dataGemini = await respGemini.json();
+            const respostaFinalCode = dataGemini.candidates[0].content.parts[0].text;
             
             const headerLog = `<div class="bg-slate-800 border border-slate-600 rounded p-2 mb-2 text-[10px] text-slate-400 italic">
-<i class='bx bx-check-shield text-emerald-400'></i> Pipeline Concluído 100% via Groq LLaMA-3 (Prevenção Erro 503 Gemini).</div>`;
+<i class='bx bx-check-shield text-emerald-400'></i> Pipeline Híbrido Concluído: Groq LLaMA-3 (Planejamento) + Gemini 1.5 Flash (Código).</div>`;
             return headerLog + respostaFinalCode;
 
         } else {
-            // ==========================================
-            // MODO PADRÃO (Apenas Gemini - Pode dar 503)
-            // ==========================================
-            console.log(`[JARVIS][Rodizio-Dev] Modo Single-Agent Gemini. Requerendo paciência do Servidor...`);
+            // MODO SINGLE (Só Gemini 1.5)
+            console.log(`[JARVIS][Rodizio-Dev] Modo Single-Agent Gemini 1.5 Flash...`);
+            const pFinal = `Pedido Atual: ${mensagemUsuario}\nAnalise a dor, projete o UX e construa o arquivo HTML final completo.\nGere apenas o código no bloco \`\`\`html \`\`\`.`;
             
-            const pFinal = `Pedido Atual do Cliente: ${mensagemUsuario}\n\nVocê tem as rédeas completas.
-Analise a dor, projete o UX de alto nível e construa o arquivo HTML final completo.\n
-Gere apenas o código no bloco \`\`\`html \`\`\`. Não dê explicações gigantes.`;
-            
-            const resposta = await sendMessageToGemini(historicoDev, pFinal, chaveApiArmazenada);
+            const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${chaveApiArmazenada}`;
+            const respGemini = await fetch(urlGemini, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: pFinal }] }],
+                    systemInstruction: { parts: [{ text: devSystemPrompt }] }
+                })
+            });
+            const dataGemini = await respGemini.json();
+            const resposta = dataGemini.candidates[0].content.parts[0].text;
             
             const headerLog = `<div class="bg-slate-800 border border-slate-600 rounded p-2 mb-2 text-[10px] text-slate-400 italic">
-<i class='bx bx-error text-yellow-500'></i> Chave do Groq Ausente. Rodando apenas com Gemini (Sujeito a lentidão do Servidor Google).</div>`;
+<i class='bx bx-error text-yellow-500'></i> Chave do Groq Ausente. Gerado 100% via Gemini 1.5 Flash.</div>`;
             return headerLog + resposta;
         }
 
     } catch (error) {
         console.error("[JARVIS][Dev] Erro pipeline:", error);
-        return `**Erro Sistêmico na Fábrica:** Ocorreu uma instabilidade na comunicação com o motor (Possível servidor ocupado). \n\nLog: *${error.message}*\n\nSugestão: Tente pedir para gerar apenas uma parte do código, ou verifique sua conexão.`;
+        return `**Erro Sistêmico:** A comunicação falhou. Isso acontece quando as APIs gratuitas estouram os limites de banda. \n\nLog: *${error.message}*\n\nSugestão: Aguarde um minuto ou peça códigos mais simples/menores por vez.`;
     }
 }
 
 // =========================================================================
-// AIMP: ENGENHARIA DE PROCESSOS (Corrigido para Groq Llama 3)
+// AIMP: ENGENHARIA DE PROCESSOS (Corrigido para Gemini 1.5 Flash)
 // =========================================================================
 export async function analisarEGerarProcessoAIMP(contextoUsuario, nomeArquivoAnexo) {
     if (!chaveApiArmazenada) {
         const snap = await get(ref(database, 'admin_config/gemini_api_key'));
         if (snap.exists()) chaveApiArmazenada = snap.val();
     }
-    if (!chaveGroqArmazenada) {
-        const snapGroq = await get(ref(database, 'admin_config/groq_api_key'));
-        if(snapGroq.exists()) chaveGroqArmazenada = snapGroq.val();
-    }
 
-    const temGroq = !!chaveGroqArmazenada;
-    console.log(`[JARVIS][AIMP] Pipeline iniciado. Groq: ${temGroq}`);
-
-    let diagnostico = "";
-    let popCompleto = "";
-    let metricas = "";
+    console.log(`[JARVIS][AIMP] Pipeline iniciado (Single-Agent 1.5 Flash) para evitar limites.`);
 
     try {
-        if(temGroq) {
-            // AGENTE 1
-            console.log(`[JARVIS][AIMP] Agente 1 — Diagnóstico...`);
-            const p1 = `Contexto do Cliente: ${contextoUsuario} \nArquivo Analisado: ${nomeArquivoAnexo || 'Nenhum'}\nQuais são os gargalos e riscos dessa operação?`;
-            diagnostico = await callGroqAPI(p1, "Você é Engenheiro de Processos Sênior.", chaveGroqArmazenada, "llama-3.3-70b-versatile");
-            console.log(`[JARVIS][AIMP] Agente 1 OK.`);
+        const pUnico = `Analise o contexto: ${contextoUsuario}\nArquivo: ${nomeArquivoAnexo||'Nenhum'}\nGere: 1) Diagnóstico Rápido, 2) POP em formato de Checklist claro, e 3) Três KPIs para auditoria.`;
+        
+        // Chamada rápida via Gemini 1.5 Flash
+        const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${chaveApiArmazenada}`;
+        const respBase = await fetch(urlGemini, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: pUnico }] }],
+                systemInstruction: { parts: [{ text: "Você é Engenheiro de Processos e Auditor de Qualidade McDonald's. Regras blindadas a erros." }] }
+            })
+        });
+        const dataBase = await respBase.json();
+        const textoBase = dataBase.candidates[0].content.parts[0].text;
 
-            // AGENTE 2
-            console.log(`[JARVIS][AIMP] Agente 2 — POP...`);
-            const p2 = `Com base nisso: ${diagnostico}\nCrie o POP (Procedimento Operacional Padrão) em formato de Checklist prático.`;
-            popCompleto = await callGroqAPI(p2, "Você é Especialista em Qualidade McDonald's. Regras blindadas a erros.", chaveGroqArmazenada, "llama-3.3-70b-versatile");
-            console.log(`[JARVIS][AIMP] Agente 2 OK.`);
+        // AGENTE RENDERIZADOR HTML
+        console.log(`[JARVIS][AIMP] Formatando para HTML Tailwind...`);
+        const promptHtml = `Formate o texto abaixo em blocos HTML puros usando as classes Tailwind. Não crie \`<html>\` ou \`<body>\`, apenas as DIVs internas.
 
-            // AGENTE 3 (CORRIGIDO: Era 8b-8192, agora é llama-3.1-8b-instant)
-            console.log(`[JARVIS][AIMP] Agente 3 — Métricas e Auditorias...`);
-            const p3 = `Com base no POP: ${popCompleto}\nQuais são os 3 KPIs (Métricas) para medir se o funcionário está fazendo certo? Como auditar?`;
-            try {
-                metricas = await callGroqAPI(p3, "Você é Auditor de Qualidade.", chaveGroqArmazenada, "llama-3.1-8b-instant");
-                console.log(`[JARVIS][AIMP] Agente 3 OK.`);
-            } catch(e) {
-                console.warn(`[JARVIS][AIMP] Agente 3 falhou, ignorando métricas:`, e.message);
-                metricas = "Métricas não puderam ser geradas.";
-            }
+Para títulos: <div class="relative pl-4 mb-6"><div class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-full"></div><h1 class="text-xl font-extrabold text-white tracking-wide uppercase">[TITULO]</h1></div>
+Para textos/diagnósticos: <div class="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-4 text-slate-300 text-sm leading-relaxed">[texto]</div>
+Para alertas: <div class="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-4 flex items-start gap-3"><p class="text-red-200 text-sm">[aviso]</p></div>
+Para checklists: <div class="space-y-2 mb-6"><label class="flex items-center gap-3 p-3 bg-slate-800/80 border border-slate-700 hover:border-emerald-500/50 rounded-lg cursor-pointer"><input type="checkbox" class="w-5 h-5 accent-emerald-500 bg-slate-900"><span class="text-slate-200 text-sm font-medium">[PASSO DO CHECKLIST AQUI]</span></label></div>
+Para KPIs: <div class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-4 mb-2"><div class="text-sky-400 text-xs font-bold uppercase">[NOME DO KPI]</div><div class="text-slate-400 text-xs mt-1">[Detalhe]</div></div>
 
-        } else {
-            console.log(`[JARVIS][AIMP] Rodando modo single-agent Gemini...`);
-            const pUnico = `Analise: ${contextoUsuario}\nArquivo: ${nomeArquivoAnexo||'Nenhum'}\nGere 1) Diagnóstico, 2) POP em Checklist e 3) KPIs de Auditoria.`;
-            popCompleto = await callGeminiText(pUnico, "Você é Engenheiro de Processos. Gere texto claro e estruturado.", chaveApiArmazenada);
-        }
+CONTEÚDO:
+${textoBase}`;
 
-        // AGENTE 4 - RENDERIZADOR (Continua com Gemini, pois é leve)
-        console.log(`[JARVIS][AIMP] Agente 4 — Formatador HTML...`);
-        const promptHtml = `Formate o texto abaixo em blocos HTML puros usando as classes Tailwind que enviei nas instruções. Não crie \`<html>\` ou \`<body>\`, apenas as DIVs internas que vão compor a tela.
-
-Use APENAS este design system Tailwind:
-Para títulos principais de seções: 
-<div class="relative pl-4 mb-6">
-  <div class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-full"></div>
-  <h1 class="text-xl font-extrabold text-white tracking-wide uppercase">[TITULO AQUI]</h1>
-</div>
-
-Para parágrafos normais e diagnósticos: 
-<div class="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-4 text-slate-300 text-sm leading-relaxed">[texto]</div>
-
-Para alertas, avisos críticos ou riscos:
-<div class="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-4 flex items-start gap-3">
-  <i class='bx bx-error-circle text-red-500 text-xl shrink-0 mt-0.5'></i>
-  <p class="text-red-200 text-sm">[aviso aqui]</p>
-</div>
-
-Para checklists de tarefas e POPs (MUITO IMPORTANTE FORMATAR ASSIM):
-<div class="space-y-2 mb-6">
-  <label class="flex items-center gap-3 p-3 bg-slate-800/80 border border-slate-700 hover:border-emerald-500/50 rounded-lg cursor-pointer transition">
-    <input type="checkbox" class="w-5 h-5 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-900">
-    <span class="text-slate-200 text-sm font-medium">[PASSO DO CHECKLIST AQUI]</span>
-  </label>
-</div>
-
-Para Indicadores (KPIs) e Métricas (Crie "Cards" para eles):
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-  <div class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-4">
-    <div class="text-sky-400 text-xs font-bold uppercase tracking-wider mb-1">[NOME DO KPI]</div>
-    <div class="text-white text-lg font-semibold">[VALOR/META DO KPI]</div>
-    <div class="text-slate-400 text-xs mt-2">[Como auditar / explicação]</div>
-  </div>
-</div>
-
-CONTEÚDO PARA FORMATAR:
---- DIAGNÓSTICO E RISCOS ---
-${diagnostico}
-
---- PROCEDIMENTO (POP) ---
-${popCompleto}
-
---- KPIs / MÉTRICAS ---
-${metricas}
-`;
-
-        let htmlFinal = await callGeminiText(promptHtml, "Você formata textos puramente em HTML Tailwind seguindo o design system fornecido. Não adicione markdown.", chaveApiArmazenada);
+        const respHtml = await fetch(urlGemini, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: promptHtml }] }]
+            })
+        });
+        const dataHtml = await respHtml.json();
+        let htmlFinal = dataHtml.candidates[0].content.parts[0].text;
         htmlFinal = htmlFinal.replace(/```html/g, '').replace(/```/g, '').trim();
 
-        const label = temGroq ? 'Groq LLaMA-3 (Fast)' : 'Gemini 2.5';
-        const headerRodizio = `<div class="flex items-center gap-2 text-[10px] text-slate-500 mb-6 pb-2 border-b border-slate-800 uppercase tracking-widest font-bold"><i class='bx bx-bot'></i> Engine Padrão McDonald's via ${label}</div>`;
+        const headerRodizio = `<div class="flex items-center gap-2 text-[10px] text-slate-500 mb-6 pb-2 border-b border-slate-800 uppercase tracking-widest font-bold"><i class='bx bx-bot'></i> Engine Padrão McDonald's via Gemini 1.5 Flash</div>`;
 
         return headerRodizio + htmlFinal;
 
     } catch (e) {
         console.error(`[JARVIS][AIMP] Erro:`, e.message);
-        throw new Error(`O Cérebro Engenheiro falhou ou sobrecarregou. Detalhe: ${e.message}`);
+        throw new Error(`Falha no motor de processos. Detalhe: ${e.message}`);
     }
 }

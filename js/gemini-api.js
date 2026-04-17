@@ -32,435 +32,465 @@ Use o nome em TODAS as mensagens seguintes.
 
 PASSO 2 - DIREÇÃO:
 [OPCOES: Para minha Empresa | Para minha Vida Pessoal]
+- Se Vida Pessoal: Pergunte qual aspecto da rotina ele quer organizar. (Ex: Finanças, Produtividade, Saúde).
+- Se Empresa: Pergunte o segmento da empresa.
 
---- CAMINHO EMPRESA ---
-PASSO 3E: Ramo de atuação, equipe, como funciona hoje. [OPCOES: Explico melhor | Descrevo o problema]
-PASSO 4E: Descubra a dor real. Cave fundo. [OPCOES: É isso mesmo | Tem mais detalhe]
-PASSO 5E: Mostre empatia + como a solução digital resolve. [OPCOES: Faz sentido | Outra dúvida]
-PASSO 6E: Peça o WhatsApp com DDD. [OPCOES: Vou passar meu número | Prefiro outro contato]
+PASSO 3 - A DOR:
+Investigue qual o maior desafio ou problema que ele quer resolver com essa ferramenta/sistema.
 
---- CAMINHO VIDA PESSOAL ---
-PASSO 3P: Qual área quer turbinar? Dê exemplos concretos. [OPCOES: Finanças pessoais | Rotina e hábitos | Saúde e treino | Outro]
-PASSO 4P: Como lida com isso hoje? Qual a maior frustração? [OPCOES: Explico melhor | Esse é o ponto]
-PASSO 5P: Descreva entusiasticamente a ferramenta que criaria para essa pessoa especificamente. [OPCOES: Adorei! | Quero ajustar algo]
-PASSO 6P: Diga que vai criar sob medida. Peça o WhatsApp com DDD. [OPCOES: Vou passar meu número | Prefiro outro contato]
+PASSO 4 - TELEFONE (APENAS DEPOIS DE ENTENDER A DOR):
+Peça o WhatsApp para enviar o link do sistema quando ficar pronto.
+[OPCOES: Meu WhatsApp é... | Agora não]
 
---- CONFIRMAÇÃO (ambos os caminhos) ---
-PASSO 7: Confirme o número. ESCREVA com hífens entre CADA dígito (ex: 1-7-9-9-7-6-3-1-2-1-0).
-[OPCOES: Sim, é esse mesmo | Não, vou digitar de novo]
-
-PASSO 8: Agradeça pelo nome, deseje ótimo dia, gere a TAG.
-Após a tag: "Tudo anotado, [NOME]! O Thiago entrará em contato em breve. 😊"
-
-TAG (APENAS no Passo 8, UMA vez):
-[LEAD: NOME=nome | EMPRESA=empresa ou "Projeto Pessoal: descrição" | DORES=resumo | FACILITOIDE=solução proposta | WHATSAPP=numeros]`;
+PASSO 5 - ENCERRAMENTO E CAPTURA:
+Confirme que a 'Fábrica' (seu cérebro de desenvolvedor) começará a gerar o sistema imediatamente.
+GERE UM RESUMO EXATO NO FINAL NESTE FORMATO (ESCONDIDO DO USUÁRIO):
+[JSON_CAPTURA]
+{ "nome": "Nome Capturado", "empresa": "Nome da Empresa ou 'Projeto Pessoal'", "dores": "Resumo da dor", "whatsapp": "Numero capturado ou Vazio" }
+[/JSON_CAPTURA]`;
 
 export function atualizarPromptMemoria(novoPrompt) {
-    if (novoPrompt && novoPrompt.trim()) systemPrompt = novoPrompt;
-}
-
-// ============================================================
-// CHAVES
-// ============================================================
-async function obterChaveDaApi() {
-    if (chaveApiArmazenada) return chaveApiArmazenada;
-    try {
-        const s = await get(ref(database, 'admin_config/gemini_api_key'));
-        if (s.exists()) { chaveApiArmazenada = s.val(); return chaveApiArmazenada; }
-    } catch (e) { console.error('[JARVIS][Firebase] Erro chave Gemini:', e); }
-    return null;
-}
-
-async function obterChaveGroq() {
-    if (chaveGroqArmazenada) return chaveGroqArmazenada;
-    try {
-        const s = await get(ref(database, 'admin_config/groq_api_key'));
-        if (s.exists()) { chaveGroqArmazenada = s.val(); return chaveGroqArmazenada; }
-    } catch (e) { console.warn('[JARVIS][Firebase] Chave Groq ausente:', e.message); }
-    return null;
-}
-
-// ============================================================
-// MOTOR GEMINI: timeout 25s, retry 2x com backoff
-// ============================================================
-async function sendMessageToGemini(modelUrl, requestBody, retryCount = 0) {
-    const controller = new AbortController();
-    const timeoutId  = setTimeout(() => controller.abort(), 25000);
-    try {
-        console.log(`[JARVIS][Gemini] Tentativa ${retryCount + 1} — ${modelUrl.split('?')[0].split('/').pop()}`);
-        const res  = await fetch(modelUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody), signal: controller.signal });
-        clearTimeout(timeoutId);
-        const data = await res.json();
-        if (!res.ok || data.error) throw new Error(`${data.error?.code || res.status}: ${data.error?.message || 'Erro API'}`);
-        console.log('[JARVIS][Gemini] Resposta OK.');
-        return data;
-    } catch (e) {
-        clearTimeout(timeoutId);
-        if (e.name === 'AbortError') throw new Error('[Timeout] 25s excedidos.');
-        console.warn(`[JARVIS][Gemini] Falha tentativa ${retryCount + 1}:`, e.message);
-        if (retryCount < 2) { await new Promise(r => setTimeout(r, (retryCount + 1) * 2000)); return sendMessageToGemini(modelUrl, requestBody, retryCount + 1); }
-        throw e;
+    if(novoPrompt && novoPrompt.trim().length > 10) {
+        systemPrompt = novoPrompt;
     }
 }
 
-// ============================================================
-// MOTOR GROQ: OpenAI-compatible, sem retry (evita cascata 429)
-// ============================================================
-async function callGroqAPI(systemInstruction, userContent, model, groqKey) {
-    const controller = new AbortController();
-    const timeoutId  = setTimeout(() => controller.abort(), 30000);
-    try {
-        console.log(`[JARVIS][Groq] Chamando ${model}...`);
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model, messages: [{ role: 'system', content: systemInstruction }, { role: 'user', content: userContent }], max_tokens: 4096, temperature: 0.3 }),
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        const data = await res.json();
-        if (!res.ok || data.error) throw new Error(data.error?.message || `HTTP ${res.status}`);
-        const resultado = data.choices?.[0]?.message?.content || '';
-        console.log(`[JARVIS][Groq] ${model} OK (${resultado.length} chars).`);
-        return resultado;
-    } catch (e) {
-        clearTimeout(timeoutId);
-        console.error(`[JARVIS][Groq] Erro (${model}):`, e.message);
-        throw e;
-    }
-}
-
-async function callGeminiText(systemInstruction, userContent, geminiKey) {
-    const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-    const data = await sendMessageToGemini(MODEL_URL, { contents: [{ role: 'user', parts: [{ text: userContent }] }], system_instruction: { parts: [{ text: systemInstruction }] } });
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-}
-
-// ============================================================
-// SNIPPET TTS injetado em todos os sistemas gerados
-// ============================================================
-const SNIPPET_TTS = `let globalAudioCtx = null;
-async function falarComMascote(textoParaFalar) {
-    if (!globalAudioCtx) globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (globalAudioCtx.state === 'suspended') globalAudioCtx.resume();
-    try {
-        const resKey = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_api_key.json');
-        const adminApiKey = await resKey.json();
-        const resVoice = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_voice_name.json');
-        const voiceName = await resVoice.json() || 'Aoede';
-        if (!adminApiKey) throw new Error('Chave nao encontrada.');
-        const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=' + adminApiKey;
-        const payload = { contents: [{ role: 'user', parts: [{ text: textoParaFalar }] }], generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } } } };
-        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        const data = await res.json();
-        if (!res.ok || data.error) throw new Error(data.error?.message || 'Erro TTS');
-        const b64 = data.candidates[0].content.parts[0].inlineData.data;
-        const bs = window.atob(b64); const buf = new ArrayBuffer(bs.length); const v = new Uint8Array(buf);
-        for (let i = 0; i < bs.length; i++) v[i] = bs.charCodeAt(i);
-        const i16 = new Int16Array(buf); const ab = globalAudioCtx.createBuffer(1, i16.length, 24000); const ch = ab.getChannelData(0);
-        for (let i = 0; i < i16.length; i++) ch[i] = i16[i] / 32768.0;
-        const src = globalAudioCtx.createBufferSource(); src.buffer = ab; src.connect(globalAudioCtx.destination); src.start();
-    } catch(e) { const f = new SpeechSynthesisUtterance(textoParaFalar); f.lang = 'pt-BR'; window.speechSynthesis.speak(f); }
-}`;
-
-// ============================================================
-// BUILDCONTENTS
-// ============================================================
-function buildContents(history) {
-    const contents = [];
-    for (const m of history) {
-        const roleApi = (m.role === 'user' || m.role === 'admin') ? 'user' : 'model';
-        const texto   = String(m.text || '').trim();
-        if (!texto) continue;
-        if (contents.length === 0 || contents[contents.length - 1].role !== roleApi) {
-            contents.push({ role: roleApi, parts: [{ text: texto }] });
-        } else {
-            contents[contents.length - 1].parts.push({ text: texto });
+function extractJSONCaptura(texto) {
+    const match = texto.match(/\[JSON_CAPTURA\]([\s\S]*?)\[\/JSON_CAPTURA\]/);
+    if (match) {
+        try {
+            return JSON.parse(match[1]);
+        } catch (e) {
+            console.error("[JARVIS] Falha ao extrair JSON do Lead:", e);
+            return null;
         }
     }
-    if (contents.length > 0 && contents[0].role === 'model') {
-        console.warn('[JARVIS][History] Historico iniciava com model — inserindo ancora user.');
-        contents.unshift({ role: 'user', parts: [{ text: 'Ola' }] });
-    }
-    return contents;
+    return null;
 }
 
-// ============================================================
-// CÉREBRO 1 — askGemini (Conversa Principal)
-// ============================================================
-export async function askGemini(msgUsuario) {
-    if (_geminiLocked) { console.warn('[JARVIS] Bloqueado — chamada em andamento.'); return 'Aguarde, ainda estou processando...'; }
-    _geminiLocked = true;
-    try {
-        const msgSanitizada = String(msgUsuario || '').trim().replace(/</g,'&lt;').replace(/>/g,'&gt;').substring(0, 2000);
-        if (!msgSanitizada) return 'Por favor, envie uma mensagem para continuar.';
-        const apiKey = await obterChaveDaApi();
-        if (!apiKey) return 'Aviso: Chave da API nao configurada no Firebase.';
-        const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-        const contents  = buildContents(chatHistoryCliente);
-        if (contents.length === 0) { contents.push({ role: 'user', parts: [{ text: msgSanitizada }] }); }
-        else if (contents[contents.length - 1].role !== 'user') { contents.push({ role: 'user', parts: [{ text: msgSanitizada }] }); }
-        const data = await sendMessageToGemini(MODEL_URL, { contents, system_instruction: { parts: [{ text: systemPrompt }] } });
-        let botReply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!botReply) return 'Desculpe, ocorreu um erro de processamento. Pode repetir?';
-        const regexLead = /\[LEAD:\s*NOME=([\s\S]*?)\|\s*EMPRESA=([\s\S]*?)\|\s*DORES=([\s\S]*?)\|\s*FACILITOIDE=([\s\S]*?)\|\s*WHATSAPP=([\s\S]*?)\]/i;
-        const match = botReply.match(regexLead);
-        if (match) {
-            if (!leadJaCapturado) {
-                const [, nome, empresa, dores, facilitoide, whatsapp] = match;
-                let wppLimpo = whatsapp.replace(/\D/g, '');
-                if (wppLimpo.startsWith('55') && wppLimpo.length > 11) wppLimpo = wppLimpo.substring(2);
-                const novoLeadRef = push(ref(database, 'projetos_capturados'));
-                await set(novoLeadRef, { nome: nome.trim() || 'Cliente Indefinido', empresa: empresa.trim() || 'Nao informada', dores: dores.trim() || 'Sem dor', facilitoide: facilitoide.trim() || 'Arquitetura pendente.', whatsapp: wppLimpo, data: new Date().toISOString(), devChat: [], status: 'novo' });
-                leadJaCapturado = true;
-                console.log('[JARVIS][Lead] Lead capturado!');
+export function adicionarAoHistorico(role, text) {
+    chatHistoryCliente.push({ role, parts: [{ text }] });
+}
+
+// =========================================================================
+// CAMADA BASE DE REDE
+// =========================================================================
+async function sendMessageToGemini(history, text, apiKey) {
+    const model = 'gemini-2.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+    const safeHistory = history.map(item => ({
+        role: item.role === 'user' ? 'user' : 'model',
+        parts: Array.isArray(item.parts) ? item.parts : [{text: String(item.text||"")}]
+    }));
+
+    const contents = [...safeHistory, { role: 'user', parts: [{ text }] }];
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            console.log(`[JARVIS][Gemini] Tentativa ${attempt} — ${model}:generateContent`);
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: contents,
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(`${response.status}: ${errData.error?.message || 'Erro desconhecido'}`);
             }
-            botReply = botReply.replace(regexLead, '').trim();
-        } else if (leadJaCapturado) { botReply = botReply.replace(/\[LEAD:.*?\]/gi, '').trim(); }
-        return botReply;
-    } catch (e) { console.error('[JARVIS] Falha em askGemini:', e.message); return 'Houve uma falha na conexão. Pode repetir a informação?'; }
-    finally { _geminiLocked = false; }
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+            
+        } catch (error) {
+            console.warn(`[JARVIS][Gemini] Falha tentativa ${attempt}: ${error.message}`);
+            if (attempt === 3) throw error;
+            await new Promise(r => setTimeout(r, 1500 * attempt));
+        }
+    }
 }
 
-export function adicionarAoHistorico(role, texto) { chatHistoryCliente.push({ role, text: texto }); }
+async function callGroqAPI(prompt, sys, apiKey, model = "llama-3.3-70b-versatile") {
+    const url = "https://api.groq.com/openai/v1/chat/completions";
+    
+    console.log(`[JARVIS][Groq] Chamando ${model}...`);
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: model,
+            messages: [
+                { role: "system", content: sys },
+                { role: "user", content: prompt }
+            ],
+            temperature: 0.5,
+            max_tokens: 6000
+        })
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || "Erro Groq API");
+    }
+
+    const data = await response.json();
+    console.log(`[JARVIS][Groq] ${model} OK (${data.choices[0].message.content.length} chars).`);
+    return data.choices[0].message.content;
+}
+
+// -------------------------------------------------------------------------
+// NOVA FUNÇÃO: FORÇAR GERADOR DE CÓDIGO HTML/JS PELA GROQ
+// -------------------------------------------------------------------------
+async function callGroqHTMLGenerator(prompt, sys, apiKey) {
+    const model = "llama-3.3-70b-versatile";
+    console.log(`[JARVIS][Groq] Gerando CÓDIGO FINAL via ${model}...`);
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: model,
+            messages: [
+                { role: "system", content: sys },
+                { role: "user", content: prompt }
+            ],
+            temperature: 0.2, // Mais baixo para focar em código exato
+            max_tokens: 7500
+        })
+    });
+
+    if (!response.ok) {
+         const err = await response.json();
+         throw new Error(err.error?.message || "Erro Groq API no CÓDIGO");
+    }
+    const data = await response.json();
+    console.log(`[JARVIS][Groq] Geração de Código Concluída.`);
+    return data.choices[0].message.content;
+}
+
+
+async function callGeminiText(prompt, sys, apiKey) {
+    const model = 'gemini-2.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    
+    for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+            console.log(`[JARVIS][Gemini] Tentativa ${attempt} — ${model}:generateContent`);
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: sys }] }
+                })
+            });
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(`${response.status}: ${errData.error?.message || 'Erro desconhecido'}`);
+            }
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        } catch (error) {
+            console.warn(`[JARVIS][Gemini] Falha tentativa ${attempt}: ${error.message}`);
+            if (attempt === 2) throw error;
+            await new Promise(r => setTimeout(r, 2000));
+        }
+    }
+}
 
 // =========================================================================
-// CÉREBRO 2: RODÍZIO 4 AGENTES — ENGENHEIRO SAAS
-// Agente 1: Groq/llama-3.3-70b  → Analista Técnico
-// Agente 2: Gemini               → Arquiteto de Sistema
-// Agente 3: Groq/llama-3.3-70b  → Desenvolvedor Fullstack
-// Agente 4: Gemini               → Revisor Final + Injeções
+// MOTOR PRINCIPAL - CHAT DO CLIENTE (Mascote / AR)
 // =========================================================================
-export async function conversarComDesenvolvedorIA(msgAdmin, contextoProjeto, historicoSalvo = [], idProjetoAtivo = 'padrao') {
+export async function askGemini(text) {
+    if (_geminiLocked) return "Aguarde, estou processando sua última resposta...";
+    _geminiLocked = true;
+
     try {
-        const apiKeyGemini = await obterChaveDaApi();
-        const apiKeyGroq   = await obterChaveGroq();
-        if (!apiKeyGemini) return 'Configure a chave Gemini no Painel primeiro.';
-        const temGroq = !!apiKeyGroq;
+        if (!chaveApiArmazenada) {
+            const snap = await get(ref(database, 'admin_config/gemini_api_key'));
+            if(snap.exists()) chaveApiArmazenada = snap.val();
+            else throw new Error("API Key do Gemini não configurada pelo Admin.");
+        }
+
+        const resposta = await sendMessageToGemini(chatHistoryCliente, text, chaveApiArmazenada);
+        adicionarAoHistorico('user', text);
+        
+        let textoLimpo = resposta;
+        const dadosCaptura = extractJSONCaptura(resposta);
+        
+        if (dadosCaptura) {
+            textoLimpo = resposta.replace(/\\[JSON_CAPTURA\\][\\s\\S]*?\\[\\/JSON_CAPTURA\\]/, "").trim();
+            if(!leadJaCapturado) {
+                try {
+                    const novoLeadRef = push(ref(database, 'projetos_capturados'));
+                    await set(novoLeadRef, {
+                        ...dadosCaptura,
+                        data: new Date().toISOString(),
+                        status: 'novo',
+                        origem: 'AR_Assistant',
+                        devChat: []
+                    });
+                    leadJaCapturado = true;
+                    console.log("[JARVIS] Lead salvo com sucesso no Banco de Dados!");
+                } catch(e) {
+                    console.error("[JARVIS] Falha ao salvar lead:", e);
+                }
+            }
+        }
+        
+        adicionarAoHistorico('model', textoLimpo);
+        return textoLimpo;
+        
+    } catch (error) {
+        console.error("Erro na API Gemini:", error);
+        return "A API do cérebro está indisponível no momento. Pode tentar novamente?";
+    } finally {
+        _geminiLocked = false;
+    }
+}
+
+// =========================================================================
+// CÉREBRO 2: DEV CHAT DO ADMIN (Agora otimizado para Groq/Fallback)
+// =========================================================================
+export async function conversarComDesenvolvedorIA(mensagemUsuario, contextoCliente, historicoDev, idProjeto = null) {
+    try {
+        if (!chaveApiArmazenada) {
+            const snap = await get(ref(database, 'admin_config/gemini_api_key'));
+            if (snap.exists()) chaveApiArmazenada = snap.val();
+        }
+        if (!chaveGroqArmazenada) {
+            const snapGroq = await get(ref(database, 'admin_config/groq_api_key'));
+            if(snapGroq.exists()) chaveGroqArmazenada = snapGroq.val();
+        }
+
+        let voiceName = "pt-BR-Standard-B"; 
+        const snapVoice = await get(ref(database, 'admin_config/gemini_voice_name'));
+        if(snapVoice.exists() && snapVoice.val().trim() !== "") {
+            voiceName = snapVoice.val().trim();
+        }
+
+        const devSystemPrompt = `Você é o ARQUITETO DE CÓDIGO DA THIAGUINHO SOLUÇÕES.
+Sua missão final é SEMPRE retornar código HTML único e completo (HTML+CSS Tailwind+JS) ou apenas JS, dependendo do pedido.
+
+Contexto do Cliente Atual:
+${contextoCliente}
+
+REGRAS OBRIGATÓRIAS DE SISTEMA (SE GERAR HTML):
+1. Use Tailwind via CDN (<script src="https://cdn.tailwindcss.com"></script>).
+2. TEMA OBRIGATÓRIO: Dark mode (bg-slate-900 text-white), com acentos em Emerald (emerald-500) e Sky (sky-500).
+3. Use a fonte 'Montserrat' do Google Fonts.
+4. Inclua ícones do Boxicons (<link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">).
+5. O sistema deve ser LINDO, MODERNO e PARECER CARO. Use shadows, bordas sutis (border-slate-700), cantos arredondados (rounded-xl) e glassmorphism (bg-slate-800/80 backdrop-blur).
+
+REGRA DE ÁUDIO NEURAL PARA O CLIENTE:
+Para qualquer botão ou ação importante que o cliente clicar no sistema que você gerar, inclua uma resposta em áudio Neural do Google TTS com sotaque natural.
+VOCÊ DEVE INCLUIR ESTA FUNÇÃO JS GLOBAL NO SEU CÓDIGO HTML:
+\`\`\`javascript
+window.tocarAudioNeural = function(texto) {
+    const url = 'https://texttospeech.googleapis.com/v1/text:synthesize?key=${chaveApiArmazenada}';
+    fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            input: { text: texto },
+            voice: { languageCode: 'pt-BR', name: '${voiceName}' },
+            audioConfig: { audioEncoding: 'MP3', pitch: 0, speakingRate: 1.05 }
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if(data.audioContent) {
+            const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
+            audio.play().catch(e => console.log('Erro de autoplay:', e));
+        }
+    })
+    .catch(console.error);
+};
+\`\`\`
+Exemplo de uso no HTML: <button onclick="window.tocarAudioNeural('Seu pedido foi adicionado ao carrinho com sucesso.')">Adicionar</button>`;
+
+        const temGroq = !!chaveGroqArmazenada;
+        
         console.log(`[JARVIS][Rodizio-Dev] Pipeline iniciado. Groq disponivel: ${temGroq}`);
 
-        // AGENTE 1: ANALISTA TÉCNICO (Groq)
-        console.log('[JARVIS][Rodizio-Dev] Agente 1 — Analista Técnico...');
-        let especTecnica = `CONTEXTO: ${contextoProjeto}\nPEDIDO: ${msgAdmin}`;
         if (temGroq) {
-            try {
-                especTecnica = await callGroqAPI(
-`Você é um Analista de Sistemas Sênior. Analise o pedido e estruture:
-1. OBJETIVO PRINCIPAL: o que o sistema deve resolver
-2. USUARIOS FINAIS: quem usa, em que situação, qual dispositivo
-3. FUNCIONALIDADES (máx 10, com complexidade baixa/média/alta)
-4. ESTRUTURA DE DADOS: nós Firebase necessários (JSON paths)
-5. FLUXO DE TELAS: sequência lógica de estados/telas
-6. INTEGRACOES: Gemini API, Firebase Auth, outros
-7. RISCOS TÉCNICOS: o que pode dar problema
-8. COMPLEXIDADE TOTAL: simples/médio/complexo e porquê`,
-                    `CONTEXTO: ${contextoProjeto}\nPEDIDO: ${msgAdmin}`,
-                    'llama-3.3-70b-versatile', apiKeyGroq
-                );
-                console.log('[JARVIS][Rodizio-Dev] Agente 1 OK.');
-            } catch (e) { console.warn('[JARVIS][Rodizio-Dev] Agente 1 falhou:', e.message); }
+            // ==========================================
+            // MODO TURBO (100% GROQ - LLAMA 3)
+            // Ignorando Gemini para evitar erro 503
+            // ==========================================
+            
+            // Passo 1: Análise
+            console.log(`[JARVIS][Rodizio-Dev] Agente 1 (Groq) — Analista Técnico...`);
+            const p1 = `Analise este pedido e defina a arquitetura de variáveis e funções JS necessárias.\nPedido: ${mensagemUsuario}`;
+            const sys1 = `Você é o Arquiteto Analista. Seja curto e direto. Crie a lista de funções e variáveis necessárias baseada no pedido.`;
+            const r1 = await callGroqAPI(p1, sys1, chaveGroqArmazenada);
+
+            // Passo 2: Layout
+            console.log(`[JARVIS][Rodizio-Dev] Agente 2 (Groq) — Arquiteto Layout...`);
+            const p2 = `Com base nesta análise: ${r1}\nCrie o rascunho de estrutura HTML (Wireframe escrito, sem código) para o layout de Tailwind escuro. O que vai em cada DIV?`;
+            const sys2 = `Você é UX Designer sênior. Responda apenas com a estrutura da tela em tópicos rápidos.`;
+            const r2 = await callGroqAPI(p2, sys2, chaveGroqArmazenada);
+
+            // Passo 3: GERAÇÃO FINAL DO CÓDIGO (100% Groq)
+            console.log(`[JARVIS][Rodizio-Dev] Agente 3 (Groq) — Gerador de Código...`);
+            const pFinal = `Você possui:
+1. Funções/Lógica: ${r1}
+2. Estrutura UX: ${r2}
+3. Pedido Original: ${mensagemUsuario}
+4. Chat Anterior (Contexto): ${JSON.stringify(historicoDev.slice(-3))}
+
+GERE O CÓDIGO HTML COMPLETO AGORA, JUNTANDO TUDO NUM ÚNICO ARQUIVO.
+Lembre-se da regra da função 'window.tocarAudioNeural' exigida no seu System Prompt e aplique-a nos botões de interação.
+Use a tag \`\`\`html no início e \`\`\` no fim da resposta. NÃO DIGA MAIS NADA ALÉM DO CÓDIGO.`;
+
+            // Usamos a função focada em Código
+            const respostaFinalCode = await callGroqHTMLGenerator(pFinal, devSystemPrompt, chaveGroqArmazenada);
+            
+            const headerLog = `<div class="bg-slate-800 border border-slate-600 rounded p-2 mb-2 text-[10px] text-slate-400 italic">
+<i class='bx bx-check-shield text-emerald-400'></i> Pipeline Concluído 100% via Groq LLaMA-3 (Prevenção Erro 503 Gemini).</div>`;
+            return headerLog + respostaFinalCode;
+
+        } else {
+            // ==========================================
+            // MODO PADRÃO (Apenas Gemini - Pode dar 503)
+            // ==========================================
+            console.log(`[JARVIS][Rodizio-Dev] Modo Single-Agent Gemini. Requerendo paciência do Servidor...`);
+            
+            const pFinal = `Pedido Atual do Cliente: ${mensagemUsuario}\n\nVocê tem as rédeas completas.
+Analise a dor, projete o UX de alto nível e construa o arquivo HTML final completo.\n
+Gere apenas o código no bloco \`\`\`html \`\`\`. Não dê explicações gigantes.`;
+            
+            const resposta = await sendMessageToGemini(historicoDev, pFinal, chaveApiArmazenada);
+            
+            const headerLog = `<div class="bg-slate-800 border border-slate-600 rounded p-2 mb-2 text-[10px] text-slate-400 italic">
+<i class='bx bx-error text-yellow-500'></i> Chave do Groq Ausente. Rodando apenas com Gemini (Sujeito a lentidão do Servidor Google).</div>`;
+            return headerLog + resposta;
         }
 
-        // AGENTE 2: ARQUITETO (Gemini)
-        console.log('[JARVIS][Rodizio-Dev] Agente 2 — Arquiteto...');
-        let arquitetura = especTecnica;
-        try {
-            arquitetura = await callGeminiText(
-`Você é um Arquiteto de Software Sênior da thIAguinho Soluções.
-Com base na análise técnica, projete a ARQUITETURA COMPLETA:
-- Estrutura HTML (seções, modais, componentes)
-- Lógica JS (funções principais, eventos, fluxo de dados)
-- Estrutura Firebase (paths, estrutura JSON)
-- Componentes UI (Tailwind, mobile-first, dark theme)
-- Onde e como usar Gemini API e Firebase
-Seja detalhado — será usado pelo desenvolvedor na fase seguinte.`,
-                `ANÁLISE TÉCNICA:\n${especTecnica}\n\nPEDIDO ORIGINAL: ${msgAdmin}`,
-                apiKeyGemini
-            );
-            console.log('[JARVIS][Rodizio-Dev] Agente 2 OK.');
-        } catch (e) { console.warn('[JARVIS][Rodizio-Dev] Agente 2 falhou:', e.message); }
-
-        // AGENTE 3: DESENVOLVEDOR (Groq)
-        console.log('[JARVIS][Rodizio-Dev] Agente 3 — Desenvolvedor...');
-        let codigoBase = arquitetura;
-        if (temGroq) {
-            try {
-                codigoBase = await callGroqAPI(
-`Você é um Desenvolvedor Fullstack. Implemente o sistema em UM arquivo HTML completo e funcional.
-REGRAS:
-- Zero TODOs ou placeholders — código 100% funcional
-- Tailwind CSS CDN: https://cdn.tailwindcss.com
-- Boxicons CDN para ícones
-- Firebase URL: https://thiaguinho-40a14-default-rtdb.firebaseio.com/
-- Responsivo mobile-first, dark theme profissional
-- Todos modais e formulários devem funcionar
-- Retorne APENAS o HTML dentro de \`\`\`html ... \`\`\``,
-                    `ARQUITETURA:\n${arquitetura}\n\nCONTEXTO: ${contextoProjeto}\nID CLIENTE: ${idProjetoAtivo}`,
-                    'llama-3.3-70b-versatile', apiKeyGroq
-                );
-                console.log('[JARVIS][Rodizio-Dev] Agente 3 OK.');
-            } catch (e) { console.warn('[JARVIS][Rodizio-Dev] Agente 3 falhou:', e.message); }
-        }
-
-        // AGENTE 4: REVISOR FINAL (Gemini) + INJEÇÕES OBRIGATÓRIAS
-        console.log('[JARVIS][Rodizio-Dev] Agente 4 — Revisor Final...');
-        const promptA4 = `Você é o Engenheiro Sênior da thIAguinho Soluções. Revise, corrija e entregue o produto final enterprise.
-
-PROJETO: ${contextoProjeto} | ID CLIENTE: ${idProjetoAtivo}
-
-SE há código HTML, REVISE: corrija bugs, melhore UX/UI, garanta todas as funcionalidades.
-SE não há código HTML (apenas arquitetura), CRIE o sistema completo agora.
-
-INJETE OBRIGATORIAMENTE:
-1. MOTOR DE VOZ TTS — copie exatamente:
-\`\`\`javascript
-${SNIPPET_TTS}
-\`\`\`
-
-2. BOTÃO DE FEEDBACK REVERSO — botão flutuante canto inferior direito:
-\`\`\`javascript
-async function enviarFeedback(mensagem) {
-    await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/projetos_capturados/${idProjetoAtivo}/feedbacks.json', { method: 'POST', body: JSON.stringify({ texto: mensagem, data: new Date().toISOString() }), headers: { 'Content-Type': 'application/json' } });
-}
-\`\`\`
-
-INICIE com: **Rodizio de IAs Concluido** + resumo do que cada agente fez e o que você corrigiu/melhorou.
-Depois entregue o código final completo.
-
-CÓDIGO BASE:
-${codigoBase}`;
-
-        const contsA4 = [];
-        for (const m of historicoSalvo) {
-            const r = m.role === 'user' ? 'user' : 'model'; const t = String(m.text || '').trim();
-            if (!t) continue;
-            if (contsA4.length === 0 || contsA4[contsA4.length-1].role !== r) contsA4.push({ role: r, parts: [{ text: t }] });
-            else contsA4[contsA4.length-1].parts.push({ text: t });
-        }
-        if (contsA4.length > 0 && contsA4[0].role === 'model') contsA4.unshift({ role: 'user', parts: [{ text: 'Preciso de ajuda.' }] });
-        if (contsA4.length === 0 || contsA4[contsA4.length-1].role !== 'user') contsA4.push({ role: 'user', parts: [{ text: promptA4 }] });
-        else contsA4[contsA4.length-1].parts.push({ text: promptA4 });
-
-        const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKeyGemini}`;
-        const data = await sendMessageToGemini(MODEL_URL, { contents: contsA4, system_instruction: { parts: [{ text: 'Engenheiro Sênior da thIAguinho. Entregue sistemas profissionais, completos e funcionais.' }] } });
-        const resultado = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Erro no revisor.';
-        const label = temGroq ? 'Groq Analista → Gemini Arquiteto → Groq Dev → Gemini Revisor' : 'Gemini Arquiteto → Gemini Revisor';
-        console.log('[JARVIS][Rodizio-Dev] Pipeline completo!');
-        return `**Rodizio IAs:** ${label}\n\n${resultado}`;
-    } catch (e) { console.error('[JARVIS][Dev] Erro pipeline:', e.message); return 'Erro no pipeline de IAs: ' + e.message; }
+    } catch (error) {
+        console.error("[JARVIS][Dev] Erro pipeline:", error);
+        return `**Erro Sistêmico na Fábrica:** Ocorreu uma instabilidade na comunicação com o motor (Possível servidor ocupado). \n\nLog: *${error.message}*\n\nSugestão: Tente pedir para gerar apenas uma parte do código, ou verifique sua conexão.`;
+    }
 }
 
 // =========================================================================
-// CÉREBRO 3: RODÍZIO 4 AGENTES — AIMP (PADRÃO MCDONALD'S)
-// Agente 1: Groq/llama-3.3-70b → Diagnóstico de Campo
-// Agente 2: Groq/llama-3.3-70b → Redator do POP
-// Agente 3: Groq/llama3-8b     → KPIs, Auditorias, Formulários
-// Agente 4: Gemini              → Formatador HTML Profissional
+// AIMP: ENGENHARIA DE PROCESSOS (Corrigido para Groq Llama 3)
 // =========================================================================
-export async function analisarEGerarProcessoAIMP(contextoCaotico, nomeVideoAnexado = null) {
+export async function analisarEGerarProcessoAIMP(contextoUsuario, nomeArquivoAnexo) {
+    if (!chaveApiArmazenada) {
+        const snap = await get(ref(database, 'admin_config/gemini_api_key'));
+        if (snap.exists()) chaveApiArmazenada = snap.val();
+    }
+    if (!chaveGroqArmazenada) {
+        const snapGroq = await get(ref(database, 'admin_config/groq_api_key'));
+        if(snapGroq.exists()) chaveGroqArmazenada = snapGroq.val();
+    }
+
+    const temGroq = !!chaveGroqArmazenada;
+    console.log(`[JARVIS][AIMP] Pipeline iniciado. Groq: ${temGroq}`);
+
+    let diagnostico = "";
+    let popCompleto = "";
+    let metricas = "";
+
     try {
-        const apiKeyGemini = await obterChaveDaApi();
-        const apiKeyGroq   = await obterChaveGroq();
-        if (!apiKeyGemini) throw new Error('Chave Gemini não encontrada.');
-        let intro = nomeVideoAnexado ? `[Video: ${nomeVideoAnexado}]\n\n${contextoCaotico}` : contextoCaotico;
-        const temGroq = !!apiKeyGroq;
-        console.log(`[JARVIS][AIMP] Pipeline iniciado. Groq: ${temGroq}`);
+        if(temGroq) {
+            // AGENTE 1
+            console.log(`[JARVIS][AIMP] Agente 1 — Diagnóstico...`);
+            const p1 = `Contexto do Cliente: ${contextoUsuario} \nArquivo Analisado: ${nomeArquivoAnexo || 'Nenhum'}\nQuais são os gargalos e riscos dessa operação?`;
+            diagnostico = await callGroqAPI(p1, "Você é Engenheiro de Processos Sênior.", chaveGroqArmazenada, "llama-3.3-70b-versatile");
+            console.log(`[JARVIS][AIMP] Agente 1 OK.`);
 
-        // AGENTE 1: DIAGNÓSTICO DE CAMPO
-        console.log('[JARVIS][AIMP] Agente 1 — Diagnóstico...');
-        let diagnostico = intro;
-        if (temGroq) {
+            // AGENTE 2
+            console.log(`[JARVIS][AIMP] Agente 2 — POP...`);
+            const p2 = `Com base nisso: ${diagnostico}\nCrie o POP (Procedimento Operacional Padrão) em formato de Checklist prático.`;
+            popCompleto = await callGroqAPI(p2, "Você é Especialista em Qualidade McDonald's. Regras blindadas a erros.", chaveGroqArmazenada, "llama-3.3-70b-versatile");
+            console.log(`[JARVIS][AIMP] Agente 2 OK.`);
+
+            // AGENTE 3 (CORRIGIDO: Era 8b-8192, agora é llama-3.1-8b-instant)
+            console.log(`[JARVIS][AIMP] Agente 3 — Métricas e Auditorias...`);
+            const p3 = `Com base no POP: ${popCompleto}\nQuais são os 3 KPIs (Métricas) para medir se o funcionário está fazendo certo? Como auditar?`;
             try {
-                diagnostico = await callGroqAPI(
-`Especialista em Engenharia de Processos ISO 9001. Diagnóstico clínico:
-1. PROCESSO IDENTIFICADO: nome e categoria
-2. SITUAÇÃO ATUAL (AS-IS): como funciona hoje passo a passo
-3. PONTOS DE FALHA: todos os momentos onde erros ocorrem
-4. CAUSA RAIZ: origem real do caos (não sintomas)
-5. IMPACTO NO NEGÓCIO: financeiro, reputação, operacional
-6. GARGALOS CRITICOS: top 3 travadores de eficiência
-7. KPIs SUGERIDOS: 5 indicadores mensuráveis
-8. BENCHMARKS: como empresas excelentes fazem este processo`,
-                    `SITUAÇÃO:\n${intro}`, 'llama-3.3-70b-versatile', apiKeyGroq
-                );
-                console.log('[JARVIS][AIMP] Agente 1 OK.');
-            } catch (e) { console.warn('[JARVIS][AIMP] Agente 1 falhou:', e.message); }
+                metricas = await callGroqAPI(p3, "Você é Auditor de Qualidade.", chaveGroqArmazenada, "llama-3.1-8b-instant");
+                console.log(`[JARVIS][AIMP] Agente 3 OK.`);
+            } catch(e) {
+                console.warn(`[JARVIS][AIMP] Agente 3 falhou, ignorando métricas:`, e.message);
+                metricas = "Métricas não puderam ser geradas.";
+            }
+
+        } else {
+            console.log(`[JARVIS][AIMP] Rodando modo single-agent Gemini...`);
+            const pUnico = `Analise: ${contextoUsuario}\nArquivo: ${nomeArquivoAnexo||'Nenhum'}\nGere 1) Diagnóstico, 2) POP em Checklist e 3) KPIs de Auditoria.`;
+            popCompleto = await callGeminiText(pUnico, "Você é Engenheiro de Processos. Gere texto claro e estruturado.", chaveApiArmazenada);
         }
 
-        // AGENTE 2: REDATOR DO POP
-        console.log('[JARVIS][AIMP] Agente 2 — POP...');
-        let popDraft = diagnostico;
-        if (temGroq) {
-            try {
-                popDraft = await callGroqAPI(
-`Consultor de Processos. Crie um POP completo padrão McDonald's:
-- TÍTULO e VERSÃO
-- OBJETIVO (uma frase)
-- ESCOPO (quem faz, quando)
-- PRÉ-REQUISITOS (materiais, acessos)
-- PASSO A PASSO: QUEM | O QUÊ | QUANDO | COMO | TEMPO
-- CHECKPOINTS obrigatórios com critérios
-- TRATAMENTO DE EXCEÇÕES
-- DEFINIÇÃO DE PRONTO (critérios objetivos)
-- RESPONSÁVEL PELO POP`,
-                    `DIAGNÓSTICO:\n${diagnostico}`, 'llama-3.3-70b-versatile', apiKeyGroq
-                );
-                console.log('[JARVIS][AIMP] Agente 2 OK.');
-            } catch (e) { console.warn('[JARVIS][AIMP] Agente 2 falhou:', e.message); popDraft = diagnostico; }
-        }
+        // AGENTE 4 - RENDERIZADOR (Continua com Gemini, pois é leve)
+        console.log(`[JARVIS][AIMP] Agente 4 — Formatador HTML...`);
+        const promptHtml = `Formate o texto abaixo em blocos HTML puros usando as classes Tailwind que enviei nas instruções. Não crie \`<html>\` ou \`<body>\`, apenas as DIVs internas que vão compor a tela.
 
-        // AGENTE 3: ENRIQUECEDOR (KPIs + AUDITORIA + FORMULÁRIOS)
-        console.log('[JARVIS][AIMP] Agente 3 — Métricas e Auditorias...');
-        let popCompleto = popDraft;
-        if (temGroq) {
-            try {
-                popCompleto = await callGroqAPI(
-`Especialista em Qualidade e Indicadores. Adicione ao POP:
-1. CHECKLIST DE AUDITORIA DIÁRIA (12-15 itens: Sim/Não/N.A. + observação)
-2. DASHBOARD DE INDICADORES (KPI | Meta | Como medir | Frequência | Responsável)
-3. FORMULÁRIO DE NÃO-CONFORMIDADE (data, desvio, causa, ação corretiva, prazo, responsável)
-4. PLANO DE TREINAMENTO (duração, método, critério de aprovação)
-5. LOG DE MELHORIAS (data, sugestão, status, resultado)
-6. MATRIZ RACI (Responsável/Aprovador/Consultado/Informado por etapa)`,
-                    `POP:\n${popDraft}`, 'llama3-8b-8192', apiKeyGroq
-                );
-                console.log('[JARVIS][AIMP] Agente 3 OK.');
-            } catch (e) { console.warn('[JARVIS][AIMP] Agente 3 falhou:', e.message); }
-        }
+Use APENAS este design system Tailwind:
+Para títulos principais de seções: 
+<div class="relative pl-4 mb-6">
+  <div class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-full"></div>
+  <h1 class="text-xl font-extrabold text-white tracking-wide uppercase">[TITULO AQUI]</h1>
+</div>
 
-        // AGENTE 4: HTML PROFISSIONAL (Gemini)
-        console.log('[JARVIS][AIMP] Agente 4 — Formatador HTML...');
-        const promptHtml = `Formate TODO o conteúdo em HTML puro com Tailwind CSS. SEM markdown. Retorne apenas HTML.
+Para parágrafos normais e diagnósticos: 
+<div class="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-4 text-slate-300 text-sm leading-relaxed">[texto]</div>
 
-ESTRUTURA:
-<div class="space-y-6">
-  <div class="bg-gradient-to-r from-emerald-900 to-slate-900 p-6 rounded-xl border border-emerald-700">
-    <h1 class="text-2xl font-black text-emerald-400 mb-1">POP: [TITULO]</h1>
-    <p class="text-slate-400 text-sm">Versão 1.0 — thIAguinho Soluções</p>
-  </div>
-  <div class="bg-slate-900 p-5 rounded-xl border-l-4 border-emerald-500">
-    <h2 class="text-white font-bold text-lg mb-3 flex items-center gap-2"><i class='bx bx-target-lock text-emerald-400'></i>[TITULO SEÇÃO]</h2>
-    [conteúdo]
+Para alertas, avisos críticos ou riscos:
+<div class="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-4 flex items-start gap-3">
+  <i class='bx bx-error-circle text-red-500 text-xl shrink-0 mt-0.5'></i>
+  <p class="text-red-200 text-sm">[aviso aqui]</p>
+</div>
+
+Para checklists de tarefas e POPs (MUITO IMPORTANTE FORMATAR ASSIM):
+<div class="space-y-2 mb-6">
+  <label class="flex items-center gap-3 p-3 bg-slate-800/80 border border-slate-700 hover:border-emerald-500/50 rounded-lg cursor-pointer transition">
+    <input type="checkbox" class="w-5 h-5 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-900">
+    <span class="text-slate-200 text-sm font-medium">[PASSO DO CHECKLIST AQUI]</span>
+  </label>
+</div>
+
+Para Indicadores (KPIs) e Métricas (Crie "Cards" para eles):
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-4">
+    <div class="text-sky-400 text-xs font-bold uppercase tracking-wider mb-1">[NOME DO KPI]</div>
+    <div class="text-white text-lg font-semibold">[VALOR/META DO KPI]</div>
+    <div class="text-slate-400 text-xs mt-2">[Como auditar / explicação]</div>
   </div>
 </div>
-Para checklists: <label class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-700"><input type="checkbox" class="w-5 h-5 accent-emerald-500"><span class="text-slate-200 text-sm">[item]</span></label>
-Para tabelas: use bg-slate-700 no thead, text-slate-300 nas tds, border-b border-slate-700
-Para alertas: bg-red-900/20 border border-red-800
 
-CONTEÚDO:
-DIAGNÓSTICO: ${diagnostico}
+CONTEÚDO PARA FORMATAR:
+--- DIAGNÓSTICO E RISCOS ---
+${diagnostico}
 
-POP COMPLETO COM MÉTRICAS: ${popCompleto}`;
+--- PROCEDIMENTO (POP) ---
+${popCompleto}
 
-        let htmlFinal = await callGeminiText(promptHtml, promptHtml, apiKeyGemini);
+--- KPIs / MÉTRICAS ---
+${metricas}
+`;
+
+        let htmlFinal = await callGeminiText(promptHtml, "Você formata textos puramente em HTML Tailwind seguindo o design system fornecido. Não adicione markdown.", chaveApiArmazenada);
         htmlFinal = htmlFinal.replace(/```html/g, '').replace(/```/g, '').trim();
 
-        const label = temGroq
-            ? 'Groq Diagnóstico → Groq POP → Groq KPIs → Gemini HTML'
-            : 'Gemini POP + HTML';
+        const label = temGroq ? 'Groq LLaMA-3 (Fast)' : 'Gemini 2.5';
+        const headerRodizio = `<div class="flex items-center gap-2 text-[10px] text-slate-500 mb-6 pb-2 border-b border-slate-800 uppercase tracking-widest font-bold"><i class='bx bx-bot'></i> Engine Padrão McDonald's via ${label}</div>`;
 
-        const headerRodizio = `<div class="bg-slate-800 border border-slate-600 rounded-xl p-3 mb-4 text-xs text-slate-400 flex items-center gap-2"><i class='bx bx-git-branch text-emerald-400 text-base'></i><span><strong class="text-emerald-400">Rodizio AIMP:</strong> ${label}</span></div>`;
-        console.log('[JARVIS][AIMP] Pipeline completo!');
         return headerRodizio + htmlFinal;
-    } catch (e) { console.error('[JARVIS][AIMP] Erro:', e.message); throw new Error('Falha Rodizio AIMP: ' + e.message); }
+
+    } catch (e) {
+        console.error(`[JARVIS][AIMP] Erro:`, e.message);
+        throw new Error(`O Cérebro Engenheiro falhou ou sobrecarregou. Detalhe: ${e.message}`);
+    }
 }

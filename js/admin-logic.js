@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const erroMsg = document.getElementById('msg-erro-login');
     
     const apiKeyInput = document.getElementById('api-key-input');
+const groqKeyInput = document.getElementById('groq-key-input');
     const geminiVoiceInput = document.getElementById('gemini-voice-input');
     const githubTokenInput = document.getElementById('github-token-input');
     const githubRepoInput = document.getElementById('github-repo-input');
@@ -275,7 +276,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-save-voice').addEventListener('click', () => {
             if (!usuarioLogado) return;
             const btn = document.getElementById('btn-save-voice'); btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
-            set(ref(database, 'admin_config/gemini_voice_name'), geminiVoiceInput.value).then(() => { btn.innerHTML = "Salvo"; setTimeout(() => btn.innerHTML = "Salvar Voz", 2000); });
+if(document.getElementById('btn-save-groq')) {
+    document.getElementById('btn-save-groq').addEventListener('click', () => {
+        if (!usuarioLogado) return;
+        const btn = document.getElementById('btn-save-groq');
+        btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
+        set(ref(database, 'admin_config/groq_api_key'), groqKeyInput.value.trim())
+            .then(() => {
+                btn.innerHTML = "Salvo";
+                setTimeout(() => btn.innerHTML = "Salvar", 2000);
+            });
+    });
+}
+         
+   set(ref(database, 'admin_config/gemini_voice_name'), geminiVoiceInput.value).then(() => { btn.innerHTML = "Salvo"; setTimeout(() => btn.innerHTML = "Salvar Voz", 2000); });
         });
     }
 
@@ -302,6 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
         get(ref(database, 'admin_config/gemini_voice_name')).then((s) => { if(s.exists() && geminiVoiceInput) geminiVoiceInput.value = s.val(); });
         get(ref(database, 'admin_config/github_token')).then((s) => { if(s.exists() && githubTokenInput) githubTokenInput.value = s.val(); });
         get(ref(database, 'admin_config/github_repo')).then((s) => { if(s.exists() && githubRepoInput) githubRepoInput.value = s.val(); });
+get(ref(database, 'admin_config/groq_api_key')).then((s) => {
+    if (s.exists() && groqKeyInput) groqKeyInput.value = s.val();
 
         get(ref(database, 'admin_config/prompt_mascote')).then((s) => {
             const caixaTexto = document.getElementById('prompt-ia');

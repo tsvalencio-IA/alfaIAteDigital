@@ -131,7 +131,7 @@ async function callGroqAPI(systemInstruction, userContent, model, groqKey) {
 }
 
 async function callGeminiText(systemInstruction, userContent, geminiKey) {
-    const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+    const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
     const data = await sendMessageToGemini(MODEL_URL, { contents: [{ role: 'user', parts: [{ text: userContent }] }], system_instruction: { parts: [{ text: systemInstruction }] } });
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
@@ -149,7 +149,7 @@ async function falarComMascote(textoParaFalar) {
         const resVoice = await fetch('https://thiaguinho-40a14-default-rtdb.firebaseio.com/admin_config/gemini_voice_name.json');
         const voiceName = await resVoice.json() || 'Aoede';
         if (!adminApiKey) throw new Error('Chave nao encontrada.');
-        const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=' + adminApiKey;
+        const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + adminApiKey;
         const payload = { contents: [{ role: 'user', parts: [{ text: textoParaFalar }] }], generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } } } };
         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
@@ -196,7 +196,7 @@ export async function askGemini(msgUsuario) {
         if (!msgSanitizada) return 'Por favor, envie uma mensagem para continuar.';
         const apiKey = await obterChaveDaApi();
         if (!apiKey) return 'Aviso: Chave da API nao configurada no Firebase.';
-        const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         const contents  = buildContents(chatHistoryCliente);
         if (contents.length === 0) { contents.push({ role: 'user', parts: [{ text: msgSanitizada }] }); }
         else if (contents[contents.length - 1].role !== 'user') { contents.push({ role: 'user', parts: [{ text: msgSanitizada }] }); }
@@ -299,7 +299,19 @@ REGRAS:
                     'llama-3.3-70b-versatile', apiKeyGroq
                 );
                 console.log('[JARVIS][Rodizio-Dev] Agente 3 OK.');
-            } catch (e) { console.warn('[JARVIS][Rodizio-Dev] Agente 3 falhou:', e.message); }
+            } catch (e) {
+                console.warn('[JARVIS][Rodizio-Dev] Agente 3 Groq falhou, tentando Gemini:', e.message);
+                try {
+                    codigoBase = await callGeminiText(
+                        'Você é um Desenvolvedor Fullstack. Crie um arquivo HTML completo e funcional com Tailwind CSS e Firebase conforme a arquitetura abaixo.',
+                        'ARQUITETURA:\n' + arquitetura + '\n\nCONTEXTO: ' + contextoProjeto,
+                        apiKeyGemini
+                    );
+                    console.log('[JARVIS][Rodizio-Dev] Agente 3 OK (Gemini fallback).');
+                } catch (e2) {
+                    console.warn('[JARVIS][Rodizio-Dev] Agente 3 Gemini fallback falhou:', e2.message);
+                }
+            }
         }
 
         // AGENTE 4: REVISOR FINAL (Gemini) + INJEÇÕES OBRIGATÓRIAS
@@ -341,7 +353,7 @@ ${codigoBase}`;
         if (contsA4.length === 0 || contsA4[contsA4.length-1].role !== 'user') contsA4.push({ role: 'user', parts: [{ text: promptA4 }] });
         else contsA4[contsA4.length-1].parts.push({ text: promptA4 });
 
-        const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKeyGemini}`;
+        const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKeyGemini}`;
         const data = await sendMessageToGemini(MODEL_URL, { contents: contsA4, system_instruction: { parts: [{ text: 'Engenheiro Sênior da thIAguinho. Entregue sistemas profissionais, completos e funcionais.' }] } });
         const resultado = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Erro no revisor.';
         const label = temGroq ? 'Groq Analista → Gemini Arquiteto → Groq Dev → Gemini Revisor' : 'Gemini Arquiteto → Gemini Revisor';

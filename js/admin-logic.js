@@ -13,8 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnLogout = document.getElementById('btn-logout');
     const erroMsg = document.getElementById('msg-erro-login');
     
-    const apiKeyInput = document.getElementById('api-key-input');
-    const groqKeyInput = document.getElementById('groq-key-input');
+    const apiKeyInput       = document.getElementById('api-key-input');
+    const groqKeyInput      = document.getElementById('groq-key-input');
+    const openrouterKeyInput= document.getElementById('openrouter-key-input');
+    const mistralKeyInput   = document.getElementById('mistral-key-input');
     const geminiVoiceInput = document.getElementById('gemini-voice-input');
     const githubTokenInput = document.getElementById('github-token-input');
     const githubRepoInput = document.getElementById('github-repo-input');
@@ -265,10 +267,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if(btnLogout) btnLogout.addEventListener('click', () => signOut(auth).then(() => window.location.reload()));
 
     if(document.getElementById('btn-save-key')) {
-        document.getElementById('btn-save-key').addEventListener('click', () => {
+        document.getElementById('btn-save-key').addEventListener('click', async () => {
             if (!usuarioLogado) return;
-            const btn = document.getElementById('btn-save-key'); btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
-            set(ref(database, 'admin_config/gemini_api_key'), apiKeyInput.value.trim()).then(() => { btn.innerHTML = "Salvo"; setTimeout(() => btn.innerHTML = "Salvar", 2000); });
+            const btn = document.getElementById('btn-save-key');
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
+            // Parse multiple Gemini keys separated by comma or newline
+            const raw = apiKeyInput.value || '';
+            const list = raw.split(/[\n,]+/).map(k => k.trim()).filter(k => k);
+            try {
+                await set(ref(database, 'admin_config/gemini_api_keys'), list);
+                // Also save the first key separately for retrocompatibility (TTS)
+                const first = list.length > 0 ? list[0] : '';
+                await set(ref(database, 'admin_config/gemini_api_key'), first);
+                btn.innerHTML = "Salvo";
+            } catch (e) {
+                console.error('[Admin] Erro ao salvar chaves Gemini:', e);
+                btn.innerHTML = "Erro";
+            }
+            setTimeout(() => btn.innerHTML = "Salvar", 2000);
         });
     }
     
@@ -283,15 +299,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // CORREÇÃO: Botão de Salvar Groq de forma independente
     if(document.getElementById('btn-save-groq')) {
-        document.getElementById('btn-save-groq').addEventListener('click', () => {
+        document.getElementById('btn-save-groq').addEventListener('click', async () => {
             if (!usuarioLogado) return;
             const btn = document.getElementById('btn-save-groq');
             btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
-            set(ref(database, 'admin_config/groq_api_key'), groqKeyInput.value.trim())
-                .then(() => {
-                    btn.innerHTML = "Salvo";
-                    setTimeout(() => btn.innerHTML = "Salvar", 2000);
-                });
+            // Parse multiple Groq keys
+            const raw = groqKeyInput.value || '';
+            const list = raw.split(/[\n,]+/).map(k => k.trim()).filter(k => k);
+            try {
+                await set(ref(database, 'admin_config/groq_api_keys'), list);
+                const first = list.length > 0 ? list[0] : '';
+                await set(ref(database, 'admin_config/groq_api_key'), first);
+                btn.innerHTML = "Salvo";
+            } catch (e) {
+                console.error('[Admin] Erro ao salvar chaves Groq:', e);
+                btn.innerHTML = "Erro";
+            }
+            setTimeout(() => btn.innerHTML = "Salvar", 2000);
+        });
+    }
+
+    // Botão de Salvar OpenRouter
+    if(document.getElementById('btn-save-openrouter')) {
+        document.getElementById('btn-save-openrouter').addEventListener('click', async () => {
+            if (!usuarioLogado) return;
+            const btn = document.getElementById('btn-save-openrouter');
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
+            const raw = openrouterKeyInput?.value || '';
+            const list = raw.split(/[\n,]+/).map(k => k.trim()).filter(k => k);
+            try {
+                await set(ref(database, 'admin_config/openrouter_api_keys'), list);
+                btn.innerHTML = "Salvo";
+            } catch (e) {
+                console.error('[Admin] Erro ao salvar chaves OpenRouter:', e);
+                btn.innerHTML = "Erro";
+            }
+            setTimeout(() => btn.innerHTML = "Salvar", 2000);
+        });
+    }
+
+    // Botão de Salvar Mistral
+    if(document.getElementById('btn-save-mistral')) {
+        document.getElementById('btn-save-mistral').addEventListener('click', async () => {
+            if (!usuarioLogado) return;
+            const btn = document.getElementById('btn-save-mistral');
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
+            const raw = mistralKeyInput?.value || '';
+            const list = raw.split(/[\n,]+/).map(k => k.trim()).filter(k => k);
+            try {
+                await set(ref(database, 'admin_config/mistral_api_keys'), list);
+                btn.innerHTML = "Salvo";
+            } catch (e) {
+                console.error('[Admin] Erro ao salvar chaves Mistral:', e);
+                btn.innerHTML = "Erro";
+            }
+            setTimeout(() => btn.innerHTML = "Salvar", 2000);
         });
     }
 
@@ -314,20 +376,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function iniciarLeituraDoBancoDeDados() {
-        get(ref(database, 'admin_config/gemini_api_key')).then((s) => { if(s.exists() && apiKeyInput) apiKeyInput.value = s.val(); });
+        // Carrega as chaves Gemini (lista ou valor único)
+        get(ref(database, 'admin_config/gemini_api_keys')).then((s) => {
+            if (s.exists() && apiKeyInput) {
+                const val = s.val();
+                if (Array.isArray(val)) apiKeyInput.value = val.join(', ');
+                else apiKeyInput.value = String(val);
+            } else {
+                // Fallback: valor único
+                get(ref(database, 'admin_config/gemini_api_key')).then((x) => {
+                    if (x.exists() && apiKeyInput) apiKeyInput.value = x.val();
+                });
+            }
+        });
+        // Carrega as chaves Groq
+        get(ref(database, 'admin_config/groq_api_keys')).then((s) => {
+            if (s.exists() && groqKeyInput) {
+                const val = s.val();
+                if (Array.isArray(val)) groqKeyInput.value = val.join(', ');
+                else groqKeyInput.value = String(val);
+            } else {
+                get(ref(database, 'admin_config/groq_api_key')).then((x) => {
+                    if (x.exists() && groqKeyInput) groqKeyInput.value = x.val();
+                });
+            }
+        });
+        // Carrega chaves OpenRouter
+        get(ref(database, 'admin_config/openrouter_api_keys')).then((s) => {
+            if (s.exists() && openrouterKeyInput) {
+                const val = s.val();
+                if (Array.isArray(val)) openrouterKeyInput.value = val.join(', ');
+                else openrouterKeyInput.value = String(val);
+            }
+        });
+        // Carrega chaves Mistral
+        get(ref(database, 'admin_config/mistral_api_keys')).then((s) => {
+            if (s.exists() && mistralKeyInput) {
+                const val = s.val();
+                if (Array.isArray(val)) mistralKeyInput.value = val.join(', ');
+                else mistralKeyInput.value = String(val);
+            }
+        });
+        // Outras configurações
         get(ref(database, 'admin_config/gemini_voice_name')).then((s) => { if(s.exists() && geminiVoiceInput) geminiVoiceInput.value = s.val(); });
         get(ref(database, 'admin_config/github_token')).then((s) => { if(s.exists() && githubTokenInput) githubTokenInput.value = s.val(); });
         get(ref(database, 'admin_config/github_repo')).then((s) => { if(s.exists() && githubRepoInput) githubRepoInput.value = s.val(); });
-        
-        // CORREÇÃO: Fechamento adicionado ( }); )
-        get(ref(database, 'admin_config/groq_api_key')).then((s) => { if (s.exists() && groqKeyInput) groqKeyInput.value = s.val(); });
-
         get(ref(database, 'admin_config/prompt_mascote')).then((s) => {
             const caixaTexto = document.getElementById('prompt-ia');
-            if (s.exists() && caixaTexto) { caixaTexto.value = s.val(); atualizarPromptMemoria(s.val()); } 
+            if (s.exists() && caixaTexto) { caixaTexto.value = s.val(); atualizarPromptMemoria(s.val()); }
             else if(caixaTexto) { caixaTexto.value = promptPadraoDaAPI; }
         });
-
         onValue(ref(database, 'projetos_capturados'), (snapshot) => {
             listaDeClientesGlobais = [];
             if (snapshot.exists()) { snapshot.forEach((filho) => { listaDeClientesGlobais.push({ id: filho.key, ...filho.val() }); }); listaDeClientesGlobais.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0)); }

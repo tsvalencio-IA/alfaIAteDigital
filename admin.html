@@ -82,7 +82,8 @@
                         <div class="mb-4">
                             <h3 class="font-bold text-white mb-2 flex items-center gap-2 text-xs"><i class='bx bx-brain text-yellow-500'></i> API Gemini (Cérebro)</h3>
                             <div class="flex gap-2">
-                                <input type="password" id="api-key-input" class="flex-1 w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm text-white outline-none focus:border-yellow-500" placeholder="AIzaSy...">
+                                <!-- Permite múltiplas chaves separadas por vírgulas -->
+                                <input type="password" id="api-key-input" class="flex-1 w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm text-white outline-none focus:border-yellow-500" placeholder="Chaves Gemini (separadas por vírgula)">
                                 <button id="btn-save-key" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition shrink-0">Salvar</button>
                             </div>
                         </div>
@@ -92,9 +93,10 @@
         <i class='bx bx-zap text-orange-400'></i> API Groq (Agente Analítico)
     </h3>
     <div class="flex gap-2">
+        <!-- Permite múltiplas chaves separadas por vírgulas -->
         <input type="password" id="groq-key-input"
                class="flex-1 w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm text-white outline-none focus:border-orange-500"
-               placeholder="gsk_...">
+               placeholder="Chaves Groq (separadas por vírgula)">
         <button id="btn-save-groq"
                 class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition shrink-0">
             Salvar
@@ -105,6 +107,46 @@
         Gratuito em groq.com
     </p>
 </div>
+
+                        <!-- OPENROUTER API -->
+                        <div class="mb-4">
+                            <h3 class="font-bold text-white mb-2 flex items-center gap-2 text-xs">
+                                <i class='bx bx-link-alt text-purple-400'></i> API OpenRouter (Modelos Diversos)
+                            </h3>
+                            <div class="flex gap-2">
+                                <!-- Permite múltiplas chaves separadas por vírgulas -->
+                                <input type="password" id="openrouter-key-input"
+                                       class="flex-1 w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm text-white outline-none focus:border-purple-500"
+                                       placeholder="Chaves OpenRouter (separadas por vírgula)">
+                                <button id="btn-save-openrouter"
+                                        class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition shrink-0">
+                                    Salvar
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">
+                                Acesso a modelos Llama 3, Mistral e outros via openrouter.ai (20 req/min, 200/dia).
+                            </p>
+                        </div>
+
+                        <!-- MISTRAL API -->
+                        <div class="mb-4">
+                            <h3 class="font-bold text-white mb-2 flex items-center gap-2 text-xs">
+                                <i class='bx bx-wind text-emerald-400'></i> API Mistral (Modelos Próprios)
+                            </h3>
+                            <div class="flex gap-2">
+                                <!-- Permite múltiplas chaves separadas por vírgulas -->
+                                <input type="password" id="mistral-key-input"
+                                       class="flex-1 w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm text-white outline-none focus:border-emerald-500"
+                                       placeholder="Chaves Mistral (separadas por vírgula)">
+                                <button id="btn-save-mistral"
+                                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition shrink-0">
+                                    Salvar
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">
+                                Use modelos nativos Mistral (small, medium, large) gratuitamente em mistral.ai.
+                            </p>
+                        </div>
                         <!-- MOTOR DE VOZ GEMINI -->
                         <div class="mb-4">
                             <h3 class="font-bold text-white mb-2 flex items-center gap-2 text-xs"><i class='bx bx-podcast text-sky-500'></i> Voz Neural Mascote</h3>

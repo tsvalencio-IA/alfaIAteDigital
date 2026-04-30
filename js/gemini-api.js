@@ -3,11 +3,19 @@
 
 import { database, ref, push, set, get } from './firebase-config.js';
 
-let chatHistoryCliente  = [];
-let chaveApiArmazenada  = null;
-let chaveGroqArmazenada = null;
-let leadJaCapturado     = false;
-let _geminiLocked       = false;
+let chatHistoryCliente   = [];
+// Listas de chaves de API para rodízio
+let chavesGemini        = [];
+let chavesGroq          = [];
+let chavesOpenRouter    = [];
+let chavesMistral       = [];
+// Índices de rodízio (incrementam a cada uso)
+let idxGemini = 0;
+let idxGroq   = 0;
+let idxOpenRouter = 0;
+let idxMistral = 0;
+let leadJaCapturado      = false;
+let _geminiLocked        = false;
 
 // =========================================================================
 // CÉREBRO 1: FUNIL DUAL — EMPRESA + VIDA PESSOAL
@@ -60,24 +68,134 @@ export function atualizarPromptMemoria(novoPrompt) {
 }
 
 // ============================================================
-// CHAVES
+// CHAVES & RODÍZIO
 // ============================================================
-async function obterChaveDaApi() {
-    if (chaveApiArmazenada) return chaveApiArmazenada;
+/**
+ * Carrega e retorna a lista de chaves Gemini a partir do Firebase.
+ * Caso exista apenas um valor salvo em `gemini_api_key`, converte para array.
+ */
+async function obterChavesGemini() {
+    if (chavesGemini.length > 0) return chavesGemini;
     try {
-        const s = await get(ref(database, 'admin_config/gemini_api_key'));
-        if (s.exists()) { chaveApiArmazenada = s.val(); return chaveApiArmazenada; }
-    } catch (e) { console.error('[JARVIS][Firebase] Erro chave Gemini:', e); }
-    return null;
+        const sList = await get(ref(database, 'admin_config/gemini_api_keys'));
+        if (sList.exists()) {
+            const val = sList.val();
+            if (Array.isArray(val)) chavesGemini = val.filter((k) => k);
+            else if (typeof val === 'string') chavesGemini = String(val).split(/[\n,]+/).map(k => k.trim()).filter(k => k);
+        }
+        if (chavesGemini.length === 0) {
+            const sSingle = await get(ref(database, 'admin_config/gemini_api_key'));
+            if (sSingle.exists()) {
+                const v = sSingle.val();
+                if (v) chavesGemini = [v];
+            }
+        }
+    } catch (e) {
+        console.error('[JARVIS][Firebase] Erro ao carregar chaves Gemini:', e);
+    }
+    return chavesGemini;
 }
 
-async function obterChaveGroq() {
-    if (chaveGroqArmazenada) return chaveGroqArmazenada;
+/**
+ * Retorna a próxima chave Gemini, rotacionando sobre a lista carregada.
+ */
+function getNextGeminiKey() {
+    if (!chavesGemini || chavesGemini.length === 0) return null;
+    const key = chavesGemini[idxGemini % chavesGemini.length];
+    idxGemini = (idxGemini + 1) % chavesGemini.length;
+    return key;
+}
+
+/**
+ * Carrega e retorna a lista de chaves Groq a partir do Firebase.
+ * Caso exista apenas um valor salvo em `groq_api_key`, converte para array.
+ */
+async function obterChavesGroq() {
+    if (chavesGroq.length > 0) return chavesGroq;
     try {
-        const s = await get(ref(database, 'admin_config/groq_api_key'));
-        if (s.exists()) { chaveGroqArmazenada = s.val(); return chaveGroqArmazenada; }
-    } catch (e) { console.warn('[JARVIS][Firebase] Chave Groq ausente:', e.message); }
-    return null;
+        const sList = await get(ref(database, 'admin_config/groq_api_keys'));
+        if (sList.exists()) {
+            const val = sList.val();
+            if (Array.isArray(val)) chavesGroq = val.filter((k) => k);
+            else if (typeof val === 'string') chavesGroq = String(val).split(/[\n,]+/).map(k => k.trim()).filter(k => k);
+        }
+        if (chavesGroq.length === 0) {
+            const sSingle = await get(ref(database, 'admin_config/groq_api_key'));
+            if (sSingle.exists()) {
+                const v = sSingle.val();
+                if (v) chavesGroq = [v];
+            }
+        }
+    } catch (e) {
+        console.warn('[JARVIS][Firebase] Erro ao carregar chaves Groq:', e.message);
+    }
+    return chavesGroq;
+}
+
+/**
+ * Retorna a próxima chave Groq, rotacionando sobre a lista carregada.
+ */
+function getNextGroqKey() {
+    if (!chavesGroq || chavesGroq.length === 0) return null;
+    const key = chavesGroq[idxGroq % chavesGroq.length];
+    idxGroq = (idxGroq + 1) % chavesGroq.length;
+    return key;
+}
+
+/**
+ * Carrega e retorna a lista de chaves OpenRouter a partir do Firebase.
+ */
+async function obterChavesOpenRouter() {
+    if (chavesOpenRouter.length > 0) return chavesOpenRouter;
+    try {
+        const sList = await get(ref(database, 'admin_config/openrouter_api_keys'));
+        if (sList.exists()) {
+            const val = sList.val();
+            if (Array.isArray(val)) chavesOpenRouter = val.filter((k) => k);
+            else if (typeof val === 'string') chavesOpenRouter = String(val).split(/[\n,]+/).map(k => k.trim()).filter(k => k);
+        }
+    } catch (e) {
+        console.warn('[JARVIS][Firebase] Erro ao carregar chaves OpenRouter:', e.message);
+    }
+    return chavesOpenRouter;
+}
+
+/**
+ * Retorna a próxima chave OpenRouter.
+ */
+function getNextOpenRouterKey() {
+    if (!chavesOpenRouter || chavesOpenRouter.length === 0) return null;
+    const key = chavesOpenRouter[idxOpenRouter % chavesOpenRouter.length];
+    idxOpenRouter = (idxOpenRouter + 1) % chavesOpenRouter.length;
+    return key;
+}
+
+/**
+ * Carrega e retorna a lista de chaves Mistral a partir do Firebase.
+ */
+async function obterChavesMistral() {
+    if (chavesMistral.length > 0) return chavesMistral;
+    try {
+        const sList = await get(ref(database, 'admin_config/mistral_api_keys'));
+        if (sList.exists()) {
+            const val = sList.val();
+            if (Array.isArray(val)) chavesMistral = val.filter((k) => k);
+            else if (typeof val === 'string') chavesMistral = String(val).split(/[\n,]+/).map(k => k.trim()).filter(k => k);
+        }
+    } catch (e) {
+        console.warn('[JARVIS][Firebase] Erro ao carregar chaves Mistral:', e.message);
+    }
+    return chavesMistral;
+}
+
+/**
+ * Retorna a próxima chave Mistral.
+ */
+function getNextMistralKey() {
+    if (!chavesMistral || chavesMistral.length === 0) return null;
+    const key = chavesMistral[idxMistral % chavesMistral.length];
+    idxMistral = (idxMistral + 1) % chavesMistral.length;
+    return key;
 }
 
 // ============================================================
@@ -126,6 +244,82 @@ async function callGroqAPI(systemInstruction, userContent, model, groqKey) {
     } catch (e) {
         clearTimeout(timeoutId);
         console.error(`[JARVIS][Groq] Erro (${model}):`, e.message);
+        throw e;
+    }
+}
+
+// ============================================================
+// MOTOR OPENROUTER: OpenAI-compatible (sem retry). Chamadas ilimitadas conforme plano.
+// ============================================================
+async function callOpenRouterAPI(systemInstruction, userContent, model, openrouterKey) {
+    const controller = new AbortController();
+    const timeoutId  = setTimeout(() => controller.abort(), 30000);
+    try {
+        console.log(`[JARVIS][OpenRouter] Chamando ${model}...`);
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${openrouterKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    { role: 'system', content: systemInstruction },
+                    { role: 'user',   content: userContent }
+                ],
+                max_tokens: 4096,
+                temperature: 0.3
+            }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error?.message || `HTTP ${res.status}`);
+        const resultado = data.choices?.[0]?.message?.content || '';
+        console.log(`[JARVIS][OpenRouter] ${model} OK (${resultado.length} chars).`);
+        return resultado;
+    } catch (e) {
+        clearTimeout(timeoutId);
+        console.error(`[JARVIS][OpenRouter] Erro (${model}):`, e.message);
+        throw e;
+    }
+}
+
+// ============================================================
+// MOTOR MISTRAL: OpenAI-compatible para modelos Mistral.
+// ============================================================
+async function callMistralAPI(systemInstruction, userContent, model, mistralKey) {
+    const controller = new AbortController();
+    const timeoutId  = setTimeout(() => controller.abort(), 30000);
+    try {
+        console.log(`[JARVIS][Mistral] Chamando ${model}...`);
+        const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${mistralKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    { role: 'system', content: systemInstruction },
+                    { role: 'user',   content: userContent }
+                ],
+                max_tokens: 4096,
+                temperature: 0.3
+            }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error?.message || `HTTP ${res.status}`);
+        const resultado = data.choices?.[0]?.message?.content || '';
+        console.log(`[JARVIS][Mistral] ${model} OK (${resultado.length} chars).`);
+        return resultado;
+    } catch (e) {
+        clearTimeout(timeoutId);
+        console.error(`[JARVIS][Mistral] Erro (${model}):`, e.message);
         throw e;
     }
 }
@@ -194,7 +388,8 @@ export async function askGemini(msgUsuario) {
     try {
         const msgSanitizada = String(msgUsuario || '').trim().replace(/</g,'&lt;').replace(/>/g,'&gt;').substring(0, 2000);
         if (!msgSanitizada) return 'Por favor, envie uma mensagem para continuar.';
-        const apiKey = await obterChaveDaApi();
+        await obterChavesGemini();
+        const apiKey = getNextGeminiKey();
         if (!apiKey) return 'Aviso: Chave da API nao configurada no Firebase.';
         const MODEL_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         const contents  = buildContents(chatHistoryCliente);
@@ -233,8 +428,10 @@ export function adicionarAoHistorico(role, texto) { chatHistoryCliente.push({ ro
 // =========================================================================
 export async function conversarComDesenvolvedorIA(msgAdmin, contextoProjeto, historicoSalvo = [], idProjetoAtivo = 'padrao') {
     try {
-        const apiKeyGemini = await obterChaveDaApi();
-        const apiKeyGroq   = await obterChaveGroq();
+        await obterChavesGemini();
+        await obterChavesGroq();
+        const apiKeyGemini = getNextGeminiKey();
+        const apiKeyGroq   = getNextGroqKey();
         if (!apiKeyGemini) return 'Configure a chave Gemini no Painel primeiro.';
         const temGroq = !!apiKeyGroq;
         console.log(`[JARVIS][Rodizio-Dev] Pipeline iniciado. Groq disponivel: ${temGroq}`);
@@ -371,8 +568,10 @@ ${codigoBase}`;
 // =========================================================================
 export async function analisarEGerarProcessoAIMP(contextoCaotico, nomeVideoAnexado = null) {
     try {
-        const apiKeyGemini = await obterChaveDaApi();
-        const apiKeyGroq   = await obterChaveGroq();
+        await obterChavesGemini();
+        await obterChavesGroq();
+        const apiKeyGemini = getNextGeminiKey();
+        const apiKeyGroq   = getNextGroqKey();
         if (!apiKeyGemini) throw new Error('Chave Gemini não encontrada.');
         let intro = nomeVideoAnexado ? `[Video: ${nomeVideoAnexado}]\n\n${contextoCaotico}` : contextoCaotico;
         const temGroq = !!apiKeyGroq;
